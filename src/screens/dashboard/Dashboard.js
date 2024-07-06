@@ -27,7 +27,7 @@ const Dashboard = (props) => {
 
     const getMyMatches = async () => {
         setLoadingDashScreen(true)
-        fetch('https://60a61d65c0c1fd00175f546a.mockapi.io/library/MatchData').then((res) => {
+        fetch('https://668877670ea28ca88b854c39.mockapi.io/library/matchdata').then((res) => {
             return res.json()
         }).then((response) => {
             setmatchdata(response)
@@ -72,7 +72,7 @@ const Dashboard = (props) => {
                     </TouchableOpacity>
                 </View>
             </LinearGradient>
-         
+
 
 
 
