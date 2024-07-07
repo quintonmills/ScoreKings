@@ -59,83 +59,83 @@ export const matchdata = [
     {
         "match_id": "8d05c3ca-96a2-4d55-8752-7b5ce25c1c6c",
         "status": "result",
-        "time_left": "06h: 13m: 32s",
-        "tournament": "T20 World Cup",
-        "team1_name": "IND",
-        "team2_name": "ENG",
-        "team1": "https://lh3.googleusercontent.com/mq4oNuNSSTe4SvGfuf7EKLnFTsTR0spOTky7J_k14ArsYD5whdoUoKJFG-ZHt45Lf38=w2400",
-        "team2": "https://lh4.googleusercontent.com/-u2DbgjnPXh9O5uGU1-dttIyFDULjtDhKkpi-6yp3Zj0bZd2pSd8sY3EzHDEv_ZLP6g=w2400"
+        "time_left": "06h: 13m: 35s",
+        "tournament": "OTE Regular Season",
+        "team1_name": "CHS",
+        "team2_name": "RWE",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/df7b500b-4f2c-455d-a154-110e5c8f4e78.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/2251d35a-ac66-4927-b057-c19781e4705e.webp"
     },
     {
         "match_id": "18057f25-46d6-4e65-aa5b-636d2eb6e7da",
         "status": "result",
-        "tournament": "T20 World Cup",
+        "tournament": "OTE Regular Season",
         "time_left": "22h: 19m: 12s",
-        "team1_name": "RSA",
-        "team2_name": "AUS",
-        "team1": "https://lh6.googleusercontent.com/pAkId3tefgi0lxyGBnXHjZcr6ecLPhAEO0QeVgdPDkdGLbW8y3l_c4ju5vNhMA1sj9Q=w2400",
-        "team2": "https://lh6.googleusercontent.com/r4MOzrbiN1m9HnypY5w2SR9kADRXcySeiX6Ao63OUklXH761gJxqybLJ4Q4G4FOsBVo=w2400"
+        "team1_name": "BLU",
+        "team2_name": "CTY",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/8ec33d5e-9151-438a-b4e4-d9b5a65d50cf.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/a8db0c2f-90a0-4b16-bbdf-abc057cd6111.webp"
     },
     {
-        "match_id": "0c8f46d7-19e3-4684-b124-00e4ae03dba4",
+        "match_id": "18057f25-46d6-4e65-aa5b-636d2eb6e7da",
         "status": "result",
-        "tournament": "Indian Premier League",
-        "time_left": "36h: 33m: 32s",
-        "team1_name": "RCB",
-        "team2_name": "CSK",
-        "team1": "https://lh3.googleusercontent.com/We5GTETpIVV9yL3wofetmv7hH8w1uXKMYZQGK872ge2Ajj9Iqq5tNm-VIatFu9mftqQ=w2400",
-        "team2": "https://lh4.googleusercontent.com/Nt0AfCLWPb5Fp6sJcHL2Rau-lO9BZkVAwhKVBZyJ8EaTDQFH5uQbEVHEwy-Z2cD1_rU=w2400"
+        "tournament": "OTE Regular Season",
+        "time_left": "22h: 19m: 12s",
+        "team1_name": "JLY",
+        "team2_name": "ROL",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/ba704c6c-5ce1-49e9-9b95-0ad4287a66fa.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/cf1919a3-010c-4247-b840-60fb3e5f77d3.webp"
     },
     {
-        "match_id": "d15fa8db-8658-4aa0-b2f0-36c253d9ef05",
-        "status": "live",
-        "tournament": "Indian Premier League",
-        "time_left": "40h: 19m: 52s",
-        "team1_name": "KKR",
-        "team2_name": "MI",
-        "team1": "https://lh3.googleusercontent.com/OHgnMkaQM8P-nTkfjWEqvdkRyzEOuSfF4FqyNLcf3V8-RKUDqjc8jVRaaeLVJbjF1xc=w2400",
-        "team2": "https://lh3.googleusercontent.com/10MSSLpmWczLt75mCgKOZOh3CLyAqCOMIB7iD38jAKiPNa0DlR5bC4nvPdaPgRVEG_Y=w2400"
+        "match_id": "18057f25-46d6-4e65-aa5b-636d2eb6e7da",
+        "status": "result",
+        "tournament": "OTE Regular Season",
+        "time_left": "22h: 19m: 12s",
+        "team1_name": "DDS",
+        "team2_name": "ROL",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/6fe81aa1-5851-403a-942f-f89e618c6bc1.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/cf1919a3-010c-4247-b840-60fb3e5f77d3.webp"
     },
     {
-        "match_id": "8cc896e3-7fd1-4fde-bfa3-e477942b354f",
-        "status": "fixture",
-        "tournament": "Big Bash League",
-        "time_left": "42h: 46m: 22s",
-        "team1_name": "HEA",
-        "team2_name": "STR",
-        "team1": "https://lh3.googleusercontent.com/32ZsxyNjI3fqB0URuMTkrkDRkWbpO5952ZOPapE5iozsD4ksLZ5gSBuj9WfXaXDysnI=w2400",
-        "team2": "https://lh5.googleusercontent.com/wXSpTOWIJEBU6DO15gJMIj7665kwd8ST7S2_9oJcw8HB24FnSgYIO2U8EcVfRKrUImA=w2400"
+        "match_id": "8d05c3ca-96a2-4d55-8752-7b5ce25c1c6c",
+        "status": "result",
+        "time_left": "06h: 13m: 35s",
+        "tournament": "OTE Regular Season",
+        "team1_name": "CHS",
+        "team2_name": "RWE",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/df7b500b-4f2c-455d-a154-110e5c8f4e78.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/2251d35a-ac66-4927-b057-c19781e4705e.webp"
     },
     {
-        "match_id": "8cc896e3-7fd1-4fde-bfa3-e477942b354b",
-        "status": "fixture",
-        "tournament": "Big Bash League",
-        "time_left": "46h: 03m: 28s",
-        "team1_name": "THU",
-        "team2_name": "REN",
-        "team1": "https://lh6.googleusercontent.com/C-PtvhFuPtVqEhjXzSYn3LbVGr1RmHJwyRBInW3MGjY3rufda1OWGorzJAYp0k-2tHc=w2400",
-        "team2": "https://lh3.googleusercontent.com/ZofZi5xgjfoVVNBhHc7O31Swpht1vJwgBJshHz_h9er_czggwiF8bx5yjLs4dNoVn4k=w2400"
+        "match_id": "18057f25-46d6-4e65-aa5b-636d2eb6e7da",
+        "status": "result",
+        "tournament": "OTE Regular Season",
+        "time_left": "22h: 19m: 12s",
+        "team1_name": "BLU",
+        "team2_name": "CTY",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/8ec33d5e-9151-438a-b4e4-d9b5a65d50cf.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/a8db0c2f-90a0-4b16-bbdf-abc057cd6111.webp"
     },
     {
-        "match_id": "8cc896e3-7fd1-4fde-bfa3-e477942b354a",
-        "status": "fixture",
-        "tournament": "Caribbean Premier League",
-        "time_left": "52h: 21m: 19s",
-        "team1_name": "TKR",
-        "team2_name": "SLK",
-        "team1": "https://lh5.googleusercontent.com/6UjCqURT8TDTgXl6eXNJB92s0SaLNahXIz5qmkMufxdcx-Mj2MM8W7YvZU2Mj_nSg_M=w2400",
-        "team2": "https://lh5.googleusercontent.com/XPVjgg7to29bbD0HMY0vzJG2facVgSUTwok_uyZbMCMfvjxeMzqyyPk-QOi1E63r1bo=w2400"
+        "match_id": "18057f25-46d6-4e65-aa5b-636d2eb6e7da",
+        "status": "result",
+        "tournament": "OTE Regular Season",
+        "time_left": "22h: 19m: 12s",
+        "team1_name": "JLY",
+        "team2_name": "ROL",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/ba704c6c-5ce1-49e9-9b95-0ad4287a66fa.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/cf1919a3-010c-4247-b840-60fb3e5f77d3.webp"
     },
     {
-        "match_id": "8cc896e3-7fd1-4fde-bfa3-e477942b354g",
-        "status": "fixture",
-        "tournament": "Caribbean Premier League",
-        "time_left": "56h: 45m: 07s",
-        "team1_name": "BAR",
-        "team2_name": "JAM",
-        "team1": "https://lh5.googleusercontent.com/ljDVK54WWsUd1P3RkSRTHSFNer65NF1VftKwtikgmL8AHQjzHMJKHZp1bZA475otgh8=w2400",
-        "team2": "https://lh6.googleusercontent.com/zmi0V9RooR6kthdSghB58675SxGnTrM7YrbjOhDE_BUpl070-9NwJJCcm_8U8xW8yxE=w2400"
-    },
+        "match_id": "18057f25-46d6-4e65-aa5b-636d2eb6e7da",
+        "status": "result",
+        "tournament": "OTE Regular Season",
+        "time_left": "22h: 19m: 12s",
+        "team1_name": "DDS",
+        "team2_name": "ROL",
+        "team1": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/6fe81aa1-5851-403a-942f-f89e618c6bc1.webp",
+        "team2": "https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/cf1919a3-010c-4247-b840-60fb3e5f77d3.webp"
+    }
 ]
 
 export const contestData = [
@@ -147,7 +147,7 @@ export const contestData = [
 ]
 
 export const completedMatchData = [
-    { "team1": require('../assets/images/flagindia.jpeg'), "team2": require('../assets/images/flagengland.png'), 'tournament': 'T20 World Cup', "time_left": "06h: 13m: 32s", "team1_name": "IND", "team2_name": "ENG" },
+    { "team1": require('../assets/images/flagindia.jpeg'), "team2": require('../assets/images/flagengland.png'), 'tournament': 'T20 World Cup', "time_left": "06h: 13m: 32s", "team1_name": "CHS", "team2_name": "ENG" },
     { "team1": require('../assets/images/flagafrica.jpeg'), "team2": require('../assets/images/flagaustralia.jpeg'), 'tournament': 'T20 World Cup', "time_left": "22h: 19m: 12s", "team1_name": "RSA", "team2_name": "AUS" },
 ]
 
@@ -195,3 +195,9 @@ export const playersdata = [
     { id: 28, "playerName": "Sam Curran", "teamName": "ENG", "fantasyPoints": "135", "credits": 9.0, "role": "AR", "image": "", "isCaptain": false, "isViceCaptain": false },
 
 ]
+// [{"match_id":"8cc896e3-7fd1-4fde-bfa3-e477942b354f",
+//     "player_id":"f4f04183-23e9-4605-a475-00b0982a5f43",
+//     "team_name":"Auckland","player_name":
+//     "William O Donnell","role":"Batsman",
+//     "battingStyle":null,
+//     "bowlingStyle": "Right-arm offbreak","country":"New Zealand","playerImg":"https://h.cricapi.com/img/icon512.png","fantasy_points":"0","credits":"9","playing_11":"0"}
