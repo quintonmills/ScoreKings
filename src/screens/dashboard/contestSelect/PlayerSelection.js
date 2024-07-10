@@ -35,7 +35,7 @@ const PlayerSelection = (props) => {
     }, [])
 
     const getPlayerList = () => {
-        fetch('https://60a61d65c0c1fd00175f546a.mockapi.io/library/cvb').then((res) => {
+        fetch('https://668877670ea28ca88b854c39.mockapi.io/library/cvb').then((res) => {
             return res.json()
         }).then((response) => {
             console.log(response)
@@ -47,7 +47,7 @@ const PlayerSelection = (props) => {
     const addItem = async (item, index) => {
         console.log(team1, team2)
         let data = playerList;
-        if (item.role == "WK-Batsman") {
+        if (item.role == "guard") {
             if (Keepercount === 1) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
@@ -351,7 +351,7 @@ const PlayerSelection = (props) => {
         return (
             <View>
                 {
-                    item.role === "WK-Batsman" ? (
+                    item.role === "guard" ? (
                         <View style={{ backgroundColor: backgroundColor, flexDirection: 'row', alignItems: 'center', height: verticalScale(50), width: scale(360), paddingHorizontal: scale(20), }}>
                             <View style={{}}>
                                 <Image source={{ uri: item.playerImg }} style={{ width: scale(30), height: scale(30), borderRadius: verticalScale(100), resizeMode: "stretch" }} />
@@ -605,7 +605,7 @@ const PlayerSelection = (props) => {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: verticalScale(30), elevation: 1, backgroundColor: colors.white, paddingHorizontal: scale(30) }}>
 
                     <TouchableOpacity onPress={() => { setkeeperTab(true), setbatsmanTab(false), setbowlerTab(false), setAllrounderTab(false) }} style={{ justifyContent: 'center', alignItems: 'center', borderBottomWidth: verticalScale(3), borderColor: KeeperTab ? colors.primary_blue : 'white', height: verticalScale(30) }} >
-                        <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: KeeperTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >WK({Keepercount})</Text>
+                        <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: KeeperTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >G({Keepercount})</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => { setkeeperTab(false), setbatsmanTab(true), setbowlerTab(false), setAllrounderTab(false) }} style={{ justifyContent: 'center', alignItems: 'center', borderBottomWidth: verticalScale(3), borderColor: batsmanTab ? colors.primary_blue : 'white', height: verticalScale(30) }} >
