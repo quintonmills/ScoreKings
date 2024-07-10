@@ -82,7 +82,7 @@ const PlayerSelection = (props) => {
 
             }
         }
-        if (item.role == "Batsman") {
+        if (item.role == "forward") {
             if (batsmancount == 6) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
@@ -137,7 +137,7 @@ const PlayerSelection = (props) => {
                 }
             }
         }
-        if (item.role == "Bowler") {
+        if (item.role == "center") {
             if (bowlercount == 4) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
@@ -390,7 +390,7 @@ const PlayerSelection = (props) => {
         return (
             <View>
                 {
-                    item.role === "Batsman" ? (
+                    item.role === "forward" ? (
                         <View style={{ backgroundColor: backgroundColor, flexDirection: 'row', alignItems: 'center', height: verticalScale(50), width: scale(360), paddingHorizontal: scale(20), }}>
                             <View style={{}}>
                                 <Image source={{ uri: item.playerImg }} style={{ width: scale(30), height: scale(30), borderRadius: verticalScale(100), resizeMode: "stretch" }} />
@@ -430,7 +430,7 @@ const PlayerSelection = (props) => {
         return (
             <View>
                 {
-                    item.role === "Bowler" ? (
+                    item.role === "center" ? (
                         <View style={{ backgroundColor: backgroundColor, flexDirection: 'row', alignItems: 'center', height: verticalScale(50), width: scale(360), paddingHorizontal: scale(20), }}>
                             <View style={{}}>
                                 <Image source={{ uri: item.playerImg }} style={{ width: scale(30), height: scale(30), borderRadius: verticalScale(100), resizeMode: "stretch" }} />
@@ -609,16 +609,13 @@ const PlayerSelection = (props) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => { setkeeperTab(false), setbatsmanTab(true), setbowlerTab(false), setAllrounderTab(false) }} style={{ justifyContent: 'center', alignItems: 'center', borderBottomWidth: verticalScale(3), borderColor: batsmanTab ? colors.primary_blue : 'white', height: verticalScale(30) }} >
-                        <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: batsmanTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >BAT({batsmancount})</Text>
+                        <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: batsmanTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >F({batsmancount})</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => { setkeeperTab(false), setbatsmanTab(false), setbowlerTab(true), setAllrounderTab(false) }} style={{ justifyContent: 'center', alignItems: 'center', borderBottomWidth: verticalScale(3), borderColor: bowlerTab ? colors.primary_blue : 'white', height: verticalScale(30) }} >
-                        <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: bowlerTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >BOWL({bowlercount})</Text>
+                        <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: bowlerTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >C({bowlercount})</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => { setkeeperTab(false), setbatsmanTab(false), setbowlerTab(false), setAllrounderTab(true) }} style={{ justifyContent: 'center', alignItems: 'center', borderBottomWidth: verticalScale(3), borderColor: AllrounderTab ? colors.primary_blue : 'white', height: verticalScale(30) }} >
-                        <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: AllrounderTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >AR({Allroundercount})</Text>
-                    </TouchableOpacity>
 
                 </View>
             </View>
