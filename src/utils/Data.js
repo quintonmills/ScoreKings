@@ -139,9 +139,9 @@ export const matchdata = [
 ]
 
 export const contestData = [
-    { "prize": "4,00,00,000", "joining_fee": "20", "entries": "20,00,000", "contest_status": 60, "winners": "4,00,000", "joined_status": "Joined with 6 Teams" },
-    { "prize": "1,00,00,000", "joining_fee": "20", "entries": "5,00,000", "contest_status": 75, "winners": "1,00,000", "joined_status": "Joined with 2 Teams" },
-    { "prize": "20,00,000", "joining_fee": "80", "entries": "25,000", "contest_status": 20, "winners": "5,000", "joined_status": "Joined with 1 Team" },
+    { "prize": "40,000,000", "joining_fee": "20", "entries": "2,000,000", "contest_status": 60, "winners": "400,000", "joined_status": "Joined with 6 Teams" },
+    { "prize": "10,000,000", "joining_fee": "20", "entries": "500,000", "contest_status": 75, "winners": "100,000", "joined_status": "Joined with 2 Teams" },
+    { "prize": "2,000,000", "joining_fee": "80", "entries": "25,000", "contest_status": 20, "winners": "5,000", "joined_status": "Joined with 1 Team" },
     { "prize": "5,000", "joining_fee": "25", "entries": "200", "contest_status": 20, "winners": "20", "joined_status": "Joined with 3 Teams" },
     { "prize": "400", "joining_fee": "10", "entries": "40", "contest_status": 90, "winners": "5", "joined_status": "Joined with 1 Team" }
 ]
@@ -157,7 +157,7 @@ export const Livematchdata = [
     { "team1": require('../assets/images/flagindia.jpeg'), "team2": require('../assets/images/flagengland.png'), 'tournament': 'T20 World Cup', "time_left": "06h: 13m: 32s" },
 ]
 
-export const bannercarouseldata = [
+export const bannercarouseldata = [ //can we remove this ?
     { "id": 1, "bannerredirecturl": "PlayerScreen", "ismovie": true, "url": require("../assets/images/carousel1.png"), "name": "Forrest Gump", "genre": "Drama, Romance", "language": "English", "duration": "2 h 22 min", "size": "712MB", },
     { "id": 2, "bannerredirecturl": "PlayerScreen", "ismovie": true, "url": require("../assets/images/carousel2.jpeg"), "name": "The Godfather", "genre": "Crime, Drama", "language": "English", "duration": "2 h 55 min", "size": "236 Episodes", },
     { "id": 3, "bannerredirecturl": "PlayerScreen", "ismovie": true, "url": require("../assets/images/carousel3.jpeg"), "name": "Life Of Pi", "genre": "Adventure Drama", "language": "English", "duration": "2 h 7 min", "size": "26 Episodes", },
@@ -195,9 +195,3 @@ export const playersdata = [
     { id: 28, "playerName": "Sam Curran", "teamName": "ENG", "fantasyPoints": "135", "credits": 9.0, "role": "AR", "image": "", "isCaptain": false, "isViceCaptain": false },
 
 ]
-// [{"match_id":"8cc896e3-7fd1-4fde-bfa3-e477942b354f",
-//     "player_id":"f4f04183-23e9-4605-a475-00b0982a5f43",
-//     "team_name":"Auckland","player_name":
-//     "William O Donnell","role":"Batsman",
-//     "battingStyle":null,
-//     "bowlingStyle": "Right-arm offbreak","country":"New Zealand","playerImg":"https://h.cricapi.com/img/icon512.png","fantasy_points":"0","credits":"9","playing_11":"0"}
