@@ -616,7 +616,6 @@ const PlayerSelection = (props) => {
                         <Text style={{ textAlign: 'center', fontFamily: constants.OPENSANS_FONT_BOLD, color: bowlerTab ? colors.primary_blue : colors.greyColour, fontSize: scaleFont(14), marginTop: verticalScale(4) }} >C({bowlercount})</Text>
                     </TouchableOpacity>
 
-
                 </View>
             </View>
 
