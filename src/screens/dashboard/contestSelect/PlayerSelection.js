@@ -48,7 +48,7 @@ const PlayerSelection = (props) => {
         console.log(team1, team2)
         let data = playerList;
         if (item.role == "guard") {
-            if (Keepercount === 1) {
+            if (Keepercount === 2) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
                     data.splice(data.findIndex(e => e.player_id === item.player_id), 1);
@@ -61,7 +61,7 @@ const PlayerSelection = (props) => {
                     setcredits(credits + item.credits)
 
                 } else {
-                    Alert.alert("You can Select only 1 Keeper")
+                    Alert.alert("You can select two guards")
                 }
             }
             else {
@@ -83,7 +83,7 @@ const PlayerSelection = (props) => {
             }
         }
         if (item.role == "forward") {
-            if (batsmancount == 6) {
+            if (batsmancount == 2) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
                     data.splice(data.findIndex(e => e.player_id === item.player_id), 1);
@@ -94,7 +94,7 @@ const PlayerSelection = (props) => {
                     setcredits(credits + item.credits)
 
                 } else {
-                    Alert.alert("You can Select only 6 batsman")
+                    Alert.alert("You can select two fowards")
                 }
             } else {
                 if (item.isSelected == true) {
@@ -127,7 +127,7 @@ const PlayerSelection = (props) => {
 
                     } else {
                         if (Keepercount == 0) {
-                            Alert.alert("Please Select 1 Keeper First")
+                            Alert.alert("Please Select 2 guards")
                         }
                         else {
                             Alert.alert("Team Full")
@@ -138,7 +138,7 @@ const PlayerSelection = (props) => {
             }
         }
         if (item.role == "center") {
-            if (bowlercount == 4) {
+            if (bowlercount == 1) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
                     data.splice(data.findIndex(e => e.player_id === item.player_id), 1);
@@ -150,7 +150,7 @@ const PlayerSelection = (props) => {
 
 
                 } else {
-                    Alert.alert("You can Select only 4 bowler")
+                    Alert.alert("You can select 1 center")
                 }
             } else {
                 if (item.isSelected == true) {
@@ -221,9 +221,6 @@ const PlayerSelection = (props) => {
                                         } else {
                                             Alert.alert("You do not have sufficient credit points")
                                         }
-
-
-
                                     } else {
                                         Alert.alert("Team Full")
 
@@ -234,104 +231,6 @@ const PlayerSelection = (props) => {
 
                     }
 
-                }
-            }
-        }
-        if (item.role == "Batting Allrounder" || item.role == "Bowling Allrounder") {
-            if (Allroundercount == 4) {
-                if (item.isSelected == true) {
-                    playerSelectedcheck(index)
-                    data.splice(data.findIndex(e => e.player_id === item.player_id), 1);
-                    setplayerList([...data])
-                    setAllroundercount(Allroundercount - 1)
-                    setplayercount(playercount - 1)
-                    item.team_name == team2 ? setteam2count(team2count - 1) : setteam1count(team1count - 1)
-                    setcredits(credits + item.credits)
-
-
-                } else {
-                    Alert.alert("You can Select only 4 All Rounders")
-                }
-            } else {
-                if (item.isSelected == true) {
-                    playerSelectedcheck(index)
-                    data.splice(data.findIndex(e => e.player_id === item.player_id), 1);
-                    setplayerList([...data])
-                    setAllroundercount(Allroundercount - 1)
-                    setplayercount(playercount - 1)
-                    item.team_name == team2 ? setteam2count(team2count - 1) : setteam1count(team1count - 1)
-                    setcredits(credits + item.credits)
-
-
-                }
-                else {
-                    if (batsmancount >= 3 && bowlercount >= 2 && Keepercount == 1 && playercount < 11) {
-                        if (credits == 0 || credits - item.credits >= 0) {
-                            let newdata = data.concat(item)
-                            const arUnique = newdata.filter((a, i) => newdata.findIndex((s) => a.player_id === s.player_id) === i)
-                            setplayerList([...arUnique])
-                            playerSelectedcheck(index)
-                            setplayercount(playercount + 1)
-                            setAllroundercount(Allroundercount + 1)
-                            item.team_name == team2 ? setteam2count(team2count + 1) : setteam1count(team1count + 1)
-                            setcredits(credits - item.credits)
-                        } else {
-                            Alert.alert("You do not have sufficient credit points")
-                        }
-
-
-
-                    } else {
-                        if (batsmancount < 3) {
-                            if (bowlercount < 2) {
-                                if (Keepercount == 0) {
-                                    Alert.alert("Please Select 1 Keeper First")
-                                } else {
-                                    Alert.alert("Please Select atleast 2 Bowlers First")
-                                }
-                            } else {
-                                if (Keepercount == 0) {
-                                    Alert.alert("Please Select 1 Keeper First")
-                                } else {
-                                    Alert.alert("Please Select atleast 3 Batsman First")
-                                }
-                            }
-                        } else {
-                            if (bowlercount < 2) {
-                                if (Keepercount == 0) {
-                                    Alert.alert("Please Select 1 Keeper First")
-                                } else {
-                                    Alert.alert("Please Select atleast 2 Bowlers First")
-                                }
-                            } else {
-                                if (Keepercount == 0) {
-                                    Alert.alert("Please Select 1 Keeper First")
-                                } else {
-                                    if (playercount < 11) {
-                                        if (credits == 0 || credits - item.credits >= 0) {
-                                            let newdata = data.concat(item)
-                                            const arUnique = newdata.filter((a, i) => newdata.findIndex((s) => a.player_id === s.player_id) === i)
-                                            setplayerList([...arUnique])
-                                            playerSelectedcheck(index)
-                                            setplayercount(playercount + 1)
-                                            setAllroundercount(Allroundercount + 1)
-                                            item.team_name == team2 ? setteam2count(team2count + 1) : setteam1count(team1count + 1)
-                                            setcredits(credits - item.credits)
-                                        } else {
-                                            Alert.alert("You do not have sufficient credit points")
-                                        }
-
-
-
-                                    } else {
-                                        Alert.alert("Team Full")
-
-                                    }
-                                }
-                            }
-                        }
-
-                    }
                 }
             }
         }
@@ -622,7 +521,7 @@ const PlayerSelection = (props) => {
             <View style={{ backgroundColor: '#f5f7fb', height: verticalScale(40), width: scale(360), alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: colors.black, fontSize: scaleFont(12), fontFamily: constants.OPENSANS_FONT_MEDIUM }}>
                     {
-                        KeeperTab ? "You can select only 1 Wicket Keeper" : batsmanTab ? "You can select 3-6 batsman." : bowlerTab ? "You can pick 2-4 bowler" : "You can pick 2-4 All Rounder"
+                        KeeperTab ? "You can select 2 guards" : batsmanTab ? "You can select 2 fowards" : bowlerTab ? "You can select 1 center" : "You can pick 2-4 All Rounder"
                     }
                 </Text>
             </View>
