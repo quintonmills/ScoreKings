@@ -246,7 +246,7 @@ const PlayerSelection = (props) => {
 
     const renderkeeperItem = ({ item, index }) => {
         const backgroundColor = item.isSelected === true ? "#fff4dd" : colors.white;
-        f
+
         return (
             <View>
                 {
