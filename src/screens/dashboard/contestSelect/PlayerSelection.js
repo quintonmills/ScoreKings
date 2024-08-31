@@ -47,8 +47,8 @@ const PlayerSelection = (props) => {
     const addItem = async (item, index) => {
         console.log(team1, team2)
         let data = playerList;
-        if (item.role == "guard") {
-            if (Keepercount === 2) {
+        if (item.role == "WK-Batsman") {
+            if (Keepercount === 1) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
                     data.splice(data.findIndex(e => e.player_id === item.player_id), 1);
@@ -250,7 +250,7 @@ const PlayerSelection = (props) => {
         return (
             <View>
                 {
-                    item.role === "guard" ? (
+                    item.role === "WK-Batsman" ? (
                         <View style={{ backgroundColor: backgroundColor, flexDirection: 'row', alignItems: 'center', height: verticalScale(50), width: scale(360), paddingHorizontal: scale(20), }}>
                             <View style={{}}>
                                 <Image source={{ uri: item.playerImg }} style={{ width: scale(30), height: scale(30), borderRadius: verticalScale(100), resizeMode: "stretch" }} />
