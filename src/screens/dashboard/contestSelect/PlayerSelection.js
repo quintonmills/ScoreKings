@@ -47,7 +47,7 @@ const PlayerSelection = (props) => {
     const addItem = async (item, index) => {
         console.log(team1, team2)
         let data = playerList;
-        if (item.role == "WK-Batsman") {
+        if (item.role == "guard") {
             if (Keepercount === 1) {
                 if (item.isSelected == true) {
                     playerSelectedcheck(index)
@@ -246,11 +246,11 @@ const PlayerSelection = (props) => {
 
     const renderkeeperItem = ({ item, index }) => {
         const backgroundColor = item.isSelected === true ? "#fff4dd" : colors.white;
-
+        f
         return (
             <View>
                 {
-                    item.role === "WK-Batsman" ? (
+                    item.role === "guard" ? (
                         <View style={{ backgroundColor: backgroundColor, flexDirection: 'row', alignItems: 'center', height: verticalScale(50), width: scale(360), paddingHorizontal: scale(20), }}>
                             <View style={{}}>
                                 <Image source={{ uri: item.playerImg }} style={{ width: scale(30), height: scale(30), borderRadius: verticalScale(100), resizeMode: "stretch" }} />
