@@ -65,7 +65,7 @@ const Dashboard = (props) => {
                             size={verticalScale(20)}
                             color={colors.white}
                         />
-                        <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_BOLD, fontSize: scaleFont(18), marginLeft: scale(10) }}>ScoreKings</Text>
+                        <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_BOLD, fontSize: scaleFont(18), marginLeft: scale(10) }}>PitchPlay</Text>
                     </View>
                     <TouchableOpacity onPress={() => props.navigation.navigate('NotificationScreen')}>
                         <Ionicon name="notifications-outline" color='white' size={verticalScale(22)} />

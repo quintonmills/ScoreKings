@@ -30,7 +30,7 @@ const SplashScreen = (props) => {
                             size={verticalScale(80)}
                             color={colors.white}
                         />
-                        <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_EXTRA_BOLD, fontSize: scaleFont(40), marginTop: verticalScale(5) }}>ScoreKings</Text>
+                        <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_EXTRA_BOLD, fontSize: scaleFont(40), marginTop: verticalScale(5) }}>PitchPlay</Text>
                     </View>
 
                 </View>

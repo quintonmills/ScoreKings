@@ -1,4 +1,4 @@
-# Welcome to ScoreKings 👋
+# Welcome to PitchPlay 👋
 
 ## Get started
 

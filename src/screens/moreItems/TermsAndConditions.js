@@ -106,7 +106,7 @@ const TermsAndConditions = (props) => {
                     </Text>
                     <Text style={{ color: colors.text_primary, fontSize: scaleFont(14), fontFamily: constants.OPENSANS_FONT_MEDIUM, marginTop: verticalScale(10), textAlign: "justify" }}>
                         14. Contact Us
-                        If you have any questions about these Terms, please contact us at scorekings@gmail.com.
+                        If you have any questions about these Terms, please contact us at pitchplay@gmail.com.
                     </Text>
 
                 </ScrollView>

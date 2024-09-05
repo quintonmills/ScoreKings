@@ -67,7 +67,7 @@ const MoreItems = (props) => {
     }
 
     const [visible, setVisible] = useState(false);
-    const shareMessage = "Hey ! I have gifted you ₹50 to start playing on ScoreKings. Think you can beat me?  \n1. Download the Scorekings App from here: https://dream11.onelink.me/hNTA/ll5jdi4e \n2. Use my invite code THAKU28043ST \n3. Get ₹200 in discounts  \n\nLet the games begin!"
+    const shareMessage = "Hey ! I have gifted you $50 to start playing on PitchPlay. Think you can beat me?  \n1. Download the PitchPlay App from here: https://dream11.onelink.me/hNTA/ll5jdi4e \n2. Use my invite code THAKU28043ST \n3. Get $200 in discounts  \n\nLet the games begin!"
 
 
     const showModal = () => setVisible(true);
