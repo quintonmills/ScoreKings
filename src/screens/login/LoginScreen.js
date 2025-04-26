@@ -59,20 +59,20 @@ const LoginScreen = ({ navigation }) => {
 
         setTimeout(() => {
             setIsLoading(false);
-            navigation.navigate('Home');
+            navigation.navigate('Playerselection');
         }, 1500);
     };
 
     const handleLogin = () => {
-        if (!email.trim() || !password.trim()) {
-            Alert.alert('Error', 'Please fill all fields');
-            return;
-        }
+        // if (!email.trim() || !password.trim()) {
+        //     Alert.alert('Error', 'Please fill all fields');
+        //     return;
+        // }
 
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
-            Alert.alert('Error', 'Invalid email format');
-            return;
-        }
+        // if (!/^\S+@\S+\.\S+$/.test(email)) {
+        //     Alert.alert('Error', 'Invalid email format');
+        //     return;
+        // }
 
         simulateLogin();
     };
