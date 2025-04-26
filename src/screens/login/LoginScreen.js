@@ -1,85 +1,310 @@
-import React, { useState, } from 'react';
-import { View, Image, ImageBackground, Text, TouchableOpacity, StatusBar, Keyboard } from 'react-native';
-import { colors, constants, fullWidth, scale, scaleFont, verticalScale } from '../../utils';
-import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, Alert, Animated, Platform } from 'react-native';
+// import * as LocalAuthentication from 'expo-local-authentication';
+// import { Ionicons } from 'react-native-vector-icons';
 
+const LoginScreen = ({ navigation }) => {
+    const Background = require("../../assets/images/LoginBackground.png");
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [biometricAvailable, setBiometricAvailable] = useState(false);
+    const buttonScale = new Animated.Value(1);
 
-const LoginScreen = (props) => {
+    // useEffect(() => {
+    //     checkBiometricAvailability();
+    // }, []);
 
-    const [phoneNumber, sethoneNumber] = useState();
+    // const checkBiometricAvailability = async () => {
+    //     const compatible = await LocalAuthentication.hasHardwareAsync();
+    //     const enrolled = await LocalAuthentication.isEnrolledAsync();
+    //     setBiometricAvailable(compatible && enrolled);
+    // };
 
-    const Background = require("../../assets/images/LoginBackground.png")
+    const handleBiometricAuth = async () => {
+        try {
+            const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Authenticate to login',
+                fallbackLabel: 'Enter Password',
+            });
 
+            if (result.success) {
+                simulateLogin();
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Biometric authentication failed');
+        }
+    };
 
-    const handleTextChange = (text) => {
-        sethoneNumber(text)
-    }
+    const simulateLogin = () => {
+        setIsLoading(true);
+        Animated.sequence([
+            Animated.timing(buttonScale, {
+                toValue: 0.95,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+            Animated.timing(buttonScale, {
+                toValue: 1.05,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+            Animated.timing(buttonScale, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        setTimeout(() => {
+            setIsLoading(false);
+            navigation.navigate('Playerselection');
+        }, 1500);
+    };
+
+    const handleLogin = () => {
+        // if (!email.trim() || !password.trim()) {
+        //     Alert.alert('Error', 'Please fill all fields');
+        //     return;
+        // }
+
+        // if (!/^\S+@\S+\.\S+$/.test(email)) {
+        //     Alert.alert('Error', 'Invalid email format');
+        //     return;
+        // }
+
+        simulateLogin();
+    };
+
+    const handleSocialLogin = (provider) => {
+        Alert.alert('Coming Soon', `${provider} login will be available soon`);
+    };
 
     return (
-        <View style={{ flex: 1, backgroundColor: colors.primary_blue }}>
-            <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => Keyboard.dismiss()}>
+        <ImageBackground source={Background} style={styles.backgroundImage}>
+            <View style={styles.container}>
+                <Text style={styles.title}>ScoreKings</Text>
 
-
-                <StatusBar barStyle={"light-content"} backgroundColor={'transparent'} hidden={false} translucent={true}
+                <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    placeholderTextColor="#fff"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                 />
 
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        style={styles.passwordInput}
+                        placeholder="Password"
+                        placeholderTextColor="#fff"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity
+                        style={styles.toggleButton}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        {/* <Ionicons
+                            name={showPassword ? 'eye-off' : 'eye'}
+                            size={24}
+                            color="#fff"
+                        /> */}
+                    </TouchableOpacity>
+                </View>
 
+                <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                    <TouchableOpacity
+                        style={styles.loginButton}
+                        onPress={handleLogin}
+                        disabled={isLoading}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.buttonText}>
+                            {isLoading ? 'Logging in...' : 'Login'}
+                        </Text>
+                    </TouchableOpacity>
+                </Animated.View>
 
-                <ImageBackground source={Background} style={{ width: fullWidth, height: verticalScale(720), alignSelf: 'center', }}>
+                {/* {biometricAvailable && (
+                    <TouchableOpacity
+                        style={styles.biometricButton}
+                        onPress={handleBiometricAuth}
+                    >
+                        <Ionicons
+                            name={Platform.OS === 'ios' ? 'ios-finger-print' : 'md-finger-print'}
+                            size={24}
+                            color="#fff"
+                        />
+                        <Text style={styles.biometricText}>
+                            {Platform.OS === 'ios' ? 'Use FaceID' : 'Use Fingerprint'}
+                        </Text>
+                    </TouchableOpacity>
+                )} */}
 
-                    <View style={{ flex: 1 }}>
-
-                        <View style={{ alignSelf: 'center', justifyContent: 'center', alignItems: 'center', marginTop: verticalScale(100) }}>
-                            <FontAwesome5
-                                name="trophy"
-                                size={verticalScale(80)}
-                                color={colors.white}
-                            />
-
-                            <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_EXTRA_BOLD, fontSize: scaleFont(40) }}>ScoreKings</Text>
-                            <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(12), opacity: 0.5 }}>The Ultimate Hometown Fan Experience</Text>
-                        </View>
-
-                        <View style={{}}>
-                            <View style={{ flexDirection: 'row', width: scale(360), alignItems: 'center', justifyContent: 'space-evenly', alignSelf: 'center', marginTop: verticalScale(220) }}>
-                                <TouchableOpacity onPress={() => props.navigation.navigate("Socialsignin")} style={{ flexDirection: "row", height: verticalScale(50), width: scale(160), backgroundColor: colors.white, borderRadius: verticalScale(6), justifyContent: "center", alignItems: 'center', paddingHorizontal: scale(28) }}>
-                                    <Image source={require("../../assets/images/Google.png")} style={{ height: verticalScale(14), width: verticalScale(14), }} />
-                                    <Text style={{ fontSize: scaleFont(14), marginLeft: scale(20), color: colors.black, fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>Google</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity onPress={() => props.navigation.navigate("Socialsignin")} style={{ flexDirection: 'row', height: verticalScale(50), width: scale(160), backgroundColor: colors.white, borderRadius: verticalScale(6), justifyContent: "center", alignItems: 'center', paddingHorizontal: scale(22) }}>
-                                    <FontAwesome
-                                        name="facebook"
-                                        size={verticalScale(14)}
-                                        color={'#3b5998'}
-                                    />
-                                    <Text style={{ fontSize: scaleFont(14), marginLeft: scale(20), color: colors.black, fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>Facebook</Text>
-                                </TouchableOpacity>
-
-                            </View>
-
-                            <Text style={{ alignSelf: 'center', color: colors.white, fontSize: scaleFont(14), marginTop: verticalScale(14), fontFamily: constants.OPENSANS_FONT_MEDIUM }}>or</Text>
-
-                            <TouchableOpacity onPress={() => props.navigation.navigate('Signin')} style={{ backgroundColor: colors.primary_blue, height: verticalScale(50), width: scale(340), alignSelf: 'center', borderRadius: verticalScale(6), marginTop: verticalScale(14), justifyContent: 'center', alignItems: 'center' }}>
-                                <Text style={{ color: colors.white, fontSize: scaleFont(16), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>Sign in using Email/Mobile</Text>
-                            </TouchableOpacity>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                                <Text style={{ alignSelf: 'center', color: colors.white, fontSize: scaleFont(12), marginTop: verticalScale(14), fontFamily: constants.OPENSANS_FONT_MEDIUM }}>New User? </Text>
-                                <TouchableOpacity onPress={() => props.navigation.navigate("SignupScreen")} style={{ justifyContent: 'center', alignItems: "center", marginTop: verticalScale(12) }} ><Text style={{ alignSelf: 'center', color: colors.primary_blue, fontSize: scaleFont(14), fontFamily: constants.OPENSANS_FONT_MEDIUM, }}>Create an Account </Text></TouchableOpacity>
-                            </View>
-
-                        </View>
-
+                <View style={styles.socialContainer}>
+                    <Text style={styles.socialText}>Or login with</Text>
+                    <View style={styles.socialButtons}>
+                        <TouchableOpacity
+                            style={[styles.socialButton, { backgroundColor: '#4267B2' }]}
+                            onPress={() => handleSocialLogin('Facebook')}
+                        >
+                            {/* <Ionicons name="logo-facebook" size={24} color="#fff" /> */}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.socialButton, { backgroundColor: '#DB4437' }]}
+                            onPress={() => handleSocialLogin('Google')}
+                        >
+                            {/* <Ionicons name="logo-google" size={24} color="#fff" /> */}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.socialButton, { backgroundColor: '#000' }]}
+                            onPress={() => handleSocialLogin('Apple')}
+                        >
+                            {/* <Ionicons name="logo-apple" size={24} color="#fff" /> */}
+                        </TouchableOpacity>
                     </View>
+                </View>
 
-
-                </ImageBackground>
-            </TouchableOpacity>
-
-        </View>
+                <View style={styles.footer}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                        <Text style={styles.footerText}>
+                            Don't have an account? <Text style={styles.linkText}>Sign up</Text>
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+                        <Text style={styles.forgotText}>Forgot password?</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </ImageBackground>
     );
-}
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        padding: 20,
+    },
+    backgroundImage: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
+    title: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 40,
+        color: '#fff',
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 3,
+    },
+    input: {
+        height: 50,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        marginBottom: 15,
+        fontSize: 16,
+        color: '#fff',
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    passwordInput: {
+        flex: 1,
+        height: 50,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        color: '#fff',
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    toggleButton: {
+        position: 'absolute',
+        right: 15,
+    },
+    loginButton: {
+        backgroundColor: '#BA0C2F',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    biometricButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+        marginBottom: 20,
+    },
+    biometricText: {
+        color: '#fff',
+        marginLeft: 10,
+        fontWeight: '500',
+    },
+    socialContainer: {
+        marginVertical: 20,
+        alignItems: 'center',
+    },
+    socialText: {
+        color: '#fff',
+        marginBottom: 15,
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+    },
+    socialButtons: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    socialButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 10,
+    },
+    footer: {
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    footerText: {
+        textAlign: 'center',
+        color: '#fff',
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+    },
+    linkText: {
+        color: '#BA0C2F',
+        fontWeight: 'bold',
+        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    forgotText: {
+        color: '#fff',
+        marginTop: 10,
+        textDecorationLine: 'underline',
+        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    },
+});
 
 export default LoginScreen;
