@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ImageBackground } from 'react-native';
+
 
 const LoginScreen = ({ navigation }) => {
+
+    const Background = require("../../assets/images/LoginBackground.png")
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -31,54 +35,55 @@ const LoginScreen = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container} >
+        <ImageBackground source={Background} style={styles.backgroundImage}>
+            <View style={styles.container} >
+                <Text style={styles.title}> ScoreKings </Text>
 
-            <Text style={styles.title}> ScoreKings </Text>
-
-            < TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-
-            <View style={styles.passwordContainer}>
-                <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword
-                    }
+                < TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                 />
+
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        style={styles.passwordInput}
+                        placeholder="Password"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword
+                        }
+                    />
+                    < TouchableOpacity
+                        style={styles.toggleButton}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <Text style={styles.toggleText}>
+                            {showPassword ? '👁️' : '👁️‍🗨️'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
                 < TouchableOpacity
-                    style={styles.toggleButton}
-                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.loginButton}
+                    onPress={handleLogin}
+                    disabled={isLoading}
                 >
-                    <Text style={styles.toggleText}>
-                        {showPassword ? '👁️' : '👁️‍🗨️'}
+                    <Text style={styles.buttonText}>
+                        {isLoading ? 'Logging in...' : 'Login'}
                     </Text>
                 </TouchableOpacity>
-            </View>
 
-            < TouchableOpacity
-                style={styles.loginButton}
-                onPress={handleLogin}
-                disabled={isLoading}
-            >
-                <Text style={styles.buttonText}>
-                    {isLoading ? 'Logging in...' : 'Login'}
-                </Text>
-            </TouchableOpacity>
-
-            < TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                <Text style={styles.footerText}>
-                    Don't have an account? <Text style={styles.linkText}>Sign up</Text>
-                </Text>
-            </TouchableOpacity>
-        </View>
+                < TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                    <Text style={styles.footerText}>
+                        Don't have an account? <Text style={styles.linkText}>Sign up</Text>
+                    </Text>
+                </TouchableOpacity>
+            </View >
+        </ImageBackground>
     );
 };
 
@@ -95,6 +100,10 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginBottom: 30,
     },
+    backgroundImage: {
+        flex: 1,
+        resizeMode: 'cover', // or 'stretch', 'contain', 'repeat', 'center'
+    },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
@@ -110,6 +119,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         marginBottom: 15,
         fontSize: 16,
+        color: 'red',
     },
     passwordContainer: {
         flexDirection: 'row',
@@ -133,7 +143,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
     },
     loginButton: {
-        backgroundColor: 'hashtag#BA0C2F', // Georgia Bulldogs red
+        backgroundColor: 'hashtag#BA0C2F',
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
