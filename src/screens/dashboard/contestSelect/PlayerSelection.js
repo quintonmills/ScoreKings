@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 
 const PlayerSelection = ({ navigation }) => {
     // Sample player data - replace with your actual data source
@@ -55,7 +57,14 @@ const PlayerSelection = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            {/* Header with back button */}
             <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="chevron-back" size={24} color="hashtag#fff" />
+                </TouchableOpacity>
                 <Text style={styles.headerText}>Select 2 Players</Text>
             </View>
             <View style={styles.statSelector}>

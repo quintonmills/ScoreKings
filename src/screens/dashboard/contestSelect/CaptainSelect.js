@@ -17,7 +17,7 @@ const CaptainSelect = ({ route, navigation }) => {
             id: 'paypal',
             name: 'PayPal',
             icon: 'logo-paypal',
-            iconSelected: 'logo-paypal'
+            iconSelected: 'ios-wallet'
         },
         {
             id: 'crypto',
@@ -45,7 +45,15 @@ const CaptainSelect = ({ route, navigation }) => {
     return (
         <View style={styles.container}>
             {/* Blue header bar */}
+            {/* Header with back button */}
             <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="chevron-back" size={24} color="hashtag#fff" />
+                </TouchableOpacity>
+
                 <Text style={styles.headerText}>PAYMENT</Text>
             </View>
 
