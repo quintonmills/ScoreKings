@@ -1,203 +1,247 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, FlatList, Image, Alert } from 'react-native';
-import { colors, fullWidth, scale, scaleFont, verticalScale, constants } from '../../../utils';
-import CustomSlider from '../../../containers/Carousel/CustomSlider'
-import Icon from 'react-native-vector-icons/FontAwesome';
-import Ionicon from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { carouseldataMovie, continuemovies, genredata, moviesdata, carouseldataSeries, seriesdata, recentseries, toppicksseries, continueseries, MoviesData, SeriesData, matchdata, Livematchdata, playersdata } from '../../../utils/Data';
-import { useSelector } from 'react-redux';
-import LinearGradient from 'react-native-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const CaptainSelect = (props) => {
+const CaptainSelect = ({ route, navigation }) => {
+    const { player1, player2, stat, entryFee } = route.params;
+    const [selectedMethod, setSelectedMethod] = useState(null);
 
-    const [playerList, setplayerList] = useState(props.route.params.playerList)
-    const bowlerCount = props.route.params.bowlerCount;
-    const batsmanCount = props.route.params.batsmanCount;
-    const allRounderCount = props.route.params.allRounderCount;
-    const keeperCount = props.route.params.keeperCount
-    const team1 = props.route.params.team1;
-    const team2 = props.route.params.team2;
-    const [captain, setCaptain] = useState({})
-    const [viceCaptain, setViceCaptain] = useState({})
-    const [captainSelected, setCaptainSelected] = useState(false)
-    const [viceCaptainSelected, setViceCaptainSelected] = useState(false)
+    const paymentMethods = [
+        {
+            id: 'card',
+            name: 'Credit/Debit Card',
+            icon: 'card-outline',
+            iconSelected: 'card'
+        },
+        {
+            id: 'paypal',
+            name: 'PayPal',
+            icon: 'logo-paypal',
+            iconSelected: 'logo-paypal'
+        },
+        {
+            id: 'crypto',
+            name: 'Crypto',
+            icon: 'logo-bitcoin',
+            iconSelected: 'logo-bitcoin'
+        },
+        {
+            id: 'bank',
+            name: 'Bank Transfer',
+            icon: 'bank-outline',
+            iconSelected: 'bank'
+        },
+    ];
 
-    const SelectCaptain = (item, index) => {
-
-        let newdata = playerList
-        for (let i = 0; i < playerList.length; i++) {
-            newdata[i].isCaptain = false
+    const handlePayment = () => {
+        if (!selectedMethod) {
+            Alert.alert('Error', 'Please select a payment method');
+            return;
         }
-        setplayerList([...newdata])
-
-        let data = playerList
-
-        if (data[index].isViceCaptain) {
-            data[index].isViceCaptain = !data[index].isViceCaptain
-            setViceCaptainSelected(false)
-        }
-        data[index].isCaptain = !data[index].isCaptain
-        setplayerList([...data])
-        setCaptain(data[index])
-        setCaptainSelected(true)
-    }
-
-    const SelectViceCaptain = (item, index) => {
-        let newdata = playerList
-        for (let i = 0; i < playerList.length; i++) {
-            newdata[i].isViceCaptain = false
-        }
-        setplayerList([...newdata])
-        let data = playerList
-
-        if (data[index].isCaptain) {
-            data[index].isCaptain = !data[index].isCaptain
-            setCaptainSelected(false)
-        }
-        data[index].isViceCaptain = !data[index].isViceCaptain
-        setplayerList([...data])
-        setViceCaptain(data[index])
-        setViceCaptainSelected(true)
-    }
-
+        Alert.alert('Success', `Payment processed for $${entryFee}`);
+        navigation.navigate('Comparison', { player1, player2, stat });
+    };
 
     return (
-        <View style={{ flex: 1, backgroundColor: colors.white }}>
-            <StatusBar barStyle={"dark-content"} backgroundColor={'transparent'} hidden={false} translucent={true}
-            />
-
-            <View style={{ marginTop: verticalScale(40), flexDirection: 'row', paddingHorizontal: scale(20), alignItems: 'center', }}>
-                <TouchableOpacity onPress={() => { props.navigation.goBack() }} style={{ width: scale(124) }} >
-                    <MaterialCommunityIcons
-                        name="arrow-left"
-                        size={verticalScale(26)}
-                        color={colors.black}
-                    />
-                </TouchableOpacity>
-
-                <View style={{ flexDirection: 'row', width: scale(180), }}>
-                    <MaterialCommunityIcons
-                        name="clock-alert-outline"
-                        size={verticalScale(12)}
-                        color={colors.primary_red}
-                    />
-                    <Text style={{ color: colors.black, fontFamily: constants.OPENSANS_FONT_MEDIUM, fontSize: scaleFont(10) }} > 02h 32m 12s</Text>
-                </View>
-
+        <View style={styles.container}>
+            {/* Blue header bar */}
+            <View style={styles.header}>
+                <Text style={styles.headerText}>PAYMENT</Text>
             </View>
 
-
-            <LinearGradient
-                start={{ x: 1, y: 0.3 }} end={{ x: 1, y: 1 }}
-                colors={[colors.secondary_blue, colors.primary_blue]}
-                style={{
-                    width: scale(360),
-                    height: verticalScale(80),
-                    alignSelf: 'center',
-                    justifyContent: 'center', alignItems: 'center'
-                }}>
-                <View style={{ paddingHorizontal: scale(20), alignItems: 'center', }}>
-                    <Text style={{ fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(16), color: colors.white }} >Choose your captain and vice captain</Text>
-                    <View style={{ flexDirection: 'row', justifyContent: "space-evenly", alignItems: 'center', width: scale(260), marginTop: verticalScale(5) }}>
-                        <View style={{ backgroundColor: colors.white, width: scale(30), height: verticalScale(25), borderRadius: verticalScale(50), justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ color: colors.black, fontSize: scaleFont(14), fontFamily: constants.OPENSANS_FONT_MEDIUM }}>C</Text>
-                        </View>
-                        <Text style={{ fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(12), color: colors.white }} >Gets 2x Points</Text>
-                        <View style={{ backgroundColor: colors.white, width: scale(30), height: verticalScale(25), borderRadius: verticalScale(50), justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ color: colors.black, fontSize: scaleFont(14), fontFamily: constants.OPENSANS_FONT_MEDIUM }}>VC</Text>
-                        </View>
-                        <Text style={{ fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(12), color: colors.white }} >Gets 1.5x Points</Text>
-
+            <View style={styles.content}>
+                {/* Matchup card */}
+                <View style={styles.matchupCard}>
+                    <View style={styles.matchupHeader}>
+                        <Ionicons name="trophy-outline" size={24} color="#BA0C2F" />
+                        <Text style={styles.matchupText}>
+                            {player1.name} vs {player2.name}
+                        </Text>
+                    </View>
+                    <Text style={styles.statText}>Comparing: {stat.toUpperCase()}</Text>
+                    <View style={styles.feeContainer}>
+                        <Ionicons name="pricetag-outline" size={20} color="#1e3f6d" />
+                        <Text style={styles.feeText}>Entry Fee:</Text>
+                        <Text style={styles.amountText}>${entryFee}</Text>
                     </View>
                 </View>
-            </LinearGradient>
-            <View style={{ flexDirection: 'row', backgroundColor: colors.white, elevation: 1, height: verticalScale(30), width: scale(360), alignSelf: 'center', }}>
-                <View style={{ height: verticalScale(30), width: scale(206), justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ color: colors.black, fontSize: scaleFont(10), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>
-                        PLAYERS</Text>
+
+                {/* Payment methods */}
+                <View style={styles.sectionHeader}>
+                    <Ionicons name="wallet-outline" size={20} color="#1e3f6d" />
+                    <Text style={styles.sectionTitle}>SELECT PAYMENT METHOD</Text>
                 </View>
-                <View style={{ height: verticalScale(30), alignItems: 'center', flexDirection: 'row', width: scale(154) }}>
-                    <Text style={{ color: colors.black, fontSize: scaleFont(10), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>
-                        POINTS</Text>
 
-
+                <View style={styles.paymentMethods}>
+                    {paymentMethods.map(method => (
+                        <TouchableOpacity
+                            key={method.id}
+                            style={[
+                                styles.methodButton,
+                                selectedMethod === method.id && styles.selectedMethod
+                            ]}
+                            onPress={() => setSelectedMethod(method.id)}
+                        >
+                            <Ionicons
+                                name={selectedMethod === method.id ? method.iconSelected : method.icon}
+                                size={24}
+                                color={selectedMethod === method.id ? "#BA0C2F" : "#1e3f6d"}
+                            />
+                            <Text style={styles.methodText}>{method.name}</Text>
+                            {selectedMethod === method.id && (
+                                <Ionicons
+                                    name="checkmark-circle"
+                                    size={20}
+                                    color="#BA0C2F"
+                                    style={styles.checkIcon}
+                                />
+                            )}
+                        </TouchableOpacity>
+                    ))}
                 </View>
+
+                {/* Pay button */}
+                <TouchableOpacity
+                    style={styles.payButton}
+                    onPress={handlePayment}
+                >
+                    <Ionicons name="lock-closed-outline" size={20} color="#fff" />
+                    <Text style={styles.payButtonText}>PAY SECURELY - ${entryFee}</Text>
+                </TouchableOpacity>
             </View>
-
-
-            <View style={{ flex: 1, marginBottom: verticalScale(100) }}>
-                <FlatList
-                    data={playerList}
-                    renderItem={({ item, index }) => {
-                        return (
-                            <View style={{ backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', height: verticalScale(50), width: scale(360), paddingHorizontal: scale(20), }}>
-                                <View style={{}}>
-                                    <Image source={{ uri: item.playerImg }} style={{ width: scale(30), height: scale(30), borderRadius: verticalScale(100), resizeMode: "stretch" }} />
-                                </View>
-                                <View style={{ width: scale(160), paddingLeft: scale(15), }}>
-                                    <Text style={{ color: colors.black, fontSize: scaleFont(12), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>{item.player_name}</Text>
-                                    <View style={{ flexDirection: 'row' }}>
-                                        <Text style={{ color: colors.black, fontSize: scaleFont(10), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>
-                                            {item.team_name},</Text>
-                                        <Text style={{ color: colors.black, fontSize: scaleFont(10), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, marginLeft: scale(3) }}>
-                                            {item.role}</Text>
-                                    </View>
-                                </View>
-
-                                <View style={{ width: scale(60), height: verticalScale(30) }}>
-                                    <Text style={{ color: colors.black, fontSize: scaleFont(12), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, marginLeft: scale(4) }}>{item.fantasyPoints}</Text>
-                                </View>
-
-                                <TouchableOpacity onPress={() => SelectCaptain(item, index)} style={{ width: scale(40), height: verticalScale(30) }}>
-                                    <View style={{ backgroundColor: item.isCaptain ? colors.black : colors.white, width: scale(30), height: verticalScale(24), borderRadius: verticalScale(50), borderWidth: 0.25, justifyContent: 'center', alignItems: 'center' }}>
-                                        <Text style={{ color: item.isCaptain ? colors.white : colors.black, fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(12), }}>C</Text>
-                                    </View>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity onPress={() => SelectViceCaptain(item, index)} style={{ width: scale(40), height: verticalScale(30) }}>
-                                    <View style={{ backgroundColor: item.isViceCaptain ? colors.black : colors.white, width: scale(30), height: verticalScale(24), borderRadius: verticalScale(50), borderWidth: 0.25, justifyContent: 'center', alignItems: 'center' }}>
-                                        <Text style={{ color: item.isViceCaptain ? colors.white : colors.black, fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(12), }}>VC</Text>
-                                    </View>
-                                </TouchableOpacity>
-
-                            </View>
-                        )
-                    }}
-                />
-            </View>
-
-
-            {/* <View style={{ position: 'absolute', bottom: 0, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.primary_blue, borderTopLeftRadius: verticalScale(20), borderTopRightRadius: verticalScale(20), height: verticalScale(100), width: scale(360), alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: "space-evenly" }}>
-
-                <TouchableOpacity onPress={() => props.navigation.navigate("TeamPreview", { playerList: playerList, bowlerCount: bowlerCount, batsmanCount: batsmanCount, allRounderCount: allRounderCount, })} style={{ height: verticalScale(50), width: scale(160), borderWidth: 1, justifyContent: 'center', alignItems: 'center', borderColor: colors.primary_blue, backgroundColor: colors.white, borderRadius: verticalScale(6) }}>
-                    <Text style={{ color: colors.primary_blue, fontFamily: constants.OPENSANS_FONT_MEDIUM, fontSize: scaleFont(14) }} >Team Preview</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => props.navigation.navigate("TeamsList", { playerList: playerList, bowlerCount: bowlerCount, batsmanCount: batsmanCount, allRounderCount: allRounderCount, keeperCount: keeperCount, team1: team1, team2: team2 })} style={{ height: verticalScale(50), width: scale(160), justifyContent: 'center', alignItems: 'center', backgroundColor: captainSelected && viceCaptainSelected ? colors.primary_blue : '#dee5ed', borderRadius: verticalScale(6), borderWidth: captainSelected && viceCaptainSelected ? 1 : 0, borderColor: colors.primary_blue }}>
-                    <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_MEDIUM, fontSize: scaleFont(14) }} >Save Team</Text>
-                </TouchableOpacity>
-
-
-            </View> */}
-
-
-            <View style={{ position: 'absolute', bottom: 0, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.primary_blue, borderTopLeftRadius: verticalScale(20), borderTopRightRadius: verticalScale(20), height: verticalScale(100), width: scale(360), alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: "space-evenly" }}>
-
-                <TouchableOpacity onPress={() => props.navigation.navigate("TeamPreview", { playerList: playerList, bowlerCount: bowlerCount, batsmanCount: batsmanCount, allRounderCount: allRounderCount, })} style={{ height: verticalScale(50), width: scale(160), borderWidth: 1, justifyContent: 'center', alignItems: 'center', borderColor: colors.primary_blue, backgroundColor: colors.white, borderRadius: verticalScale(6) }}>
-                    <Text style={{ color: colors.primary_blue, fontFamily: constants.OPENSANS_FONT_MEDIUM, fontSize: scaleFont(14) }} >Team Preview</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => props.navigation.navigate("TeamsList", { playerList: playerList, bowlerCount: bowlerCount, batsmanCount: batsmanCount, allRounderCount: allRounderCount, keeperCount: keeperCount, team1: team1, team2: team2 })} style={{ height: verticalScale(50), width: scale(160), justifyContent: 'center', alignItems: 'center', backgroundColor: captainSelected && viceCaptainSelected ? colors.primary_blue : '#dee5ed', borderRadius: verticalScale(6), borderWidth: captainSelected && viceCaptainSelected ? 1 : 0, borderColor: colors.primary_blue }}>
-                    <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_MEDIUM, fontSize: scaleFont(14) }} >Save Team</Text>
-                </TouchableOpacity>
-
-            </View>
-
-
         </View>
     );
-}
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    header: {
+        backgroundColor: '#1e3f6d',
+        paddingVertical: 16,
+        borderBottomWidth: 3,
+        borderBottomColor: '#BA0C2F',
+        paddingTop: 50,
+    },
+    headerText: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        letterSpacing: 1,
+    },
+    content: {
+        flex: 1,
+        padding: 20,
+    },
+    matchupCard: {
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 24,
+        borderWidth: 1,
+        borderColor: '#e1e5e9',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    matchupHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8,
+    },
+    matchupText: {
+        color: '#1e3f6d',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
+    statText: {
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 12,
+        fontSize: 14,
+    },
+    feeContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    feeText: {
+        color: '#333',
+        marginHorizontal: 8,
+        fontSize: 16,
+    },
+    amountText: {
+        color: '#BA0C2F',
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        paddingLeft: 8,
+    },
+    sectionTitle: {
+        color: '#1e3f6d',
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    paymentMethods: {
+        marginBottom: 24,
+    },
+    methodButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    selectedMethod: {
+        backgroundColor: 'rgba(186, 12, 47, 0.05)',
+        borderColor: '#BA0C2F',
+    },
+    methodText: {
+        color: '#333',
+        fontSize: 16,
+        fontWeight: '500',
+        marginLeft: 16,
+        flex: 1,
+    },
+    checkIcon: {
+        marginLeft: 'auto',
+    },
+    payButton: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#BA0C2F',
+        borderRadius: 8,
+        padding: 16,
+        marginTop: 'auto',
+        shadowColor: '#BA0C2F',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    payButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+        letterSpacing: 0.5,
+        marginLeft: 8,
+    },
+});
 
 export default CaptainSelect;
