@@ -3,16 +3,36 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'rea
 
 const PlayerSelection = ({ navigation }) => {
     // Sample player data - replace with your actual data source
-    const [players, setPlayers] = useState([
-        {
-            id: 1, name: 'Anthony Edwards', team: 'Wolves', ppg: 25.9, apg: 5.1, rpg: 5.5,
-        },
-        { id: 2, name: 'Steph Curry', team: 'Warriors', ppg: 29.4 },
-        // Add more players...
-    ]);
-
+    const [players, setPlayers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selectedPlayers, setSelectedPlayers] = useState([]);
-    const [selectedStat, setSelectedStat] = useState('ppg'); // Points Per Game by default
+    const [selectedStat, setSelectedStat] = useState('ppg');
+
+    // Fetch players from backend
+    useEffect(() => {
+        const fetchPlayers = async () => {
+            try {
+                const response = await fetch('http://localhost:3001/api/players');
+                const data = await response.json();
+                setPlayers(data);
+            } catch (error) {
+                console.error('Error fetching players:', error);
+                Alert.alert('Error', 'Failed to load players');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPlayers();
+    }, []);
+
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <Text>Loading players...</Text>
+            </View>
+        );
+    }
 
     const togglePlayerSelection = (player) => {
         if (selectedPlayers.some(p => p.id === player.id)) {
@@ -24,18 +44,20 @@ const PlayerSelection = ({ navigation }) => {
 
     const startComparison = () => {
         if (selectedPlayers.length === 2) {
-            navigation.navigate('Comparison', {
+            navigation.navigate('CaptainSelect', {  // Changed from 'Comparison' to 'Payment'
                 player1: selectedPlayers[0],
                 player2: selectedPlayers[1],
-                stat: selectedStat
+                stat: selectedStat,
+                entryFee: 10.00 // Example fee - adjust as needed
             });
         }
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Select 2 Players to Compare</Text>
-
+            <View style={styles.header}>
+                <Text style={styles.headerText}>Select 2 Players</Text>
+            </View>
             <View style={styles.statSelector}>
                 <Text style={styles.statTitle}>Compare by:</Text>
                 <TouchableOpacity
@@ -68,7 +90,7 @@ const PlayerSelection = ({ navigation }) => {
                         ]}
                         onPress={() => togglePlayerSelection(player)}
                     >
-                        <Image source={player.image} style={styles.playerImage} />
+                        <Image source={{ uri: player.image }} style={styles.playerImage} />
                         <View style={styles.playerInfo}>
                             <Text style={styles.playerName}>{player.name}</Text>
                             <Text style={styles.playerTeam}>{player.team}</Text>
@@ -85,7 +107,7 @@ const PlayerSelection = ({ navigation }) => {
                 ))}
             </ScrollView>
 
-            {selectedPlayers.length === 2 && (
+            {selectedPlayers.length == 2 && (
                 <TouchableOpacity
                     style={styles.compareButton}
                     onPress={startComparison}
@@ -100,8 +122,7 @@ const PlayerSelection = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'hashtag#f5f5f5',
-        padding: 16,
+        backgroundColor: '#f5f5f5',
     },
     title: {
         fontSize: 24,
@@ -111,6 +132,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     statSelector: {
+        paddingTop: 20,
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 20,
@@ -125,11 +147,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 15,
-        backgroundColor: 'hashtag#ddd',
+        backgroundColor: '#ddd',
         marginHorizontal: 5,
     },
     selectedStat: {
-        backgroundColor: 'hashtag#BA0C2F',
+        backgroundColor: '#BA0C2F',
     },
     statText: {
         color: '#333',
@@ -141,7 +163,7 @@ const styles = StyleSheet.create({
     playerCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'hashtag#fff',
+        backgroundColor: '#fff',
         borderRadius: 10,
         padding: 15,
         marginBottom: 10,
@@ -153,7 +175,7 @@ const styles = StyleSheet.create({
     },
     selectedPlayer: {
         borderWidth: 2,
-        borderColor: 'hashtag#BA0C2F',
+        borderColor: '#BA0C2F',
     },
     playerImage: {
         width: 60,
@@ -175,7 +197,7 @@ const styles = StyleSheet.create({
     },
     playerStat: {
         fontSize: 16,
-        color: 'hashtag#BA0C2F',
+        color: '#BA0C2F',
         fontWeight: 'bold',
         marginTop: 5,
     },
@@ -183,12 +205,12 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: 'hashtag#BA0C2F',
+        backgroundColor: '#BA0C2F',
         justifyContent: 'center',
         alignItems: 'center',
     },
     badgeText: {
-        color: 'hashtag#fff',
+        color: '#fff',
         fontWeight: 'bold',
     },
     compareButton: {
@@ -196,15 +218,29 @@ const styles = StyleSheet.create({
         bottom: 20,
         left: 20,
         right: 20,
-        backgroundColor: 'hashtag#BA0C2F',
+        backgroundColor: '#BA0C2F',
         padding: 15,
         borderRadius: 10,
         alignItems: 'center',
     },
     compareButtonText: {
-        color: 'hashtag#fff',
+        color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    header: {
+        backgroundColor: '#1e3f6d',
+        paddingVertical: 16,
+        borderBottomWidth: 3,
+        borderBottomColor: '#BA0C2F',
+        paddingTop: 50,
+    },
+    headerText: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        letterSpacing: 1,
     },
 });
 
