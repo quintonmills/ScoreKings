@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, Alert, Animated, Platform } from 'react-native';
 // import * as LocalAuthentication from 'expo-local-authentication';
-// import { Ionicons } from 'react-native-vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const LoginScreen = ({ navigation }) => {
     const Background = require("../../assets/images/LoginBackground.png");
@@ -109,11 +109,11 @@ const LoginScreen = ({ navigation }) => {
                         style={styles.toggleButton}
                         onPress={() => setShowPassword(!showPassword)}
                     >
-                        {/* <Ionicons
+                        <Ionicons
                             name={showPassword ? 'eye-off' : 'eye'}
                             size={24}
                             color="#fff"
-                        /> */}
+                        />
                     </TouchableOpacity>
                 </View>
 
@@ -153,19 +153,19 @@ const LoginScreen = ({ navigation }) => {
                             style={[styles.socialButton, { backgroundColor: '#4267B2' }]}
                             onPress={() => handleSocialLogin('Facebook')}
                         >
-                            {/* <Ionicons name="logo-facebook" size={24} color="#fff" /> */}
+                            <Ionicons name="logo-facebook" size={24} color="#fff" />
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.socialButton, { backgroundColor: '#DB4437' }]}
                             onPress={() => handleSocialLogin('Google')}
                         >
-                            {/* <Ionicons name="logo-google" size={24} color="#fff" /> */}
+                            <Ionicons name="logo-google" size={24} color="#fff" />
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.socialButton, { backgroundColor: '#000' }]}
                             onPress={() => handleSocialLogin('Apple')}
                         >
-                            {/* <Ionicons name="logo-apple" size={24} color="#fff" /> */}
+                            <Ionicons name="logo-apple" size={24} color="#fff" />
                         </TouchableOpacity>
                     </View>
                 </View>
