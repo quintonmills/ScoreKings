@@ -1,116 +1,209 @@
 import React from 'react';
-import { View, Text, StatusBar, TouchableOpacity, FlatList, Modal, TextInput, ScrollView } from 'react-native';
-import { colors, scale, scaleFont, verticalScale, constants } from '../../../utils';
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { contestData } from '../../../utils/Data';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
+const ContestSelection = ({ route, navigation }) => {
+ const { player1, player2, stat } = route.params;
 
-const ContestSelection = (props) => {
-    const team1_name = props.route.params.team1_name
-    const team2_name = props.route.params.team2_name
-    const time_left = props.route.params.time_left
-    const team1_img = props.route.params.team1_img
-    const team2_img = props.route.params.team2_img
+ // Determine winner based on stat
+ const winner = player1[stat] > player2[stat] ? player1 : player2;
+ const statName = stat.toUpperCase();
 
-    return (
+ const proceedToPayment = () => {
+ navigation.navigate('Payment', {
+ player1,
+ player2,
+ stat,
+ entryFee: 10.00
+ });
+ };
 
-        <View style={{ flex: 1, backgroundColor: 'white' }}>
-            <StatusBar barStyle={"light-content"} backgroundColor={'transparent'} hidden={false} translucent={true}
-            />
+ return (
+ <View style={styles.container}>
+ {/* Header with back button */}
+ <View style={styles.header}>
+ <TouchableOpacity 
+ style={styles.backButton}
+ onPress={() => navigation.goBack()}
+ >
+ <Ionicons name="chevron-back" size={24} color="hashtag#fff" />
+ </TouchableOpacity>
+ <Text style={styles.headerText}>Matchup Comparison</Text>
+ </View>
 
-            <LinearGradient
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                colors={[colors.secondary_blue, colors.primary_blue]}
-                style={{
-                    width: scale(360),
-                    height: verticalScale(80),
-                    alignSelf: 'center',
-                }}>
-                <View style={{ marginTop: verticalScale(40), flexDirection: 'row', paddingHorizontal: scale(20), alignItems: 'center', justifyContent: 'space-between', }}>
-                    <TouchableOpacity onPress={() => { props.navigation.goBack() }} >
-                        <MaterialCommunityIcons
-                            name="arrow-left"
-                            size={verticalScale(26)}
-                            color={colors.white}
-                        />
-                    </TouchableOpacity>
+ <View style={styles.content}>
+ {/* Stat being compared */}
+ <View style={styles.statBanner}>
+ <Text style={styles.statText}>Comparing: {statName}</Text>
+ </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: scale(220) }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', width: scale(100), justifyContent: 'space-between' }}>
-                            <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(16) }} >{team1_name}</Text>
-                            <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_MEDIUM, fontSize: scaleFont(10) }} >VS</Text>
-                            <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_SEMI_BOLD, fontSize: scaleFont(16) }}  >{team2_name}</Text>
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                            <MaterialCommunityIcons
-                                name="clock-alert-outline"
-                                size={verticalScale(12)}
-                                color={colors.primary_red}
-                            />
-                            <Text style={{ color: colors.white, fontFamily: constants.OPENSANS_FONT_MEDIUM, fontSize: scaleFont(10) }} >  {time_left}</Text>
+ {/* Players comparison */}
+ <View style={styles.playersRow}>
+ {/* Player 1 Card */}
+ <View style={styles.playerCard}>
+ <Image source={{ uri: player1.image }} style={styles.playerImage} />
+ <Text style={styles.playerName}>{player1.name}</Text>
+ <Text style={styles.playerTeam}>{player1.team}</Text>
+ <Text style={styles.statValue}>{player1[stat]}</Text>
+ </View>
 
-                        </View>
-                    </View>
-                </View>
-            </LinearGradient>
+ {/* VS Separator */}
+ <View style={styles.vsContainer}>
+ <Text style={styles.vsText}>VS</Text>
+ </View>
 
+ {/* Player 2 Card */}
+ <View style={styles.playerCard}>
+ <Image source={{ uri: player2.image }} style={styles.playerImage} />
+ <Text style={styles.playerName}>{player2.name}</Text>
+ <Text style={styles.playerTeam}>{player2.team}</Text>
+ <Text style={styles.statValue}>{player2[stat]}</Text>
+ </View>
+ </View>
 
+ {/* Winner banner */}
+ <View style={styles.winnerBanner}>
+ <Ionicons name="trophy" size={24} color="hashtag#FFD700" />
+ <Text style={styles.winnerText}>{winner.name} leads in {statName}</Text>
+ </View>
 
-            <View style={{ flex: 1, backgroundColor: '#f5f7fb', }}>
-                <FlatList
-                    data={contestData}
-                    renderItem={({ item }) => {
-                        return (
-                            <View style={{ marginVertical: verticalScale(20) }}>
-                                <View style={{ backgroundColor: colors.white, width: scale(330), height: verticalScale(100), alignSelf: 'center', borderTopLeftRadius: verticalScale(6), borderTopRightRadius: verticalScale(6) }}>
-                                    <View style={{ flexDirection: 'row', paddingHorizontal: scale(15), alignItems: 'center', justifyContent: 'space-between', marginTop: verticalScale(5) }}>
-                                        <View>
-                                            <Text style={{ color: colors.greyColour, fontSize: scaleFont(12), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>
-                                                Total Prize</Text>
-                                            <Text style={{ color: colors.black, fontSize: scaleFont(18), fontFamily: constants.OPENSANS_FONT_BOLD }}>
-                                                {'\u0024'}{item.prize}</Text>
-                                        </View>
-                                        <TouchableOpacity onPress={() => props.navigation.navigate('Playerselection', { team1_img: team1_img, team2_img: team2_img, team1_name: team1_name, team2_name: team2_name })} style={{ backgroundColor: colors.primary_blue, justifyContent: 'center', alignItems: 'center', borderRadius: verticalScale(6), paddingHorizontal: scale(20), paddingVertical: verticalScale(6) }}>
-                                            <Text style={{ color: colors.white, fontSize: scaleFont(12), fontFamily: constants.OPENSANS_FONT_SEMI_BOLD }}>Join {'\u0024'}{item.joining_fee}</Text>
-                                        </TouchableOpacity>
-                                    </View>
+ {/* Continue button */}
+ <TouchableOpacity 
+ style={styles.continueButton}
+ onPress={proceedToPayment}
+ >
+ <Text style={styles.continueButtonText}>CONTINUE TO PAYMENT</Text>
+ </TouchableOpacity>
+ </View>
+ </View>
+ );
+};
 
-
-                                    <View style={{ backgroundColor: '#f5f7fb', width: scale(302), height: verticalScale(4), borderRadius: verticalScale(20), marginTop: verticalScale(15), marginHorizontal: scale(15) }} />
-
-                                    <View style={{ backgroundColor: colors.green, width: scale((item.contest_status * 302) / 100), height: verticalScale(4), borderRadius: verticalScale(20), marginTop: verticalScale(-4), marginHorizontal: scale(15) }} />
-
-
-                                    <View style={{ flexDirection: 'row', paddingHorizontal: scale(15), alignItems: 'center', justifyContent: 'space-between', marginTop: verticalScale(5) }}>
-                                        <Text style={{ color: colors.black, fontSize: scaleFont(8), fontFamily: constants.OPENSANS_FONT_BOLD }}>
-                                            {item.entries} Entries</Text>
-                                        <Text style={{ color: colors.black, fontSize: scaleFont(8), fontFamily: constants.OPENSANS_FONT_BOLD }}>
-                                            {item.contest_status}% filled</Text>
-                                    </View>
-
-                                </View>
-
-                                <View style={{ backgroundColor: colors.white, width: scale(330), height: verticalScale(30), marginTop: verticalScale(3), alignSelf: 'center', justifyContent: 'center', borderBottomLeftRadius: verticalScale(6), borderBottomRightRadius: verticalScale(6) }}>
-                                    <View style={{ flexDirection: 'row', paddingHorizontal: scale(15), alignItems: 'center', justifyContent: 'space-between', marginTop: verticalScale(5) }}>
-                                        <Text style={{ color: colors.black, fontSize: scaleFont(10), fontFamily: constants.OPENSANS_FONT_BOLD }}>
-                                            {item.winners} Winners</Text>
-                                        <Text style={{ color: colors.black, fontSize: scaleFont(10), fontFamily: constants.OPENSANS_FONT_BOLD }}>
-                                            {item.joined_status}</Text>
-                                    </View>
-
-                                </View>
-                            </View>
-                        )
-                    }}
-                />
-
-
-            </View>
-        </View >
-
-
-    );
-}
+const styles = StyleSheet.create({
+ container: {
+ flex: 1,
+ backgroundColor: 'hashtag#fff',
+ },
+ header: {
+ backgroundColor: 'hashtag#1e3f6d',
+ paddingVertical: 16,
+ borderBottomWidth: 3,
+ borderBottomColor: 'hashtag#BA0C2F',
+ paddingTop: 50,
+ justifyContent: 'center',
+ alignItems: 'center',
+ },
+ headerText: {
+ color: 'hashtag#fff',
+ fontSize: 20,
+ fontWeight: 'bold',
+ letterSpacing: 1,
+ },
+ backButton: {
+ position: 'absolute',
+ left: 15,
+ top: 50,
+ zIndex: 1,
+ padding: 8
+ },
+ content: {
+ flex: 1,
+ padding: 20,
+ },
+ statBanner: {
+ backgroundColor: 'hashtag#f8f9fa',
+ padding: 12,
+ borderRadius: 8,
+ marginBottom: 20,
+ borderWidth: 1,
+ borderColor: 'hashtag#e1e5e9',
+ alignItems: 'center'
+ },
+ statText: {
+ color: 'hashtag#1e3f6d',
+ fontSize: 16,
+ fontWeight: '600',
+ },
+ playersRow: {
+ flexDirection: 'row',
+ justifyContent: 'space-between',
+ marginBottom: 20,
+ },
+ playerCard: {
+ flex: 1,
+ alignItems: 'center',
+ padding: 15,
+ backgroundColor: 'hashtag#f8f9fa',
+ borderRadius: 8,
+ borderWidth: 1,
+ borderColor: 'hashtag#e1e5e9',
+ marginHorizontal: 5,
+ },
+ playerImage: {
+ width: 80,
+ height: 80,
+ borderRadius: 40,
+ borderWidth: 2,
+ borderColor: 'hashtag#1e3f6d',
+ marginBottom: 10,
+ },
+ playerName: {
+ color: 'hashtag#1e3f6d',
+ fontSize: 16,
+ fontWeight: 'bold',
+ textAlign: 'center',
+ marginBottom: 4,
+ },
+ playerTeam: {
+ color: '#666',
+ fontSize: 14,
+ textAlign: 'center',
+ marginBottom: 10,
+ },
+ statValue: {
+ color: 'hashtag#BA0C2F',
+ fontSize: 24,
+ fontWeight: 'bold',
+ },
+ vsContainer: {
+ justifyContent: 'center',
+ paddingHorizontal: 10,
+ },
+ vsText: {
+ color: 'hashtag#1e3f6d',
+ fontSize: 18,
+ fontWeight: 'bold',
+ },
+ winnerBanner: {
+ flexDirection: 'row',
+ alignItems: 'center',
+ justifyContent: 'center',
+ backgroundColor: 'rgba(30, 63, 109, 0.1)',
+ padding: 12,
+ borderRadius: 8,
+ marginBottom: 20,
+ borderWidth: 1,
+ borderColor: 'rgba(186, 12, 47, 0.2)',
+ },
+ winnerText: {
+ color: 'hashtag#1e3f6d',
+ fontSize: 16,
+ fontWeight: '600',
+ marginLeft: 8,
+ },
+ continueButton: {
+ backgroundColor: 'hashtag#BA0C2F',
+ borderRadius: 8,
+ padding: 16,
+ alignItems: 'center',
+ marginTop: 'auto',
+ },
+ continueButtonText: {
+ color: 'hashtag#fff',
+ fontSize: 18,
+ fontWeight: 'bold',
+ letterSpacing: 0.5,
+ },
+});
 
 export default ContestSelection;
