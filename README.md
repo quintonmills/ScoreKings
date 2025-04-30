@@ -28,7 +28,7 @@ that means your metro is not running and you need to run the following command t
 ```bash
         react-native start
    ```
-![alt text](https://github.com/quintonmills/fantasy_sports_app/blob/main/src/assets/images/PresenterScreen.jpg)
-![alt text](https://github.com/quintonmills/fantasy_sports_app/blob/main/src/assets/images/PlayerSelectionScreen.jpg)
-![alt text](https://github.com/quintonmills/fantasy_sports_app/blob/main/src/assets/images/PrizeScreen.jpg)
+![alt text](https://github.com/quintonmills/scorekings/blob/main/src/assets/images/playerselectionscreen.png)
+![alt text](https://github.com/quintonmills/scorekings/blob/main/src/assets/images/comparisonscreen.png)
+![alt text](https://github.com/quintonmills/scorekings/blob/main/src/assets/images/paymentscreen.png)
 
