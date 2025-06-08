@@ -14,9 +14,9 @@ import { colors, verticalScale, scale } from "../utils"
 /* Dashboard Tab */
 import Dashboard from '../screens/dashboard/Dashboard';
 import PlayerSelection from '../screens/dashboard/contestSelect/PlayerSelection';
-import CaptainSelect from '../screens/dashboard/contestSelect/CaptainSelect';
-import TeamsList from '../screens/dashboard/contestSelect/TeamsList';
-import ContestSelection from '../screens/dashboard/contestSelect/ContestSelection';
+import PaymentScreen from '../screens/dashboard/contestSelect/PaymentScreen';
+import ContestSelectionScreen from '../screens/dashboard/contestSelect/ContestSelectionScreen';
+import ContestReviewScreen from '../screens/dashboard/contestSelect/ContestReviewScreen';
 import TeamPreview from '../screens/dashboard/contestSelect/TeamPreview';
 import NotificationScreen from '../screens/dashboard/NotificationScreen';
 
@@ -144,11 +144,11 @@ const AppStack = () => {
 
             {/* Dashboard Screens */}
             <Stack.Screen name="NotificationScreen" component={NotificationScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Contestselection" component={ContestSelection} options={{ headerShown: false }} />
+            <Stack.Screen name="ContestReviewScreen" component={ContestReviewScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Playerselection" component={PlayerSelection} options={{ headerShown: false }} />
             <Stack.Screen name="TeamPreview" component={TeamPreview} options={{ headerShown: false }} />
-            <Stack.Screen name="CaptainSelect" component={CaptainSelect} options={{ headerShown: false }} />
-            <Stack.Screen name="TeamsList" component={TeamsList} options={{ headerShown: false }} />
+            <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="ContestSelectionScreen" component={ContestSelectionScreen} options={{ headerShown: false }} />
 
             {/* Login Screens */}
             <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />

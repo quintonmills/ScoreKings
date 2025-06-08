@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const CaptainSelect = ({ route, navigation }) => {
+const PaymentScreen = ({ route, navigation }) => {
     const { player1, player2, stat, entryFee } = route.params;
     const [selectedMethod, setSelectedMethod] = useState(null);
 
@@ -51,7 +51,7 @@ const CaptainSelect = ({ route, navigation }) => {
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}
                 >
-                    <Ionicons name="chevron-back" size={24} color="hashtag#fff" />
+                    <Ionicons name="chevron-back" size={24} color="#fff" />
                 </TouchableOpacity>
 
                 <Text style={styles.headerText}>PAYMENT</Text>
@@ -252,4 +252,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CaptainSelect;
+export default PaymentScreen;
