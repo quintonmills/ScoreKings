@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const ContestSelection = ({ route, navigation }) => {
+const ContestReviewScreen = ({ route, navigation }) => {
  const { player1, player2, stat } = route.params;
 
  // Determine winner based on stat
@@ -206,4 +206,4 @@ const styles = StyleSheet.create({
  },
 });
 
-export default ContestSelection;
+export default ContestReviewScreen;

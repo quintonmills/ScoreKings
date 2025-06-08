@@ -16,7 +16,7 @@ import Dashboard from '../screens/dashboard/Dashboard';
 import PlayerSelection from '../screens/dashboard/contestSelect/PlayerSelection';
 import PaymentScreen from '../screens/dashboard/contestSelect/PaymentScreen';
 import ContestSelectionScreen from '../screens/dashboard/contestSelect/ContestSelectionScreen';
-import ContestSelection from '../screens/dashboard/contestSelect/ContestSelection';
+import ContestReviewScreen from '../screens/dashboard/contestSelect/ContestReviewScreen';
 import TeamPreview from '../screens/dashboard/contestSelect/TeamPreview';
 import NotificationScreen from '../screens/dashboard/NotificationScreen';
 
@@ -144,7 +144,7 @@ const AppStack = () => {
 
             {/* Dashboard Screens */}
             <Stack.Screen name="NotificationScreen" component={NotificationScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Contestselection" component={ContestSelection} options={{ headerShown: false }} />
+            <Stack.Screen name="ContestReviewScreen" component={ContestReviewScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Playerselection" component={PlayerSelection} options={{ headerShown: false }} />
             <Stack.Screen name="TeamPreview" component={TeamPreview} options={{ headerShown: false }} />
             <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />

@@ -25,8 +25,8 @@ endTime: 'Sunday 11:59 PM'
 }
 ]);
 
-const navigateToPlayerSelection = (contest) => {
-navigation.navigate('PlayerSelection', { contest });
+const navigateToPlayerSelection = () => {
+navigation.navigate('Playerselection');
 };
 
 const navigateToProfile = () => {
@@ -63,7 +63,7 @@ onPress={navigateToProfile}
 <TouchableOpacity
 key={contest.id}
 style={styles.contestCard}
-onPress={() => navigateToPlayerSelection(contest)}
+onPress={() => navigateToPlayerSelection}
 >
 <View style={styles.contestHeader}>
 <Text style={styles.contestTitle}>{contest.title}</Text>

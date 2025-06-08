@@ -46,7 +46,7 @@ const PlayerSelection = ({ navigation }) => {
 
     const startComparison = () => {
         if (selectedPlayers.length === 2) {
-            navigation.navigate('Contestselection', {  // Changed from 'Comparison' to 'Payment'
+            navigation.navigate('ContestReviewScreen', {  // Changed from 'Comparison' to 'Payment'
                 player1: selectedPlayers[0],
                 player2: selectedPlayers[1],
                 stat: selectedStat,
