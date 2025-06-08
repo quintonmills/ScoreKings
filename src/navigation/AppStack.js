@@ -15,7 +15,7 @@ import { colors, verticalScale, scale } from "../utils"
 import Dashboard from '../screens/dashboard/Dashboard';
 import PlayerSelection from '../screens/dashboard/contestSelect/PlayerSelection';
 import PaymentScreen from '../screens/dashboard/contestSelect/PaymentScreen';
-import TeamsList from '../screens/dashboard/contestSelect/TeamsList';
+import ContestSelectionScreen from '../screens/dashboard/contestSelect/ContestSelectionScreen';
 import ContestSelection from '../screens/dashboard/contestSelect/ContestSelection';
 import TeamPreview from '../screens/dashboard/contestSelect/TeamPreview';
 import NotificationScreen from '../screens/dashboard/NotificationScreen';
@@ -148,7 +148,7 @@ const AppStack = () => {
             <Stack.Screen name="Playerselection" component={PlayerSelection} options={{ headerShown: false }} />
             <Stack.Screen name="TeamPreview" component={TeamPreview} options={{ headerShown: false }} />
             <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="TeamsList" component={TeamsList} options={{ headerShown: false }} />
+            <Stack.Screen name="ContestSelectionScreen" component={ContestSelectionScreen} options={{ headerShown: false }} />
 
             {/* Login Screens */}
             <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />

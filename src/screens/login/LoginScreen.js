@@ -59,7 +59,7 @@ const LoginScreen = ({ navigation }) => {
 
         setTimeout(() => {
             setIsLoading(false);
-            navigation.navigate('Playerselection');
+            navigation.navigate('ContestSelectionScreen')
         }, 1500);
     };
 
