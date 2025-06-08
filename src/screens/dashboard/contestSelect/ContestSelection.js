@@ -10,7 +10,7 @@ const ContestSelection = ({ route, navigation }) => {
  const statName = stat.toUpperCase();
 
  const proceedToPayment = () => {
- navigation.navigate('Payment', {
+ navigation.navigate('PaymentScreen', {
  player1,
  player2,
  stat,
@@ -26,9 +26,9 @@ const ContestSelection = ({ route, navigation }) => {
  style={styles.backButton}
  onPress={() => navigation.goBack()}
  >
- <Ionicons name="chevron-back" size={24} color="hashtag#fff" />
+ <Ionicons name="chevron-back" size={24} color="#fff" />
  </TouchableOpacity>
- <Text style={styles.headerText}>Matchup Comparison</Text>
+ <Text style={styles.headerText}>Matchup</Text>
  </View>
 
  <View style={styles.content}>
@@ -63,7 +63,7 @@ const ContestSelection = ({ route, navigation }) => {
 
  {/* Winner banner */}
  <View style={styles.winnerBanner}>
- <Ionicons name="trophy" size={24} color="hashtag#FFD700" />
+ <Ionicons name="trophy" size={24} color="#FFD700" />
  <Text style={styles.winnerText}>{winner.name} leads in {statName}</Text>
  </View>
 
@@ -82,19 +82,19 @@ const ContestSelection = ({ route, navigation }) => {
 const styles = StyleSheet.create({
  container: {
  flex: 1,
- backgroundColor: 'hashtag#fff',
+ backgroundColor: '#fff',
  },
  header: {
- backgroundColor: 'hashtag#1e3f6d',
+ backgroundColor: '#1e3f6d',
  paddingVertical: 16,
  borderBottomWidth: 3,
- borderBottomColor: 'hashtag#BA0C2F',
+ borderBottomColor: '#BA0C2F',
  paddingTop: 50,
  justifyContent: 'center',
  alignItems: 'center',
  },
  headerText: {
- color: 'hashtag#fff',
+ color: '#fff',
  fontSize: 20,
  fontWeight: 'bold',
  letterSpacing: 1,
@@ -111,16 +111,16 @@ const styles = StyleSheet.create({
  padding: 20,
  },
  statBanner: {
- backgroundColor: 'hashtag#f8f9fa',
+ backgroundColor: '#f8f9fa',
  padding: 12,
  borderRadius: 8,
  marginBottom: 20,
  borderWidth: 1,
- borderColor: 'hashtag#e1e5e9',
+ borderColor: '#e1e5e9',
  alignItems: 'center'
  },
  statText: {
- color: 'hashtag#1e3f6d',
+ color: '#1e3f6d',
  fontSize: 16,
  fontWeight: '600',
  },
@@ -133,10 +133,10 @@ const styles = StyleSheet.create({
  flex: 1,
  alignItems: 'center',
  padding: 15,
- backgroundColor: 'hashtag#f8f9fa',
+ backgroundColor: '#f8f9fa',
  borderRadius: 8,
  borderWidth: 1,
- borderColor: 'hashtag#e1e5e9',
+ borderColor: '#e1e5e9',
  marginHorizontal: 5,
  },
  playerImage: {
@@ -144,11 +144,11 @@ const styles = StyleSheet.create({
  height: 80,
  borderRadius: 40,
  borderWidth: 2,
- borderColor: 'hashtag#1e3f6d',
+ borderColor: '#1e3f6d',
  marginBottom: 10,
  },
  playerName: {
- color: 'hashtag#1e3f6d',
+ color: '#1e3f6d',
  fontSize: 16,
  fontWeight: 'bold',
  textAlign: 'center',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
  marginBottom: 10,
  },
  statValue: {
- color: 'hashtag#BA0C2F',
+ color: '#BA0C2F',
  fontSize: 24,
  fontWeight: 'bold',
  },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
  paddingHorizontal: 10,
  },
  vsText: {
- color: 'hashtag#1e3f6d',
+ color: '#1e3f6d',
  fontSize: 18,
  fontWeight: 'bold',
  },
@@ -186,20 +186,20 @@ const styles = StyleSheet.create({
  borderColor: 'rgba(186, 12, 47, 0.2)',
  },
  winnerText: {
- color: 'hashtag#1e3f6d',
+ color: '#1e3f6d',
  fontSize: 16,
  fontWeight: '600',
  marginLeft: 8,
  },
  continueButton: {
- backgroundColor: 'hashtag#BA0C2F',
+ backgroundColor: '#BA0C2F',
  borderRadius: 8,
  padding: 16,
  alignItems: 'center',
  marginTop: 'auto',
  },
  continueButtonText: {
- color: 'hashtag#fff',
+ color: '#fff',
  fontSize: 18,
  fontWeight: 'bold',
  letterSpacing: 0.5,
