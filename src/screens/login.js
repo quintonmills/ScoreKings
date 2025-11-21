@@ -19,6 +19,7 @@ const LoginScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const buttonScale = new Animated.Value(1);
+  const Background = require('../assets/LoginBackground.png');
 
   const simulateLogin = () => {
     setIsLoading(true);
@@ -65,7 +66,7 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground style={styles.backgroundImage}>
+    <ImageBackground source={Background} style={styles.backgroundImage}>
       <View style={styles.container}>
         <Text style={styles.title}>ScoreKings</Text>
 
