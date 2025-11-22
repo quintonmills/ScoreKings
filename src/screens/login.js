@@ -8,10 +8,9 @@ import {
   ImageBackground,
   Alert,
   Animated,
-  Platform,
 } from 'react-native';
 // import * as LocalAuthentication from 'expo-local-authentication';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
