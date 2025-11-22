@@ -33,7 +33,7 @@ const ContestSelectionScreen = ({ navigation }) => {
   ]);
 
   const navigateToPlayerSelection = () => {
-    navigation.navigate('Playerselection');
+    navigation.navigate('PlayerSelection');
   };
 
   const navigateToProfile = () => {

@@ -43,7 +43,7 @@ const LoginScreen = ({ navigation }) => {
     setTimeout(() => {
       setIsLoading(false);
       navigation.navigate('ContestSelectionScreen');
-    }, 1500);
+    }, 10);
   };
 
   const handleLogin = () => {
