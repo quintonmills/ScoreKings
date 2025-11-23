@@ -10,27 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 const ContestSelectionScreen = ({ navigation }) => {
-  // Sample contest data - replace with your actual data
-  const [contests, setContests] = useState([
-    //   {
-    //     id: 1,
-    //     title: 'Daily Shootout',
-    //     entryFee: 5.0,
-    //     prize: 50.0,
-    //     participants: 24,
-    //     players: ['Eli Ellis', 'Ian Jackson', 'Jelly Fam'],
-    //     endTime: 'Today 8:00 PM',
-    //   },
-    //   {
-    //     id: 2,
-    //     title: 'Weekly Showdown',
-    //     entryFee: 10.0,
-    //     prize: 200.0,
-    //     participants: 87,
-    //     players: ['All Teams'],
-    //     endTime: 'Sunday 11:59 PM',
-    //   },
-  ]);
+  const [contests, setContests] = useState([]);
 
   useEffect(() => {
     fetch('http://localhost:4000/api/contests')
