@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import ContestReviewScreen from './src/screens/ContestReview';
 import PaymentScreen from './src/screens/Payment';
+import MyContestsScreen from './src/screens/MyContests.js';
 
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +37,11 @@ export default function App() {
         <Stack.Screen
           name='PaymentScreen'
           component={PaymentScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name='MyContests'
+          component={MyContestsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
