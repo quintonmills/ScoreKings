@@ -39,7 +39,7 @@ const PaymentScreen = ({ route, navigation }) => {
       return;
     }
     Alert.alert('Success', `Payment processed for $${entryFee}`);
-    navigation.navigate('Comparison', { player1, player2, stat });
+    navigation.navigate('MyContests');
   };
 
   return (
