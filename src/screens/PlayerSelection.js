@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const PlayerSelection = ({ navigation }) => {
-  // Sample player data - replace with your actual data source
+const PlayerSelection = ({ navigation, route }) => {
+  const { contestId } = route.params;
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
@@ -53,11 +53,11 @@ const PlayerSelection = ({ navigation }) => {
   const startComparison = () => {
     if (selectedPlayers.length === 2) {
       navigation.navigate('ContestReviewScreen', {
-        // Changed from 'Comparison' to 'Payment'
         player1: selectedPlayers[0],
         player2: selectedPlayers[1],
         stat: selectedStat,
-        entryFee: 10.0, // Example fee - adjust as needed
+        entryFee: 10.0,
+        contestId: contestId,
       });
     }
   };

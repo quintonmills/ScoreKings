@@ -19,8 +19,8 @@ const ContestSelectionScreen = ({ navigation }) => {
       .catch((err) => console.log(err));
   }, []);
 
-  const navigateToPlayerSelection = () => {
-    navigation.navigate('PlayerSelection');
+  const navigateToPlayerSelection = (contest) => {
+    navigation.navigate('PlayerSelection', { contestId: contest.id });
   };
 
   const navigateToProfile = () => {
