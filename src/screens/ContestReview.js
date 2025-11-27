@@ -1,21 +1,56 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const ContestReviewScreen = ({ route, navigation }) => {
-  const { player1, player2, stat } = route.params;
+  const { player1, player2, stat, contestId } = route.params;
 
-  // Determine winner based on stat
   const winner = player1[stat] > player2[stat] ? player1 : player2;
   const statName = stat.toUpperCase();
 
-  const proceedToPayment = () => {
-    navigation.navigate('PaymentScreen', {
-      player1,
-      player2,
-      stat,
-      entryFee: 10.0,
-    });
+  // NEW: async API call added here (UI unchanged)
+  const proceedToPayment = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/contests/${contestId}/join`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 1, // TODO: replace with auth user later
+            player1: player1.id,
+            player2: player2.id,
+            stat,
+            entryFee: 10.0,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert('Error', data.error || 'Failed to join contest');
+        return;
+      }
+
+      // After joining, continue to payment as before
+      navigation.navigate('PaymentScreen', {
+        player1,
+        player2,
+        stat,
+        entryFee: 10.0,
+      });
+    } catch (err) {
+      console.log(err);
+      Alert.alert('Error', 'Unable to connect to server.');
+    }
   };
 
   return (
@@ -61,7 +96,7 @@ const ContestReviewScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        {/* Winner banner */}
+        {/* Winner Banner */}
         <View style={styles.winnerBanner}>
           <Ionicons name='trophy' size={24} color='#FFD700' />
           <Text style={styles.winnerText}>
@@ -69,7 +104,7 @@ const ContestReviewScreen = ({ route, navigation }) => {
           </Text>
         </View>
 
-        {/* Continue button */}
+        {/* CONTINUE button */}
         <TouchableOpacity
           style={styles.continueButton}
           onPress={proceedToPayment}
@@ -82,10 +117,7 @@ const ContestReviewScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
   header: {
     backgroundColor: '#1e3f6d',
     paddingVertical: 16,
@@ -108,10 +140,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     padding: 8,
   },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
+  content: { flex: 1, padding: 20 },
   statBanner: {
     backgroundColor: '#f8f9fa',
     padding: 12,
@@ -121,11 +150,7 @@ const styles = StyleSheet.create({
     borderColor: '#e1e5e9',
     alignItems: 'center',
   },
-  statText: {
-    color: '#1e3f6d',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  statText: { color: '#1e3f6d', fontSize: 16, fontWeight: '600' },
   playersRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -162,30 +187,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-  statValue: {
-    color: '#BA0C2F',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  vsContainer: {
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-  },
-  vsText: {
-    color: '#1e3f6d',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  statValue: { color: '#BA0C2F', fontSize: 24, fontWeight: 'bold' },
+  vsContainer: { justifyContent: 'center', paddingHorizontal: 10 },
+  vsText: { color: '#1e3f6d', fontSize: 18, fontWeight: 'bold' },
   winnerBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(30, 63, 109, 0.1)',
+    backgroundColor: 'rgba(30,63,109,0.1)',
     padding: 12,
     borderRadius: 8,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(186, 12, 47, 0.2)',
+    borderColor: 'rgba(186,12,47,0.2)',
   },
   winnerText: {
     color: '#1e3f6d',
