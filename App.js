@@ -1,11 +1,11 @@
 import LoginScreen from './src/screens/login';
-import ContestSelectionScreen from './src/screens/ContestSelectionScreen';
 import PlayerSelection from './src/screens/PlayerSelection';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
 import ContestReviewScreen from './src/screens/ContestReview';
 import PaymentScreen from './src/screens/Payment';
-import MyContestsScreen from './src/screens/MyContests.js';
+import MainTabs from './src/navigation/MainTabs';
+
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,15 +18,18 @@ export default function App() {
           component={LoginScreen}
           options={{ headerShown: false }}
         />
+
+        {/* After login, go into Tabs */}
         <Stack.Screen
-          name='PlayerSelection'
-          component={PlayerSelection}
+          name='MainTabs'
+          component={MainTabs}
           options={{ headerShown: false }}
         />
 
+        {/* These stay above tabs */}
         <Stack.Screen
-          name='ContestSelectionScreen'
-          component={ContestSelectionScreen}
+          name='PlayerSelection'
+          component={PlayerSelection}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -37,11 +40,6 @@ export default function App() {
         <Stack.Screen
           name='PaymentScreen'
           component={PaymentScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name='MyContests'
-          component={MyContestsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
