@@ -42,7 +42,7 @@ const LoginScreen = ({ navigation }) => {
 
     setTimeout(() => {
       setIsLoading(false);
-      navigation.navigate('ContestSelectionScreen');
+      navigation.navigate('MainTabs');
     }, 10);
   };
 
