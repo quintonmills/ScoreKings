@@ -7,13 +7,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { API_URL } from '../config/api';
 
 export default function MyContestsScreen({ navigation }) {
   const [entries, setEntries] = useState([]);
   const userId = 1; // mock user while auth isn't built
 
   useEffect(() => {
-    fetch(`http://localhost:4000/api/users/${userId}/entries`)
+    fetch(`${API_URL}/api/users/1/entries`)
       .then((res) => res.json())
       .then((data) => setEntries(data))
       .catch((err) => console.log(err));

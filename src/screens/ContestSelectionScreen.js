@@ -8,19 +8,20 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { API_URL } from '../config/api';
 
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/contests')
+    fetch(`${API_URL}/api/contests`)
       .then((res) => res.json())
       .then((data) => setContests(data))
       .catch((err) => console.log(err));
   }, []);
 
   const navigateToPlayerSelection = (contest) => {
-    navigation.navigate('PlayerSelection', { contestId: contest.id });
+    navigation.navigate('PlayerSelection', { contest });
   };
 
   const navigateToProfile = () => {

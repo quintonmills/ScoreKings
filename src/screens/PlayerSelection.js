@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { API_URL } from '../config/api';
 
 const PlayerSelection = ({ navigation, route }) => {
   const { contestId } = route.params;
@@ -20,7 +21,7 @@ const PlayerSelection = ({ navigation, route }) => {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/players');
+        const response = await fetch(`${API_URL}/api/players`);
         const data = await response.json();
         setPlayers(data);
       } catch (error) {

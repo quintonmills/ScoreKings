@@ -7,7 +7,8 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from 'react-native-vector-icons/Ionicons';
+import { API_URL } from '../config/api';
 
 const ContestReviewScreen = ({ route, navigation }) => {
   const { player1, player2, stat, contestId } = route.params;
@@ -19,7 +20,7 @@ const ContestReviewScreen = ({ route, navigation }) => {
   const proceedToPayment = async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/contests/${contestId}/join`,
+        `${API_URL}/api/contests/${contestId}/join`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
