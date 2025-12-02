@@ -7,12 +7,17 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { Ionicons } from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
 
 const ContestReviewScreen = ({ route, navigation }) => {
-  const { player1, player2, stat, contestId } = route.params;
-
+  const {
+    player1 = {},
+    player2 = {},
+    stat = 'ppg',
+    contestId = 1,
+    entryFee = 10.0,
+  } = route.params || {};
   const winner = player1[stat] > player2[stat] ? player1 : player2;
   const statName = stat.toUpperCase();
 
