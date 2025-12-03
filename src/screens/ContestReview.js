@@ -18,6 +18,7 @@ const ContestReviewScreen = ({ route, navigation }) => {
     contestId = 1,
     entryFee = 10.0,
   } = route.params || {};
+
   const winner = player1[stat] > player2[stat] ? player1 : player2;
   const statName = stat.toUpperCase();
 

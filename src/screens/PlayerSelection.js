@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
+import PlayerCard from '../components/player';
 
 const PlayerSelection = ({ navigation, route }) => {
   const { contestId } = route.params;
@@ -107,33 +108,23 @@ const PlayerSelection = ({ navigation, route }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.playersContainer}>
-        {players.map((player) => (
-          <TouchableOpacity
-            key={player.id}
-            style={[
-              styles.playerCard,
-              selectedPlayers.some((p) => p.id === player.id) &&
-                styles.selectedPlayer,
-            ]}
-            onPress={() => togglePlayerSelection(player)}
-          >
-            <Image source={{ uri: player.image }} style={styles.playerImage} />
-            <View style={styles.playerInfo}>
-              <Text style={styles.playerName}>{player.name}</Text>
-              <Text style={styles.playerTeam}>{player.team}</Text>
-              <Text style={styles.playerStat}>
-                {player[selectedStat]} {selectedStat.toUpperCase()}
-              </Text>
-            </View>
-            {selectedPlayers.some((p) => p.id === player.id) && (
-              <View style={styles.selectionBadge}>
-                <Text style={styles.badgeText}>
-                  {selectedPlayers.findIndex((p) => p.id === player.id) + 1}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
+        {players.map((player) => {
+          const selectedIndex = selectedPlayers.findIndex(
+            (p) => p.id === player.id
+          );
+          const isSelected = selectedIndex !== -1;
+
+          return (
+            <PlayerCard
+              key={player.id}
+              player={player}
+              selected={isSelected}
+              selectedIndex={selectedIndex}
+              selectedStat={selectedStat}
+              onPress={() => togglePlayerSelection(player)}
+            />
+          );
+        })}
       </ScrollView>
 
       {selectedPlayers.length == 2 && (
