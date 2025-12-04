@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
+import Header from '../components/header';
 
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
@@ -31,7 +32,7 @@ const ContestSelectionScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header with profile icon */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -45,7 +46,8 @@ const ContestSelectionScreen = ({ navigation }) => {
         >
           <Ionicons name='person-circle-outline' size={28} color='#fff' />
         </TouchableOpacity>
-      </View>
+      </View> */}
+      <Header title='MY CONTESTS' navigation={navigation} />
 
       <ScrollView style={styles.content}>
         {/* Active contests section */}
