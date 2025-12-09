@@ -5,64 +5,26 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Alert,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { API_URL } from '../config/api';
 
 const ContestReviewScreen = ({ route, navigation }) => {
-  const {
-    player1 = {},
-    player2 = {},
-    stat = 'ppg',
-    contestId = 1,
-    entryFee = 10.0,
-  } = route.params || {};
+  const { contest, picks } = route.params;
 
-  const winner = player1[stat] > player2[stat] ? player1 : player2;
-  const statName = stat.toUpperCase();
+  const potentialPayout = contest.entryFee * 3;
 
-  // NEW: async API call added here (UI unchanged)
-  const proceedToPayment = async () => {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/contests/${contestId}/join`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: 1, // TODO: replace with auth user later
-            player1: player1.id,
-            player2: player2.id,
-            stat,
-            entryFee: 10.0,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        Alert.alert('Error', data.error || 'Failed to join contest');
-        return;
-      }
-
-      // After joining, continue to payment as before
-      navigation.navigate('PaymentScreen', {
-        player1,
-        player2,
-        stat,
-        entryFee: 10.0,
-      });
-    } catch (err) {
-      console.log(err);
-      Alert.alert('Error', 'Unable to connect to server.');
-    }
+  const proceedToPayment = () => {
+    navigation.navigate('PaymentScreen', {
+      contest,
+      picks,
+      potentialPayout,
+    });
   };
 
   return (
     <View style={styles.container}>
-      {/* Header with back button */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -70,53 +32,128 @@ const ContestReviewScreen = ({ route, navigation }) => {
         >
           <Ionicons name='chevron-back' size={24} color='#fff' />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Matchup</Text>
+        <Text style={styles.headerText}>Review Picks</Text>
       </View>
 
-      <View style={styles.content}>
-        {/* Stat being compared */}
-        <View style={styles.statBanner}>
-          <Text style={styles.statText}>Comparing: {statName}</Text>
-        </View>
-
-        {/* Players comparison */}
-        <View style={styles.playersRow}>
-          {/* Player 1 Card */}
-          <View style={styles.playerCard}>
-            <Image source={{ uri: player1.image }} style={styles.playerImage} />
-            <Text style={styles.playerName}>{player1.name}</Text>
-            <Text style={styles.playerTeam}>{player1.team}</Text>
-            <Text style={styles.statValue}>{player1[stat]}</Text>
+      <ScrollView style={styles.content}>
+        {/* Contest Info */}
+        <View style={styles.contestCard}>
+          <View style={styles.contestHeader}>
+            <Ionicons name='trophy-outline' size={24} color='#BA0C2F' />
+            <Text style={styles.contestTitle}>{contest.title}</Text>
           </View>
-
-          {/* VS Separator */}
-          <View style={styles.vsContainer}>
-            <Text style={styles.vsText}>VS</Text>
-          </View>
-
-          {/* Player 2 Card */}
-          <View style={styles.playerCard}>
-            <Image source={{ uri: player2.image }} style={styles.playerImage} />
-            <Text style={styles.playerName}>{player2.name}</Text>
-            <Text style={styles.playerTeam}>{player2.team}</Text>
-            <Text style={styles.statValue}>{player2[stat]}</Text>
+          <View style={styles.contestDetails}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Prize Pool:</Text>
+              <Text style={styles.detailValue}>${contest.prize}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Ends:</Text>
+              <Text style={styles.detailValue}>{contest.endTime}</Text>
+            </View>
           </View>
         </View>
 
-        {/* Winner Banner */}
-        <View style={styles.winnerBanner}>
-          <Ionicons name='trophy' size={24} color='#FFD700' />
-          <Text style={styles.winnerText}>
-            {winner.name} leads in {statName}
-          </Text>
+        {/* Your Picks */}
+        <View style={styles.sectionHeader}>
+          <Ionicons name='basketball-outline' size={20} color='#1e3f6d' />
+          <Text style={styles.sectionTitle}>YOUR PICKS</Text>
         </View>
 
-        {/* CONTINUE button */}
+        {picks.map((pick, index) => (
+          <View key={pick.playerId} style={styles.pickCard}>
+            <View style={styles.pickNumber}>
+              <Text style={styles.pickNumberText}>{index + 1}</Text>
+            </View>
+
+            <Image source={{ uri: pick.image }} style={styles.playerImage} />
+
+            <View style={styles.pickDetails}>
+              <Text style={styles.playerName}>{pick.playerName}</Text>
+              <Text style={styles.playerTeam}>{pick.team}</Text>
+
+              <View style={styles.predictionRow}>
+                <View
+                  style={[
+                    styles.predictionBadge,
+                    pick.prediction === 'over'
+                      ? styles.overBadge
+                      : styles.underBadge,
+                  ]}
+                >
+                  <Ionicons
+                    name={
+                      pick.prediction === 'over' ? 'arrow-up' : 'arrow-down'
+                    }
+                    size={16}
+                    color='#fff'
+                  />
+                  <Text style={styles.predictionText}>
+                    {pick.prediction === 'over' ? 'OVER' : 'UNDER'}
+                  </Text>
+                </View>
+                <Text style={styles.lineText}>{pick.line} PTS</Text>
+              </View>
+            </View>
+          </View>
+        ))}
+
+        {/* Payout Info */}
+        <View style={styles.payoutCard}>
+          <View style={styles.payoutHeader}>
+            <Ionicons name='cash-outline' size={24} color='#1e3f6d' />
+            <Text style={styles.payoutTitle}>PAYOUT BREAKDOWN</Text>
+          </View>
+
+          <View style={styles.payoutRow}>
+            <Text style={styles.payoutLabel}>Entry Fee:</Text>
+            <Text style={styles.payoutValue}>${contest.entryFee}</Text>
+          </View>
+
+          <View style={styles.payoutRow}>
+            <Text style={styles.payoutLabel}>Multiplier:</Text>
+            <Text style={styles.multiplierValue}>3x</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.payoutRow}>
+            <Text style={styles.totalLabel}>Potential Win:</Text>
+            <Text style={styles.totalValue}>${potentialPayout}</Text>
+          </View>
+
+          <View style={styles.winCondition}>
+            <Ionicons
+              name='information-circle-outline'
+              size={18}
+              color='#666'
+            />
+            <Text style={styles.winConditionText}>
+              Both picks must hit to win
+            </Text>
+          </View>
+        </View>
+
+        {/* Edit Button */}
         <TouchableOpacity
-          style={styles.continueButton}
+          style={styles.editButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name='create-outline' size={20} color='#1e3f6d' />
+          <Text style={styles.editButtonText}>EDIT PICKS</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Confirm Button */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.confirmButton}
           onPress={proceedToPayment}
         >
-          <Text style={styles.continueButtonText}>CONTINUE TO PAYMENT</Text>
+          <Ionicons name='lock-closed-outline' size={20} color='#fff' />
+          <Text style={styles.confirmButtonText}>
+            CONFIRM & PAY ${contest.entryFee}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -124,7 +161,10 @@ const ContestReviewScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   header: {
     backgroundColor: '#1e3f6d',
     paddingVertical: 16,
@@ -147,85 +187,240 @@ const styles = StyleSheet.create({
     zIndex: 1,
     padding: 8,
   },
-  content: { flex: 1, padding: 20 },
-  statBanner: {
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  contestCard: {
     backgroundColor: '#f8f9fa',
-    padding: 12,
     borderRadius: 8,
+    padding: 16,
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#e1e5e9',
-    alignItems: 'center',
   },
-  statText: { color: '#1e3f6d', fontSize: 16, fontWeight: '600' },
-  playersRow: {
+  contestHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  contestTitle: {
+    color: '#1e3f6d',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  contestDetails: {
+    marginTop: 8,
+  },
+  detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 6,
   },
-  playerCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e1e5e9',
-    marginHorizontal: 5,
-  },
-  playerImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 2,
-    borderColor: '#1e3f6d',
-    marginBottom: 10,
-  },
-  playerName: {
-    color: '#1e3f6d',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  playerTeam: {
+  detailLabel: {
     color: '#666',
     fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 10,
   },
-  statValue: { color: '#BA0C2F', fontSize: 24, fontWeight: 'bold' },
-  vsContainer: { justifyContent: 'center', paddingHorizontal: 10 },
-  vsText: { color: '#1e3f6d', fontSize: 18, fontWeight: 'bold' },
-  winnerBanner: {
+  detailValue: {
+    color: '#1e3f6d',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(30,63,109,0.1)',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(186,12,47,0.2)',
+    marginBottom: 16,
   },
-  winnerText: {
+  sectionTitle: {
     color: '#1e3f6d',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
   },
-  continueButton: {
+  pickCard: {
+    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e1e5e9',
+    alignItems: 'center',
+  },
+  pickNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1e3f6d',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  pickNumberText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  playerImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+  },
+  pickDetails: {
+    flex: 1,
+  },
+  playerName: {
+    color: '#1e3f6d',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  playerTeam: {
+    color: '#666',
+    fontSize: 14,
+    marginBottom: 6,
+  },
+  predictionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  predictionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  overBadge: {
+    backgroundColor: '#28a745',
+  },
+  underBadge: {
+    backgroundColor: '#BA0C2F',
+  },
+  predictionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  lineText: {
+    color: '#1e3f6d',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  payoutCard: {
+    backgroundColor: 'rgba(186, 12, 47, 0.05)',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(186, 12, 47, 0.2)',
+  },
+  payoutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  payoutTitle: {
+    color: '#1e3f6d',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  payoutRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  payoutLabel: {
+    color: '#666',
+    fontSize: 15,
+  },
+  payoutValue: {
+    color: '#1e3f6d',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  multiplierValue: {
+    color: '#BA0C2F',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e1e5e9',
+    marginVertical: 12,
+  },
+  totalLabel: {
+    color: '#1e3f6d',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  totalValue: {
+    color: '#BA0C2F',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  winCondition: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: '#fff',
+    borderRadius: 6,
+  },
+  winConditionText: {
+    color: '#666',
+    fontSize: 13,
+    marginLeft: 6,
+    fontStyle: 'italic',
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#1e3f6d',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20,
+  },
+  editButtonText: {
+    color: '#1e3f6d',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  footer: {
+    padding: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e1e5e9',
+    backgroundColor: '#fff',
+  },
+  confirmButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#BA0C2F',
     borderRadius: 8,
     padding: 16,
-    alignItems: 'center',
-    marginTop: 'auto',
+    shadowColor: '#BA0C2F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  continueButtonText: {
+  confirmButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-    letterSpacing: 0.5,
+    marginLeft: 8,
   },
 });
 
