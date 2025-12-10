@@ -7,13 +7,19 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "eslint --ext .jsx,.js,.ts,.tsx .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "build": "expo export"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.8.7",
     "@react-navigation/native": "^7.1.21",
     "@react-navigation/native-stack": "^7.7.0",
     "expo": "~54.0.25",
+    "expo-dev-client": "~6.0.20",
     "expo-secure-store": "~15.0.7",
     "expo-status-bar": "~3.0.8",
     "ionicons": "^8.0.13",
