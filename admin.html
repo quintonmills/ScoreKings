@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OTE Pick'em Admin Panel</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          sans-serif;
+        background: #f5f5f5;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        background: #1e3f6d;
+        color: white;
+        padding: 20px;
+        border-bottom: 3px solid #ba0c2f;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        margin-bottom: 5px;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .login-section {
+        max-width: 400px;
+        margin: 100px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .login-section h2 {
+        color: #1e3f6d;
+        margin-bottom: 20px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e1e5e9;
+      }
+
+      .tab {
+        padding: 12px 24px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+      }
+
+      .tab.active {
+        color: #1e3f6d;
+        border-bottom-color: #ba0c2f;
+        font-weight: 600;
+      }
+
+      .tab:hover {
+        color: #1e3f6d;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-label {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .stat-value {
+        color: #1e3f6d;
+        font-size: 32px;
+        font-weight: bold;
+      }
+
+      .stat-subtext {
+        color: #999;
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .card h3 {
+        color: #1e3f6d;
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background: #ba0c2f;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #9a0a27;
+      }
+
+      .btn-secondary {
+        background: #1e3f6d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #152d4d;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e1e5e9;
+      }
+
+      th {
+        background: #f8f9fa;
+        color: #1e3f6d;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+      }
+
+      tr:hover {
+        background: #f8f9fa;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .badge-upcoming {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+
+      .badge-live {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+
+      .badge-completed {
+        background: #e8f5e9;
+        color: #388e3c;
+      }
+
+      .badge-active {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+
+      .badge-won {
+        background: #e8f5e9;
+        color: #388e3c;
+      }
+
+      .badge-lost {
+        background: #ffebee;
+        color: #c62828;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+
+      .modal.active {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-header h3 {
+        color: #1e3f6d;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+      }
+
+      .alert {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+      }
+
+      .alert-success {
+        background: #e8f5e9;
+        color: #388e3c;
+        border: 1px solid #c8e6c9;
+      }
+
+      .alert-error {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+      }
+
+      .player-results {
+        display: grid;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .player-result-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Section -->
+    <div id="loginSection" class="login-section">
+      <h2>Admin Login</h2>
+      <input
+        type="password"
+        id="adminPassword"
+        placeholder="Enter admin password"
+      />
+      <button class="btn btn-primary" onclick="login()">Login</button>
+      <div
+        id="loginError"
+        class="alert alert-error hidden"
+        style="margin-top: 15px"
+      ></div>
+    </div>
+
+    <!-- Main Admin Panel -->
+    <div id="adminPanel" class="hidden">
+      <div class="header">
+        <h1>🏀 OTE Pick'em Admin Panel</h1>
+        <p>Manage contests, enter results, and monitor entries</p>
+      </div>
+
+      <div class="container">
+        <!-- Dashboard Stats -->
+        <div id="dashboardStats" class="stats-grid">
+          <!-- Stats will be populated here -->
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('contests')">
+            Contests
+          </button>
+          <button class="tab" onclick="switchTab('entries')">
+            All Entries
+          </button>
+          <button class="tab" onclick="switchTab('grading')">
+            Grade Contest
+          </button>
+        </div>
+
+        <!-- Contests Tab -->
+        <div id="contestsTab" class="tab-content active">
+          <div class="card">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+              "
+            >
+              <h3>All Contests</h3>
+              <button
+                class="btn btn-primary"
+                onclick="showCreateContestModal()"
+              >
+                + Create Contest
+              </button>
+            </div>
+            <div id="contestsList"></div>
+          </div>
+        </div>
+
+        <!-- Entries Tab -->
+        <div id="entriesTab" class="tab-content">
+          <div class="card">
+            <h3>All Entries</h3>
+            <div id="entriesList"></div>
+          </div>
+        </div>
+
+        <!-- Grading Tab -->
+        <div id="gradingTab" class="tab-content">
+          <div class="card">
+            <h3>Grade Contest</h3>
+            <div class="form-group">
+              <label>Select Contest</label>
+              <select
+                id="gradeContestSelect"
+                onchange="loadContestForGrading()"
+              >
+                <option value="">-- Select a contest --</option>
+              </select>
+            </div>
+            <div id="gradingForm"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Contest Modal -->
+    <div id="createContestModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create New Contest</h3>
+          <button class="close-btn" onclick="closeModal('createContestModal')">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="createContest(event)">
+          <div class="form-group">
+            <label>Contest Title *</label>
+            <input
+              type="text"
+              id="contestTitle"
+              required
+              placeholder="e.g., Friday Night Shootout"
+            />
+          </div>
+          <div class="form-group">
+            <label>Entry Fee ($) *</label>
+            <input
+              type="number"
+              id="contestEntryFee"
+              required
+              step="0.01"
+              min="0"
+              value="5"
+            />
+          </div>
+          <div class="form-group">
+            <label>Prize Pool ($) *</label>
+            <input
+              type="number"
+              id="contestPrize"
+              required
+              step="0.01"
+              min="0"
+              value="50"
+            />
+          </div>
+          <div class="form-group">
+            <label>Players Available *</label>
+            <select id="contestPlayers" multiple style="height: 100px">
+              <option value="All Teams">All Teams</option>
+              <option value="Eli Ellis">Eli Ellis</option>
+              <option value="Ian Jackson">Ian Jackson</option>
+              <option value="Karter Knox">Karter Knox</option>
+            </select>
+            <small style="color: #666">Hold Ctrl/Cmd to select multiple</small>
+          </div>
+          <div class="form-group">
+            <label>Start Time</label>
+            <input type="datetime-local" id="contestStartTime" />
+          </div>
+          <div class="form-group">
+            <label>End Time *</label>
+            <input
+              type="text"
+              id="contestEndTime"
+              required
+              placeholder="e.g., Friday 9:00 PM"
+            />
+          </div>
+          <div id="createContestMessage"></div>
+          <button type="submit" class="btn btn-success">Create Contest</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = 'http://localhost:4000';
+      let authToken = '';
+
+      function login() {
+        const password = document.getElementById('adminPassword').value;
+        authToken = password;
+
+        // Test auth by fetching stats
+        fetch(`${API_URL}/api/admin/stats`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        })
+          .then((res) => {
+            if (res.ok) {
+              document.getElementById('loginSection').classList.add('hidden');
+              document.getElementById('adminPanel').classList.remove('hidden');
+              loadDashboard();
+            } else {
+              document.getElementById('loginError').textContent =
+                'Invalid password';
+              document.getElementById('loginError').classList.remove('hidden');
+            }
+          })
+          .catch((err) => {
+            document.getElementById('loginError').textContent =
+              'Connection error';
+            document.getElementById('loginError').classList.remove('hidden');
+          });
+      }
+
+      async function loadDashboard() {
+        await loadStats();
+        await loadContests();
+        await loadEntries();
+        await loadGradingOptions();
+      }
+
+      async function loadStats() {
+        const res = await fetch(`${API_URL}/api/admin/stats`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+
+        document.getElementById('dashboardStats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Total Contests</div>
+          <div class="stat-value">${data.contests.total}</div>
+          <div class="stat-subtext">${data.contests.active} active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Entries</div>
+          <div class="stat-value">${data.entries.total}</div>
+          <div class="stat-subtext">${data.entries.active} active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value">$${data.financials.totalRevenue}</div>
+          <div class="stat-subtext">From entry fees</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Paid Out</div>
+          <div class="stat-value">$${data.financials.totalPaidOut}</div>
+          <div class="stat-subtext">Profit: $${data.financials.profit}</div>
+        </div>
+      `;
+      }
+
+      async function loadContests() {
+        const res = await fetch(`${API_URL}/api/admin/contests`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const contests = await res.json();
+
+        let html =
+          '<table><thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Entry Fee</th><th>Prize</th><th>Entries</th><th>Actions</th></tr></thead><tbody>';
+
+        contests.forEach((contest) => {
+          html += `
+          <tr>
+            <td>${contest.id}</td>
+            <td>${contest.title}</td>
+            <td><span class="badge badge-${contest.status}">${contest.status}</span></td>
+            <td>$${contest.entryFee}</td>
+            <td>$${contest.prize}</td>
+            <td>${contest.totalEntries}</td>
+            <td>
+              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="viewContestEntries(${contest.id})">View Entries</button>
+            </td>
+          </tr>
+        `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('contestsList').innerHTML = html;
+      }
+
+      async function loadEntries() {
+        const res = await fetch(`${API_URL}/api/admin/entries`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const entries = await res.json();
+
+        let html =
+          '<table><thead><tr><th>ID</th><th>Contest</th><th>User</th><th>Status</th><th>Entry Fee</th><th>Potential Win</th><th>Picks</th></tr></thead><tbody>';
+
+        entries.forEach((entry) => {
+          const picksText = entry.picks
+            .map(
+              (p) =>
+                `${p.playerName} ${p.prediction === 'over' ? '↑' : '↓'} ${
+                  p.line
+                }`
+            )
+            .join(', ');
+
+          html += `
+          <tr>
+            <td>${entry.id}</td>
+            <td>${entry.contestTitle}</td>
+            <td>${entry.userName}</td>
+            <td><span class="badge badge-${entry.status}">${entry.status}</span></td>
+            <td>$${entry.entryFee}</td>
+            <td>$${entry.potentialPayout}</td>
+            <td style="font-size: 12px;">${picksText}</td>
+          </tr>
+        `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('entriesList').innerHTML = html;
+      }
+
+      async function loadGradingOptions() {
+        const res = await fetch(`${API_URL}/api/admin/contests`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const contests = await res.json();
+
+        const select = document.getElementById('gradeContestSelect');
+        select.innerHTML = '<option value="">-- Select a contest --</option>';
+
+        contests.forEach((contest) => {
+          if (contest.status !== 'completed') {
+            select.innerHTML += `<option value="${contest.id}">${contest.title} (${contest.activeEntries} active entries)</option>`;
+          }
+        });
+      }
+
+      async function loadContestForGrading() {
+        const contestId = document.getElementById('gradeContestSelect').value;
+        if (!contestId) {
+          document.getElementById('gradingForm').innerHTML = '';
+          return;
+        }
+
+        const res = await fetch(
+          `${API_URL}/api/admin/contests/${contestId}/entries`,
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          }
+        );
+        const entries = await res.json();
+
+        if (entries.length === 0) {
+          document.getElementById('gradingForm').innerHTML =
+            '<p>No entries found for this contest.</p>';
+          return;
+        }
+
+        // Get unique players
+        const players = new Set();
+        entries.forEach((entry) => {
+          entry.picks.forEach((pick) => {
+            players.add(
+              JSON.stringify({ id: pick.playerId, name: pick.playerName })
+            );
+          });
+        });
+
+        const uniquePlayers = Array.from(players).map((p) => JSON.parse(p));
+
+        let html = '<div class="player-results">';
+        uniquePlayers.forEach((player) => {
+          html += `
+          <div class="player-result-row">
+            <label>${player.name} - Points Scored</label>
+            <input type="number" id="player-${player.id}" placeholder="Enter points" step="0.1" />
+          </div>
+        `;
+        });
+        html += '</div>';
+        html += '<div id="gradeMessage" style="margin-top: 15px;"></div>';
+        html += `<button class="btn btn-success" style="margin-top: 15px;" onclick="gradeContest()">Grade Contest</button>`;
+
+        document.getElementById('gradingForm').innerHTML = html;
+      }
+
+      async function gradeContest() {
+        const contestId = document.getElementById('gradeContestSelect').value;
+        const inputs = document.querySelectorAll('[id^="player-"]');
+
+        const results = [];
+        inputs.forEach((input) => {
+          const playerId = parseInt(input.id.replace('player-', ''));
+          const actualValue = parseFloat(input.value);
+          if (!isNaN(actualValue)) {
+            results.push({ playerId, actualValue });
+          }
+        });
+
+        if (results.length === 0) {
+          alert('Please enter at least one player result');
+          return;
+        }
+
+        try {
+          const res = await fetch(
+            `${API_URL}/api/admin/contests/${contestId}/grade`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ results }),
+            }
+          );
+
+          const data = await res.json();
+
+          document.getElementById('gradeMessage').innerHTML = `
+          <div class="alert alert-success">
+            Contest graded successfully!<br>
+            Entries graded: ${data.gradedCount}<br>
+            Winners: ${data.winnersCount}<br>
+            Total paid out: $${data.totalPaidOut}
+          </div>
+        `;
+
+          setTimeout(() => {
+            loadDashboard();
+          }, 2000);
+        } catch (err) {
+          document.getElementById('gradeMessage').innerHTML = `
+          <div class="alert alert-error">Error grading contest: ${err.message}</div>
+        `;
+        }
+      }
+
+      async function viewContestEntries(contestId) {
+        const res = await fetch(
+          `${API_URL}/api/admin/contests/${contestId}/entries`,
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          }
+        );
+        const entries = await res.json();
+
+        alert(
+          `Contest has ${entries.length} entries. View details in the Entries tab.`
+        );
+        switchTab('entries');
+      }
+
+      function switchTab(tabName) {
+        document
+          .querySelectorAll('.tab')
+          .forEach((tab) => tab.classList.remove('active'));
+        document
+          .querySelectorAll('.tab-content')
+          .forEach((content) => content.classList.remove('active'));
+
+        event.target.classList.add('active');
+        document.getElementById(tabName + 'Tab').classList.add('active');
+      }
+
+      function showCreateContestModal() {
+        document.getElementById('createContestModal').classList.add('active');
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+      }
+
+      async function createContest(event) {
+        event.preventDefault();
+
+        const selectedOptions = Array.from(
+          document.getElementById('contestPlayers').selectedOptions
+        );
+        const players = selectedOptions.map((opt) => opt.value);
+
+        const contestData = {
+          title: document.getElementById('contestTitle').value,
+          entryFee: parseFloat(
+            document.getElementById('contestEntryFee').value
+          ),
+          prize: parseFloat(document.getElementById('contestPrize').value),
+          players: players,
+          startTime:
+            document.getElementById('contestStartTime').value ||
+            new Date().toISOString(),
+          endTime: document.getElementById('contestEndTime').value,
+        };
+
+        try {
+          const res = await fetch(`${API_URL}/api/admin/contests`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(contestData),
+          });
+
+          const data = await res.json();
+
+          document.getElementById('createContestMessage').innerHTML = `
+          <div class="alert alert-success">Contest created successfully!</div>
+        `;
+
+          setTimeout(() => {
+            closeModal('createContestModal');
+            loadDashboard();
+            event.target.reset();
+            document.getElementById('createContestMessage').innerHTML = '';
+          }, 1500);
+        } catch (err) {
+          document.getElementById('createContestMessage').innerHTML = `
+          <div class="alert alert-error">Error creating contest: ${err.message}</div>
+        `;
+        }
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function (event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.classList.remove('active');
+        }
+      };
+    </script>
+  </body>
+</html>
