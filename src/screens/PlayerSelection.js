@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
+import Header from '../components/header';
 
 const PlayerSelection = ({ navigation, route }) => {
   const { contest } = route.params;
@@ -40,7 +41,7 @@ const PlayerSelection = ({ navigation, route }) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        {/* <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -48,7 +49,8 @@ const PlayerSelection = ({ navigation, route }) => {
             <Ionicons name='chevron-back' size={24} color='#fff' />
           </TouchableOpacity>
           <Text style={styles.headerText}>Loading...</Text>
-        </View>
+        </View> */}
+        <Header title='MY CONTESTS' navigation={navigation} />
       </View>
     );
   }
@@ -115,15 +117,9 @@ const PlayerSelection = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name='chevron-back' size={24} color='#fff' />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Pick 2 Players</Text>
-      </View>
+      {/* <View style={styles.header}> */}
+      <Header title='Pick 2 Players' navigation={navigation} />
+      {/* </View> */}
 
       {/* Contest Info Banner */}
       <View style={styles.contestBanner}>
