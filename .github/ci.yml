@@ -1,0 +1,62 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      # ----- Checkout -----
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ----- Node Setup + Cache -----
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # ----- Install dependencies -----
+      - name: Install dependencies
+        run: npm ci
+
+      # ----- Linting -----
+      - name: Run ESLint
+        run: npm run lint
+
+      # ----- Prettier formatting check -----
+      - name: Run Prettier Check
+        run: npm run format:check
+
+      # ----- Type Checking -----
+      - name: Run TypeScript Check
+        run: npm run typecheck
+
+      # ----- Unit Tests -----
+      - name: Run Tests
+        run: npm test -- --ci --watchAll=false
+
+      # ----- Build (Expo or Web) -----
+      - name: Build App
+        run: npm run build
+
+      # ----- Upload Build Artifact -----
+      - name: Upload Production Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: |
+            dist
+            build
+            .expo
+          if-no-files-found: ignore
