@@ -50,7 +50,7 @@ const PlayerSelection = ({ navigation, route }) => {
           </TouchableOpacity>
           <Text style={styles.headerText}>Loading...</Text>
         </View> */}
-        <Header title='MY CONTESTS' navigation={navigation} />
+        <Header title='Pick 2 Players' navigation={navigation} />
       </View>
     );
   }
