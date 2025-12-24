@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
-import Header from '../components/header';
+import Header from '../components/Header';
 
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
