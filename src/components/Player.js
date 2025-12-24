@@ -1,26 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
-export interface Player {
-  id: number;
-  name: string;
-  team: string;
-  image: string;
-  ppg: number;
-  apg: number;
-  rpg: number;
-  [key: string]: any;
-}
-
-interface PlayerCardProps {
-  player: Player;
-  selected: boolean;
-  selectedIndex: number;
-  selectedStat: string;
-  onPress: () => void; // <-- IMPORTANT: never Typed as TouchableOpacity
-}
-
-const PlayerCard: React.FC<PlayerCardProps> = ({
+const PlayerCard = ({
   player,
   selected,
   selectedIndex,
