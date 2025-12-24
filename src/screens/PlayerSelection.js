@@ -22,9 +22,7 @@ const PlayerSelection = ({ navigation, route }) => {
   useEffect(() => {
     const fetchProps = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/api/contests/${contest.id}/props`
-        );
+        const response = await fetch(`${API_URL}/contests/${contest.id}/props`);
         const data = await response.json();
         setProps(data);
       } catch (error) {

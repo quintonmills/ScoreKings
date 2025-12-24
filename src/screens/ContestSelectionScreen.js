@@ -15,7 +15,7 @@ const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/contests`)
+    fetch(`${API_URL}/contests`)
       .then((res) => res.json())
       .then((data) => setContests(data))
       .catch((err) => console.log(err));

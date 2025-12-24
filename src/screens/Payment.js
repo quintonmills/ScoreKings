@@ -18,7 +18,7 @@ const PaymentScreen = ({ route, navigation }) => {
     setIsProcessing(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/contests/${contest.id}/submit`, {
+      const response = await fetch(`${API_URL}/contests/${contest.id}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -43,11 +43,13 @@ const PaymentScreen = ({ route, navigation }) => {
         [
           {
             text: 'View My Entries',
-            onPress: () => navigation.navigate('MainTabs', { screen: 'MyContests' }),
+            onPress: () =>
+              navigation.navigate('MainTabs', { screen: 'MyContests' }),
           },
           {
             text: 'Browse Contests',
-            onPress: () => navigation.navigate('MainTabs', { screen: 'Contests' }),
+            onPress: () =>
+              navigation.navigate('MainTabs', { screen: 'Contests' }),
             style: 'cancel',
           },
         ]
@@ -85,7 +87,8 @@ const PaymentScreen = ({ route, navigation }) => {
             <Text style={styles.picksLabel}>Your Picks:</Text>
             {picks.map((pick, index) => (
               <Text key={pick.playerId} style={styles.pickSummary}>
-                {index + 1}. {pick.playerName} - {pick.prediction === 'over' ? 'OVER' : 'UNDER'} {pick.line} PTS
+                {index + 1}. {pick.playerName} -{' '}
+                {pick.prediction === 'over' ? 'OVER' : 'UNDER'} {pick.line} PTS
               </Text>
             ))}
           </View>
@@ -115,14 +118,20 @@ const PaymentScreen = ({ route, navigation }) => {
               <Ionicons name='cash-outline' size={28} color='#28a745' />
               <View style={styles.methodDetails}>
                 <Text style={styles.methodName}>Virtual Coins</Text>
-                <Text style={styles.methodDescription}>Free-to-play balance</Text>
+                <Text style={styles.methodDescription}>
+                  Free-to-play balance
+                </Text>
               </View>
             </View>
             <Ionicons name='checkmark-circle' size={24} color='#28a745' />
           </View>
 
           <View style={styles.balanceInfo}>
-            <Ionicons name='information-circle-outline' size={18} color='#666' />
+            <Ionicons
+              name='information-circle-outline'
+              size={18}
+              color='#666'
+            />
             <Text style={styles.balanceText}>
               This is a free-to-play contest using virtual currency
             </Text>
@@ -133,7 +142,11 @@ const PaymentScreen = ({ route, navigation }) => {
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>Important:</Text>
           <View style={styles.infoRow}>
-            <Ionicons name='checkmark-circle-outline' size={16} color='#28a745' />
+            <Ionicons
+              name='checkmark-circle-outline'
+              size={16}
+              color='#28a745'
+            />
             <Text style={styles.infoText}>Both picks must win for payout</Text>
           </View>
           <View style={styles.infoRow}>

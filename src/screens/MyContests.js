@@ -18,7 +18,7 @@ export default function MyContestsScreen({ navigation }) {
 
   const fetchEntries = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/users/${userId}/entries`);
+      const response = await fetch(`${API_URL}/users/${userId}/entries`);
       const data = await response.json();
       setEntries(data);
     } catch (err) {
@@ -28,7 +28,7 @@ export default function MyContestsScreen({ navigation }) {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/me`);
+      const response = await fetch(`${API_URL}/me`);
       const data = await response.json();
       setUser(data);
     } catch (err) {
