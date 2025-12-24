@@ -10,7 +10,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
 import Header from '../components/Header';
-
+console.log('DEBUG - Header is:', Header);
+console.log('DEBUG - Ionicons is:', Ionicons);
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
 
