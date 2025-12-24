@@ -1,4 +1,4 @@
-import LoginScreen from './src/screens/login';
+import LoginScreen from './src/screens/Login';
 import PlayerSelection from './src/screens/PlayerSelection';
 import ContestReviewScreen from './src/screens/ContestReview';
 import PaymentScreen from './src/screens/Payment';
