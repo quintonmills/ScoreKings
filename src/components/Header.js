@@ -1,59 +1,28 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity } from 'react-native';
 
-const Header = ({ title, navigation }) => {
-  const navigateToProfile = () => {
-    navigation.navigate('Profile');
-  };
-  return (
-    <View style={styles.header}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name='chevron-back' size={24} color='hashtag#fff' />
-      </TouchableOpacity>
-      <Text style={styles.headerText}>{title}</Text>
-      <TouchableOpacity
-        style={styles.profileButton}
-        onPress={navigateToProfile}
-      >
-        <Ionicons name='person-circle-outline' size={28} color='#fff' />
-      </TouchableOpacity>
-    </View>
-  );
-};
-const styles = StyleSheet.create({
-  header: {
-    backgroundColor: '#1e3f6d',
-    paddingVertical: 16,
-    borderBottomWidth: 3,
-    borderBottomColor: '#BA0C2F',
-    paddingTop: 50,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 15,
-    top: 50,
-    zIndex: 1,
-    padding: 8,
-  },
-  headerText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  profileButton: {
-    position: 'absolute',
-    right: 15,
-    top: 50,
-    zIndex: 1,
-    padding: 8,
-  },
-});
+const Header = ({ title, navigation }) => (
+  <View
+    style={{
+      backgroundColor: '#1e3f6d',
+      paddingTop: 50,
+      paddingBottom: 20,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      px: 20,
+    }}
+  >
+    <TouchableOpacity onPress={() => navigation?.goBack()}>
+      <Text style={{ color: '#fff', marginLeft: 10 }}> BACK </Text>
+    </TouchableOpacity>
+    <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
+      {title}
+    </Text>
+    <TouchableOpacity onPress={() => navigation?.navigate('Profile')}>
+      <Text style={{ color: '#fff', marginRight: 10 }}> PROFILE </Text>
+    </TouchableOpacity>
+  </View>
+);
+
 export default Header;
