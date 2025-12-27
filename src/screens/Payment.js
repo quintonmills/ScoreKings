@@ -22,7 +22,7 @@ const PaymentScreen = ({ route, navigation }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 1, // TODO: Replace with actual auth user
+          userId: 1,
           picks: picks,
           entryFee: contest.entryFee,
         }),
@@ -30,30 +30,26 @@ const PaymentScreen = ({ route, navigation }) => {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        Alert.alert('Error', data.error || 'Failed to submit entry');
+      if (response.ok) {
         setIsProcessing(false);
-        return;
-      }
 
-      // Success!
-      Alert.alert(
-        'Entry Submitted! 🎉',
-        `Your picks are in! You'll win $${potentialPayout} if both hit.\n\nNew Balance: $${data.newBalance}`,
-        [
+        // Use replace to kill the PaymentScreen immediately
+        navigation.replace('SuccessScreen');
+
+        return; // 🔥 CRITICAL: Stops any further code from running
+      } else {
+        setIsProcessing(false);
+        Alert.alert('Error', data.error);
+      }
+      navigation.reset({
+        index: 0,
+        routes: [
           {
-            text: 'View My Entries',
-            onPress: () =>
-              navigation.navigate('MainTabs', { screen: 'MyContests' }),
+            name: 'MainTabs',
+            params: { screen: 'MyContests', params: { justEntered: true } },
           },
-          {
-            text: 'Browse Contests',
-            onPress: () =>
-              navigation.navigate('MainTabs', { screen: 'Contests' }),
-            style: 'cancel',
-          },
-        ]
-      );
+        ],
+      });
     } catch (err) {
       console.error('Payment error:', err);
       Alert.alert('Error', 'Unable to connect to server');
