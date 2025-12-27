@@ -12,7 +12,9 @@ import { Ionicons } from '@expo/vector-icons';
 const ContestReviewScreen = ({ route, navigation }) => {
   const { contest, picks } = route.params;
 
-  const potentialPayout = contest.entryFee * 3;
+  // Standardizing the multiplier logic for the UI
+  const multiplier = 3;
+  const potentialPayout = contest.entryFee * multiplier;
 
   const proceedToPayment = () => {
     navigation.navigate('PaymentScreen', {
@@ -32,23 +34,23 @@ const ContestReviewScreen = ({ route, navigation }) => {
         >
           <Ionicons name='chevron-back' size={24} color='#fff' />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Review Picks</Text>
+        <Text style={styles.headerText}>Review Predictions</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {/* Contest Info */}
         <View style={styles.contestCard}>
           <View style={styles.contestHeader}>
-            <Ionicons name='trophy-outline' size={24} color='#BA0C2F' />
+            <Ionicons name='stats-chart' size={24} color='#BA0C2F' />
             <Text style={styles.contestTitle}>{contest.title}</Text>
           </View>
           <View style={styles.contestDetails}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Prize Pool:</Text>
-              <Text style={styles.detailValue}>${contest.prize}</Text>
+              <Text style={styles.detailLabel}>Entry Type:</Text>
+              <Text style={styles.detailValue}>2-Pick Power Play</Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Ends:</Text>
+              <Text style={styles.detailLabel}>Predictions Lock:</Text>
               <Text style={styles.detailValue}>{contest.endTime}</Text>
             </View>
           </View>
@@ -56,16 +58,12 @@ const ContestReviewScreen = ({ route, navigation }) => {
 
         {/* Your Picks */}
         <View style={styles.sectionHeader}>
-          <Ionicons name='basketball-outline' size={20} color='#1e3f6d' />
-          <Text style={styles.sectionTitle}>YOUR PICKS</Text>
+          <Ionicons name='checkmark-circle-outline' size={20} color='#1e3f6d' />
+          <Text style={styles.sectionTitle}>YOUR PREDICTIONS</Text>
         </View>
 
         {picks.map((pick, index) => (
           <View key={pick.playerId} style={styles.pickCard}>
-            <View style={styles.pickNumber}>
-              <Text style={styles.pickNumberText}>{index + 1}</Text>
-            </View>
-
             <Image source={{ uri: pick.image }} style={styles.playerImage} />
 
             <View style={styles.pickDetails}>
@@ -81,18 +79,11 @@ const ContestReviewScreen = ({ route, navigation }) => {
                       : styles.underBadge,
                   ]}
                 >
-                  <Ionicons
-                    name={
-                      pick.prediction === 'over' ? 'arrow-up' : 'arrow-down'
-                    }
-                    size={16}
-                    color='#fff'
-                  />
                   <Text style={styles.predictionText}>
-                    {pick.prediction === 'over' ? 'OVER' : 'UNDER'}
+                    {pick.prediction === 'over' ? 'HIGHER' : 'LOWER'}
                   </Text>
                 </View>
-                <Text style={styles.lineText}>{pick.line} PTS</Text>
+                <Text style={styles.lineText}>{pick.line} PTS Projection</Text>
               </View>
             </View>
           </View>
@@ -101,24 +92,24 @@ const ContestReviewScreen = ({ route, navigation }) => {
         {/* Payout Info */}
         <View style={styles.payoutCard}>
           <View style={styles.payoutHeader}>
-            <Ionicons name='cash-outline' size={24} color='#1e3f6d' />
-            <Text style={styles.payoutTitle}>PAYOUT BREAKDOWN</Text>
+            <Ionicons name='flash-outline' size={24} color='#1e3f6d' />
+            <Text style={styles.payoutTitle}>EXPECTED PAYOUT</Text>
           </View>
 
           <View style={styles.payoutRow}>
-            <Text style={styles.payoutLabel}>Entry Fee:</Text>
+            <Text style={styles.payoutLabel}>Entry Amount:</Text>
             <Text style={styles.payoutValue}>${contest.entryFee}</Text>
           </View>
 
           <View style={styles.payoutRow}>
-            <Text style={styles.payoutLabel}>Multiplier:</Text>
-            <Text style={styles.multiplierValue}>3x</Text>
+            <Text style={styles.payoutLabel}>Payout Multiplier:</Text>
+            <Text style={styles.multiplierValue}>{multiplier}x</Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.payoutRow}>
-            <Text style={styles.totalLabel}>Potential Win:</Text>
+            <Text style={styles.totalLabel}>To Win:</Text>
             <Text style={styles.totalValue}>${potentialPayout}</Text>
           </View>
 
@@ -126,10 +117,10 @@ const ContestReviewScreen = ({ route, navigation }) => {
             <Ionicons
               name='information-circle-outline'
               size={18}
-              color='#666'
+              color='#1e3f6d'
             />
             <Text style={styles.winConditionText}>
-              Both picks must hit to win
+              Both predictions must be correct to win
             </Text>
           </View>
         </View>
@@ -139,8 +130,7 @@ const ContestReviewScreen = ({ route, navigation }) => {
           style={styles.editButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name='create-outline' size={20} color='#1e3f6d' />
-          <Text style={styles.editButtonText}>EDIT PICKS</Text>
+          <Text style={styles.editButtonText}>EDIT SELECTIONS</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -150,9 +140,8 @@ const ContestReviewScreen = ({ route, navigation }) => {
           style={styles.confirmButton}
           onPress={proceedToPayment}
         >
-          <Ionicons name='lock-closed-outline' size={20} color='#fff' />
           <Text style={styles.confirmButtonText}>
-            CONFIRM & PAY ${contest.entryFee}
+            SUBMIT ENTRY (${contest.entryFee})
           </Text>
         </TouchableOpacity>
       </View>
