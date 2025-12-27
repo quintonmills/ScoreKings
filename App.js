@@ -3,6 +3,7 @@ import ContestReviewScreen from './src/screens/ContestReview';
 import PaymentScreen from './src/screens/Payment';
 import MainTabs from './src/navigation/MainTabs';
 import LoginScreen from './src/screens/Login';
+import SuccessScreen from './src/screens/SuccessScreen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -40,6 +41,14 @@ export default function App() {
           name='PaymentScreen'
           component={PaymentScreen}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name='SuccessScreen'
+          component={SuccessScreen}
+          options={{
+            animation: 'fade', // Smoother than the default slide
+            animationDuration: 1000, // Makes the transition feel more deliberate
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
