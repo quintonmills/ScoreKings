@@ -5,53 +5,49 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
+  ActivityIndicator, // Ensure this is imported
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
 import Header from '../components/Header';
-console.log('DEBUG - Header is:', Header);
-console.log('DEBUG - Ionicons is:', Ionicons);
+
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Note: API_URL already includes /api, so we just call /contests
     fetch(`${API_URL}/contests`)
       .then((res) => res.json())
-      .then((data) => setContests(data))
-      .catch((err) => console.log(err));
+      .then((data) => {
+        setContests(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+      });
   }, []);
 
   const navigateToPlayerSelection = (contest) => {
     navigation.navigate('PlayerSelection', { contest });
   };
 
-  const navigateToProfile = () => {
-    navigation.navigate('Profile');
-  };
+  // --- MATCHING LOADING STYLE ---
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size='large' color='#BA0C2F' />
+        <Text style={styles.loadingText}>Fetching active contests...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Header with profile icon */}
-      {/* <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name='chevron-back' size={24} color='#fff' />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>MY CONTESTS</Text>
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={navigateToProfile}
-        >
-          <Ionicons name='person-circle-outline' size={28} color='#fff' />
-        </TouchableOpacity>
-      </View> */}
       <Header title='MY CONTESTS' navigation={navigation} />
 
       <ScrollView style={styles.content}>
-        {/* Active contests section */}
         <View style={styles.sectionHeader}>
           <Ionicons name='trophy-outline' size={20} color='#1e3f6d' />
           <Text style={styles.sectionTitle}>ACTIVE CONTESTS</Text>
@@ -61,7 +57,7 @@ const ContestSelectionScreen = ({ navigation }) => {
           <TouchableOpacity
             key={contest.id}
             style={styles.contestCard}
-            onPress={() => navigateToPlayerSelection}
+            onPress={() => navigateToPlayerSelection(contest)}
           >
             <View style={styles.contestHeader}>
               <Text style={styles.contestTitle}>{contest.title}</Text>
@@ -88,23 +84,19 @@ const ContestSelectionScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.playersRow}>
-              {contest.players.map((player, index) => (
+              {contest.players?.map((player, index) => (
                 <View key={index} style={styles.playerPill}>
                   <Text style={styles.playerPillText}>{player}</Text>
                 </View>
               ))}
             </View>
 
-            <TouchableOpacity
-              style={styles.joinButton}
-              onPress={() => navigateToPlayerSelection(contest)}
-            >
+            <View style={styles.joinButton}>
               <Text style={styles.joinButtonText}>SELECT PLAYERS</Text>
-            </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         ))}
 
-        {/* Completed contests section */}
         <View style={styles.sectionHeader}>
           <Ionicons name='checkmark-done-outline' size={20} color='#1e3f6d' />
           <Text style={styles.sectionTitle}>COMPLETED CONTESTS</Text>
@@ -123,35 +115,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    backgroundColor: '#1e3f6d',
-    paddingVertical: 16,
-    borderBottomWidth: 3,
-    borderBottomColor: '#BA0C2F',
-    paddingTop: 50,
-    flexDirection: 'row',
+  // Exact match to your MyContests screen styling
+  center: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
-  headerText: {
-    color: '#fff',
-    fontSize: 20,
+  loadingText: {
+    marginTop: 15,
+    color: '#1e3f6d',
     fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 15,
-    top: 50,
-    zIndex: 1,
-    padding: 8,
-  },
-  profileButton: {
-    position: 'absolute',
-    right: 15,
-    top: 50,
-    zIndex: 1,
-    padding: 8,
+    fontSize: 16,
   },
   content: {
     flex: 1,
@@ -176,10 +151,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#e1e5e9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 2,
   },
   contestHeader: {
