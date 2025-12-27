@@ -9,17 +9,20 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
-const SuccessScreen = ({ navigation }) => {
+const SuccessScreen = ({ navigation, route }) => {
+  // Safe extraction of payout
+  const payout = route.params?.payout ?? 0;
+
   const [showConfetti, setShowConfetti] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
-    // 1. Start the Entrance Animation
+    // 1. Start Animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800, // Slightly slower fade-in
+        duration: 800,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -28,13 +31,15 @@ const SuccessScreen = ({ navigation }) => {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // 2. ONLY AFTER animation finishes:
-      setShowConfetti(true); // Start the party
+      // 2. Trigger Confetti
+      setShowConfetti(true);
 
-      // 3. START the countdown now (4 seconds of "glory time")
-      setTimeout(() => {
+      // 3. Auto-redirect after 4 seconds
+      const timer = setTimeout(() => {
         handleGoToEntries();
       }, 4000);
+
+      return () => clearTimeout(timer);
     });
   }, []);
 
@@ -51,8 +56,7 @@ const SuccessScreen = ({ navigation }) => {
         <ConfettiCannon
           count={200}
           origin={{ x: -10, y: 0 }}
-          fadeOut={true}
-          fallSpeed={3500}
+          fallSpeed={3000}
         />
       )}
 
@@ -67,17 +71,22 @@ const SuccessScreen = ({ navigation }) => {
         </View>
 
         <Text style={styles.title}>LOCKED IN! 🔒</Text>
-        <Text style={styles.subtitle}>
-          Your picks are registered for the local showdown.
-        </Text>
+
+        <View style={styles.payoutCard}>
+          <Text style={styles.payoutLabel}>POTENTIAL WINNINGS</Text>
+          <Text style={styles.payoutValue}>${payout}</Text>
+        </View>
+
+        <Text style={styles.subtitle}>Good luck in tonight's matchups!</Text>
 
         <TouchableOpacity style={styles.button} onPress={handleGoToEntries}>
-          <Text style={styles.buttonText}>VIEW MY ENTRIES NOW</Text>
+          <Text style={styles.buttonText}>VIEW MY ENTRIES</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -89,7 +98,7 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     width: '100%',
-    zIndex: 10, // Ensure text is above confetti
+    zIndex: 10,
   },
   iconCircle: {
     width: 120,
@@ -118,6 +127,28 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 40,
     lineHeight: 24,
+  },
+  payoutCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 20,
+    borderRadius: 15,
+    width: '100%',
+    alignItems: 'center',
+    marginVertical: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  payoutLabel: {
+    color: '#cbd5e0',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 5,
+  },
+  payoutValue: {
+    color: '#28a745',
+    fontSize: 42,
+    fontWeight: '900',
   },
   button: {
     backgroundColor: '#BA0C2F',

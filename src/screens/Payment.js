@@ -32,24 +32,16 @@ const PaymentScreen = ({ route, navigation }) => {
 
       if (response.ok) {
         setIsProcessing(false);
-
-        // Use replace to kill the PaymentScreen immediately
-        navigation.replace('SuccessScreen');
-
-        return; // 🔥 CRITICAL: Stops any further code from running
+        // Navigate to SuccessScreen and STOP
+        navigation.replace('SuccessScreen', {
+          payout: potentialPayout,
+        });
+        return;
       } else {
+        // Handle logic errors (e.g., insufficient funds)
         setIsProcessing(false);
-        Alert.alert('Error', data.error);
+        Alert.alert('Error', data.error || 'Failed to submit entry');
       }
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'MainTabs',
-            params: { screen: 'MyContests', params: { justEntered: true } },
-          },
-        ],
-      });
     } catch (err) {
       console.error('Payment error:', err);
       Alert.alert('Error', 'Unable to connect to server');
