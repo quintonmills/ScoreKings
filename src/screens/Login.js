@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,28 +8,38 @@ import {
   ImageBackground,
   Alert,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
-// import * as LocalAuthentication from 'expo-local-authentication';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { API_URL } from '../config/api';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const buttonScale = new Animated.Value(1);
   const Background = require('../assets/LoginBackground.png');
 
-  const simulateLogin = () => {
-    setIsLoading(true);
+  // 1. AUTO-LOGIN LOGIC
+  // Checks if a token exists when the app opens to skip the login screen
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
+        navigation.replace('MainTabs');
+      }
+    };
+    checkExistingSession();
+  }, []);
+
+  // 2. ANIMATION HELPER
+  const animateButton = () => {
     Animated.sequence([
       Animated.timing(buttonScale, {
         toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonScale, {
-        toValue: 1.05,
         duration: 100,
         useNativeDriver: true,
       }),
@@ -39,29 +49,58 @@ const LoginScreen = ({ navigation }) => {
         useNativeDriver: true,
       }),
     ]).start();
+  };
 
-    setTimeout(() => {
+  // 3. ACTUAL LOGIN LOGIC
+  const handleLogin = async () => {
+    animateButton();
+
+    // DEVELOPER BACKDOOR
+    if (email.toLowerCase() === 'admin' && password === 'admin') {
+      await AsyncStorage.setItem('userToken', 'dev-bypass-token');
+      await AsyncStorage.setItem('userId', '1');
+      navigation.replace('MainTabs');
+      return;
+    }
+
+    // VALIDATION
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Persist the session
+        await AsyncStorage.setItem('userToken', data.token);
+        await AsyncStorage.setItem('userId', data.user.id.toString());
+
+        navigation.replace('MainTabs');
+      } else {
+        Alert.alert('Login Failed', data.error || 'Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login Error:', error);
+      Alert.alert(
+        'Network Error',
+        'Check your internet connection or server status'
+      );
+    } finally {
       setIsLoading(false);
-      navigation.navigate('MainTabs');
-    }, 10);
-  };
-
-  const handleLogin = () => {
-    // if (!email.trim() || !password.trim()) {
-    //     Alert.alert('Error', 'Please fill all fields');
-    //     return;
-    // }
-
-    // if (!/^\S+@\S+\.\S+$/.test(email)) {
-    //     Alert.alert('Error', 'Invalid email format');
-    //     return;
-    // }
-
-    simulateLogin();
-  };
-
-  const handleSocialLogin = (provider) => {
-    Alert.alert('Coming Soon', `${provider} login will be available soon`);
+    }
   };
 
   return (
@@ -69,67 +108,68 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.container}>
         <Text style={styles.title}>ScoreKings</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder='Email'
-          placeholderTextColor='#fff'
-          value={email}
-          onChangeText={setEmail}
-          keyboardType='email-address'
-          autoCapitalize='none'
-        />
-
-        <View style={styles.passwordContainer}>
+        <View style={styles.formContainer}>
           <TextInput
-            style={styles.passwordInput}
-            placeholder='Password'
-            placeholderTextColor='#fff'
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
+            style={styles.input}
+            placeholder='Email or "admin"'
+            placeholderTextColor='rgba(255,255,255,0.7)'
+            value={email}
+            onChangeText={setEmail}
+            keyboardType='email-address'
+            autoCapitalize='none'
           />
-          <TouchableOpacity
-            style={styles.toggleButton}
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={24}
-              color='#fff'
+
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder='Password'
+              placeholderTextColor='rgba(255,255,255,0.7)'
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
             />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={22}
+                color='#fff'
+              />
+            </TouchableOpacity>
+          </View>
+
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && styles.disabledButton]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color='#fff' />
+              ) : (
+                <Text style={styles.buttonText}>LOGIN</Text>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
         </View>
 
-        <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={isLoading}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Logging in...' : 'Login'}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
         <View style={styles.socialContainer}>
           <Text style={styles.socialText}>Or login with</Text>
           <View style={styles.socialButtons}>
             <TouchableOpacity
-              style={[styles.socialButton, { backgroundColor: '#4267B2' }]}
-              onPress={() => handleSocialLogin('Facebook')}
+              style={[styles.socialCircle, { backgroundColor: '#4267B2' }]}
             >
               <Ionicons name='logo-facebook' size={24} color='#fff' />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.socialButton, { backgroundColor: '#DB4437' }]}
-              onPress={() => handleSocialLogin('Google')}
+              style={[styles.socialCircle, { backgroundColor: '#DB4437' }]}
             >
               <Ionicons name='logo-google' size={24} color='#fff' />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.socialButton, { backgroundColor: '#000' }]}
-              onPress={() => handleSocialLogin('Apple')}
+              style={[styles.socialCircle, { backgroundColor: '#000' }]}
             >
               <Ionicons name='logo-apple' size={24} color='#fff' />
             </TouchableOpacity>
@@ -143,11 +183,6 @@ const LoginScreen = ({ navigation }) => {
               <Text style={styles.linkText}>Sign up</Text>
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </ImageBackground>
@@ -155,114 +190,84 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: { flex: 1, resizeMode: 'cover' },
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
-  },
-  backgroundImage: {
-    flex: 1,
-    resizeMode: 'cover',
+    padding: 30,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 42,
+    fontWeight: '900',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 50,
     color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
+  formContainer: { width: '100%' },
   input: {
-    height: 50,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
+    height: 55,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 20,
     marginBottom: 15,
-    fontSize: 16,
     color: '#fff',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
-  passwordContainer: {
+  passwordWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 25,
   },
   passwordInput: {
     flex: 1,
-    height: 50,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    fontSize: 16,
+    height: 55,
+    paddingHorizontal: 20,
     color: '#fff',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    fontSize: 16,
   },
-  toggleButton: {
-    position: 'absolute',
-    right: 15,
-  },
+  eyeIcon: { padding: 10, marginRight: 5 },
   loginButton: {
     backgroundColor: '#BA0C2F',
-    padding: 15,
-    borderRadius: 8,
+    height: 55,
+    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
+  disabledButton: { opacity: 0.7 },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 18,
+    letterSpacing: 1,
   },
-
-  socialContainer: {
-    marginVertical: 20,
-    alignItems: 'center',
-  },
-  socialText: {
-    color: '#fff',
-    marginBottom: 15,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  socialButton: {
+  socialContainer: { marginTop: 40, alignItems: 'center' },
+  socialText: { color: '#fff', marginBottom: 20, opacity: 0.8 },
+  socialButtons: { flexDirection: 'row', justifyContent: 'center' },
+  socialCircle: {
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 10,
+    marginHorizontal: 12,
   },
-  footer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  footerText: {
-    textAlign: 'center',
-    color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  linkText: {
-    color: '#BA0C2F',
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  forgotText: {
-    color: '#fff',
-    marginTop: 10,
-    textDecorationLine: 'underline',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-  },
+  footer: { marginTop: 30, alignItems: 'center' },
+  footerText: { color: '#fff', fontSize: 14 },
+  linkText: { color: '#BA0C2F', fontWeight: 'bold' },
 });
 
 export default LoginScreen;
