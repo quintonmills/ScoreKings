@@ -9,9 +9,58 @@ import {
   SafeAreaView,
   Image,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { API_URL } from '../config/api';
+
+const { width } = Dimensions.get('window');
+
+// Theme Constants (same as MyContestsScreen)
+const COLORS = {
+  primary: '#1e3f6d', // Dark blue
+  secondary: '#BA0C2F', // Red
+  success: '#34C759', // Green
+  warning: '#FF9500', // Orange
+  danger: '#FF3B30', // Red
+  light: '#ffffff',
+  dark: '#0A1428',
+  gray: '#8E8E93',
+  lightGray: '#F5F5F7',
+  cardBg: '#ffffff',
+  cardBorder: '#E5E5EA',
+};
+
+const TYPOGRAPHY = {
+  h1: { fontSize: 28, fontWeight: '800', lineHeight: 34 },
+  h2: { fontSize: 22, fontWeight: '700', lineHeight: 28 },
+  h3: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
+  body: { fontSize: 16, fontWeight: '400', lineHeight: 22 },
+  caption: { fontSize: 14, fontWeight: '400', lineHeight: 18 },
+  small: { fontSize: 12, fontWeight: '400', lineHeight: 16 },
+};
+
+const SPACING = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+};
+
+const CARD_STYLES = {
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: COLORS.cardBorder,
+};
 
 const PlayerSelectionScreen = ({ navigation, route }) => {
   const { contest } = route.params;
@@ -22,21 +71,9 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        // Fetching players since the contest-specific props route might be empty
         const response = await fetch(`${API_URL}/players`);
         const data = await response.json();
 
-        // If the backend sends raw Players, but the UI wants "Props":
-        const formattedData = data.map((item) => ({
-          playerId: item.id,
-          playerName: item.name,
-          team: item.team,
-          image: item.image,
-          line: 22.5, // UI expects this
-          seasonAvg: item.ppg, // UI expects this
-          stat: 'POINTS', // UI expects this
-        }));
-        setProps(formattedData);
         // Transform Player data into the "Prop" format the UI expects
         const transformedData = data.map((player) => ({
           playerId: player.id,
@@ -51,7 +88,7 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
         setPlayers(transformedData);
       } catch (error) {
         console.error('Error fetching players:', error);
-        // DEMO FALLBACK: If DB connection fails, show these so you can still demo
+        // DEMO FALLBACK: If DB connection fails, show demo data
         setPlayers([
           {
             playerId: 1,
@@ -104,64 +141,123 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
     setPicks(newPicks);
   };
 
+  const getPickStatus = (playerId) => {
+    const pick = picks.find((p) => p.playerId === playerId);
+    if (!pick) return null;
+    return {
+      isSelected: true,
+      prediction: pick.prediction,
+      isOver: pick.prediction === 'over',
+      isUnder: pick.prediction === 'under',
+    };
+  };
+
   const renderPlayerCard = ({ item }) => {
-    const currentPick = picks.find((p) => p.playerId === item.playerId);
-    const isOver = currentPick?.prediction === 'over';
-    const isUnder = currentPick?.prediction === 'under';
+    const pickStatus = getPickStatus(item.playerId);
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.playerCard, CARD_STYLES.shadow]}>
+        {/* Card Header */}
         <View style={styles.cardHeader}>
           <Image source={{ uri: item.image }} style={styles.playerImage} />
           <View style={styles.playerInfo}>
-            <Text style={styles.playerName}>{item.playerName}</Text>
+            <Text style={styles.playerName} numberOfLines={1}>
+              {item.playerName}
+            </Text>
             <Text style={styles.playerTeam}>
-              {item.team} • AVG {item.seasonAvg}
+              {item.team} • Avg: {item.seasonAvg} {item.stat}
             </Text>
           </View>
-          <View style={styles.lineBadge}>
-            <Text style={styles.lineLabel}>{item.stat}</Text>
+          <View style={styles.lineContainer}>
+            <Text style={styles.lineLabel}>LINE</Text>
             <Text style={styles.lineValue}>{item.line}</Text>
           </View>
         </View>
 
-        <View style={styles.divider} />
+        {/* Pick Status Badge */}
+        {pickStatus && (
+          <View style={styles.selectionBadge}>
+            <Text
+              style={[
+                styles.selectionText,
+                pickStatus.isOver ? styles.overText : styles.underText,
+              ]}
+            >
+              {pickStatus.prediction.toUpperCase()} SELECTED
+            </Text>
+          </View>
+        )}
 
-        <View style={styles.buttonRow}>
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
           <TouchableOpacity
             style={[
-              styles.predButton,
-              styles.overBtn,
-              isOver && styles.overActive,
+              styles.predictionButton,
+              styles.overButton,
+              pickStatus?.isOver && styles.overActive,
             ]}
             onPress={() => handlePickSelection(item, 'over')}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name='arrow-up'
-              size={18}
-              color={isOver ? '#fff' : '#28a745'}
-            />
-            <Text style={[styles.predText, isOver && styles.textWhite]}>
-              HIGHER
-            </Text>
+            <LinearGradient
+              colors={
+                pickStatus?.isOver
+                  ? ['#34C759', '#28a745']
+                  : ['transparent', 'transparent']
+              }
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons
+                name='arrow-up'
+                size={18}
+                color={pickStatus?.isOver ? COLORS.light : COLORS.success}
+              />
+              <Text
+                style={[
+                  styles.predictionText,
+                  pickStatus?.isOver && styles.activeText,
+                ]}
+              >
+                OVER
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
-              styles.predButton,
-              styles.underBtn,
-              isUnder && styles.underActive,
+              styles.predictionButton,
+              styles.underButton,
+              pickStatus?.isUnder && styles.underActive,
             ]}
             onPress={() => handlePickSelection(item, 'under')}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name='arrow-down'
-              size={18}
-              color={isUnder ? '#fff' : '#BA0C2F'}
-            />
-            <Text style={[styles.predText, isUnder && styles.textWhite]}>
-              LOWER
-            </Text>
+            <LinearGradient
+              colors={
+                pickStatus?.isUnder
+                  ? [COLORS.secondary, '#a00a25']
+                  : ['transparent', 'transparent']
+              }
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons
+                name='arrow-down'
+                size={18}
+                color={pickStatus?.isUnder ? COLORS.light : COLORS.secondary}
+              />
+              <Text
+                style={[
+                  styles.predictionText,
+                  pickStatus?.isUnder && styles.activeText,
+                ]}
+              >
+                UNDER
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
@@ -170,152 +266,303 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size='large' color='#BA0C2F' />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size='large' color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading players...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.headerSection}>
+    <View style={styles.container}>
+      {/* Header */}
+      <LinearGradient
+        colors={[COLORS.primary, '#2A5298']}
+        style={styles.header}
+      >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          style={styles.backButton}
         >
-          <Ionicons name='chevron-back' size={28} color='#1e3f6d' />
+          <Ionicons name='chevron-back' size={24} color={COLORS.light} />
         </TouchableOpacity>
-        <View>
-          <Text style={styles.welcomeText}>CONTEST: {contest.title}</Text>
-          <Text style={styles.mainHeading}>PICK 2 PLAYERS</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>SELECT PLAYERS</Text>
+          <Text style={styles.headerSubtitle}>{contest.title}</Text>
         </View>
+      </LinearGradient>
+
+      {/* Selection Counter */}
+      <View style={styles.counterCard}>
+        <Text style={styles.counterTitle}>PICKS SELECTED</Text>
+        <View style={styles.counterContainer}>
+          <Text style={styles.counterNumber}>{picks.length}</Text>
+          <Text style={styles.counterLabel}>/ 2</Text>
+        </View>
+        <Text style={styles.counterInstruction}>
+          Tap OVER or UNDER for each player
+        </Text>
       </View>
 
+      {/* Players List */}
       <FlatList
         data={players}
         keyExtractor={(item) => item.playerId.toString()}
         renderItem={renderPlayerCard}
-        contentContainerStyle={styles.listPadding}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       />
 
+      {/* Continue Button */}
       {picks.length === 2 && (
-        <View style={styles.footerAction}>
+        <View style={styles.footer}>
           <TouchableOpacity
             style={styles.continueButton}
             onPress={() =>
               navigation.navigate('ContestReviewScreen', { contest, picks })
             }
+            activeOpacity={0.8}
           >
-            <Text style={styles.continueText}>REVIEW ENTRIES</Text>
-            <Ionicons name='arrow-forward' size={18} color='#fff' />
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.secondary]}
+              style={styles.continueGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.continueText}>REVIEW ENTRIES</Text>
+              <Ionicons
+                name='arrow-forward'
+                size={18}
+                color={COLORS.light}
+                style={{ marginLeft: 8 }}
+              />
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F4F7' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E1E5E9',
-  },
-  backBtn: { marginRight: 15 },
-  welcomeText: {
-    color: '#BA0C2F',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  mainHeading: { color: '#1e3f6d', fontSize: 22, fontWeight: '900' },
-  listPadding: { padding: 15, paddingBottom: 100 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 18,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#E1E5E9',
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'center' },
-  playerImage: {
-    width: 60, // MUST HAVE WIDTH
-    height: 60, // MUST HAVE HEIGHT
-    borderRadius: 30, // Makes it a circle
-    backgroundColor: '#DDD', // This proves the component is there!
-    marginRight: 12,
-    resizeMode: 'cover', // Ensures the face fills the circle
-  },
-  playerInfo: { flex: 1 },
-  playerName: { fontSize: 19, fontWeight: '800', color: '#1e3f6d' },
-  playerTeam: { fontSize: 13, color: '#666', fontWeight: '600', marginTop: 2 },
-  lineBadge: {
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    padding: 8,
-    borderRadius: 12,
-    width: 75,
-    borderWidth: 1,
-    borderColor: '#E1E5E9',
-  },
-  lineLabel: { fontSize: 10, fontWeight: 'bold', color: '#666' },
-  lineValue: { fontSize: 20, fontWeight: '900', color: '#1e3f6d' },
-  divider: { height: 1, backgroundColor: '#E1E5E9', marginVertical: 15 },
-  buttonRow: { flexDirection: 'row', gap: 10 },
-  predButton: {
+  container: {
     flex: 1,
-    flexDirection: 'row',
+    backgroundColor: COLORS.lightGray,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 2,
+    backgroundColor: COLORS.lightGray,
   },
-  overBtn: { borderColor: '#28a745', backgroundColor: '#fff' },
-  underBtn: { borderColor: '#BA0C2F', backgroundColor: '#fff' },
-  overActive: { backgroundColor: '#28a745' },
-  underActive: { backgroundColor: '#BA0C2F' },
-  predText: { fontWeight: '900', fontSize: 14, marginLeft: 6 },
-  textWhite: { color: '#fff' },
-  footerAction: {
+  loadingText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.gray,
+    marginTop: SPACING.md,
+  },
+  header: {
+    paddingTop: 60,
+    paddingBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  backButton: {
+    marginRight: SPACING.sm,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    ...TYPOGRAPHY.h2,
+    color: COLORS.light,
+  },
+  headerSubtitle: {
+    ...TYPOGRAPHY.caption,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: SPACING.xs,
+  },
+  counterCard: {
+    backgroundColor: COLORS.cardBg,
+    margin: SPACING.md,
+    borderRadius: CARD_STYLES.borderRadius,
+    padding: SPACING.lg,
+    borderWidth: CARD_STYLES.borderWidth,
+    borderColor: CARD_STYLES.borderColor,
+    ...CARD_STYLES.shadow,
+    alignItems: 'center',
+  },
+  counterTitle: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.gray,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginBottom: SPACING.sm,
+  },
+  counterContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: SPACING.sm,
+  },
+  counterNumber: {
+    ...TYPOGRAPHY.h1,
+    color: COLORS.primary,
+  },
+  counterLabel: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.gray,
+    marginLeft: SPACING.xs,
+  },
+  counterInstruction: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.gray,
+    textAlign: 'center',
+  },
+  scrollContent: {
+    padding: SPACING.md,
+    paddingBottom: SPACING.xl,
+  },
+  playerCard: {
+    backgroundColor: COLORS.cardBg,
+    marginBottom: SPACING.md,
+    borderRadius: CARD_STYLES.borderRadius,
+    borderWidth: CARD_STYLES.borderWidth,
+    borderColor: COLORS.cardBorder,
+    padding: SPACING.md,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  playerImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.lightGray,
+    marginRight: SPACING.md,
+    resizeMode: 'cover',
+  },
+  playerInfo: {
+    flex: 1,
+  },
+  playerName: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.dark,
+    marginBottom: SPACING.xs,
+  },
+  playerTeam: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.gray,
+  },
+  lineContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(30, 63, 109, 0.1)',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: 6,
+    minWidth: 70,
+  },
+  lineLabel: {
+    ...TYPOGRAPHY.small,
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontSize: 10,
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  lineValue: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  selectionBadge: {
+    backgroundColor: 'rgba(30, 63, 109, 0.1)',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginBottom: SPACING.md,
+  },
+  selectionText: {
+    ...TYPOGRAPHY.small,
+    fontWeight: '600',
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+  overText: {
+    color: COLORS.success,
+  },
+  underText: {
+    color: COLORS.secondary,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: SPACING.sm,
+  },
+  predictionButton: {
+    flex: 1,
+    borderWidth: 2,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+  },
+  overButton: {
+    borderColor: COLORS.success,
+  },
+  underButton: {
+    borderColor: COLORS.secondary,
+  },
+  overActive: {
+    borderColor: COLORS.success,
+  },
+  underActive: {
+    borderColor: COLORS.secondary,
+  },
+  predictionText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: '600',
+    marginLeft: SPACING.xs,
+  },
+  activeText: {
+    color: COLORS.light,
+  },
+  footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: SPACING.md,
+    backgroundColor: COLORS.light,
     borderTopWidth: 1,
-    borderColor: '#E1E5E9',
+    borderTopColor: COLORS.cardBorder,
+    ...CARD_STYLES.shadow,
   },
   continueButton: {
-    backgroundColor: '#1e3f6d',
-    borderRadius: 15,
-    paddingVertical: 18,
+    width: '100%',
+  },
+  continueGradient: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#1e3f6d',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
+    justifyContent: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: 25,
   },
   continueText: {
-    color: '#fff',
-    fontWeight: '900',
-    fontSize: 16,
-    marginRight: 8,
+    ...TYPOGRAPHY.body,
+    color: COLORS.light,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
 });
 
