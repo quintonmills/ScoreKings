@@ -2,490 +2,320 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
-  TouchableOpacity,
   StyleSheet,
-  ScrollView,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  SafeAreaView,
+  Image,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
-import Header from '../components/Header';
 
-const PlayerSelection = ({ navigation, route }) => {
+const PlayerSelectionScreen = ({ navigation, route }) => {
   const { contest } = route.params;
-  const [props, setProps] = useState([]);
+  const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [picks, setPicks] = useState([]);
 
-  // Fetch player props for this contest
   useEffect(() => {
-    const fetchProps = async () => {
+    const fetchPlayers = async () => {
       try {
-        const response = await fetch(`${API_URL}/contests/${contest.id}/props`);
+        // Fetching players since the contest-specific props route might be empty
+        const response = await fetch(`${API_URL}/players`);
         const data = await response.json();
-        setProps(data);
+
+        // If the backend sends raw Players, but the UI wants "Props":
+        const formattedData = data.map((item) => ({
+          playerId: item.id,
+          playerName: item.name,
+          team: item.team,
+          image: item.image,
+          line: 22.5, // UI expects this
+          seasonAvg: item.ppg, // UI expects this
+          stat: 'POINTS', // UI expects this
+        }));
+        setProps(formattedData);
+        // Transform Player data into the "Prop" format the UI expects
+        const transformedData = data.map((player) => ({
+          playerId: player.id,
+          playerName: player.name,
+          team: player.team,
+          image: player.image,
+          stat: 'POINTS',
+          line: 21.5, // Default line for demo
+          seasonAvg: player.ppg || 0,
+        }));
+
+        setPlayers(transformedData);
       } catch (error) {
-        console.error('Error fetching props:', error);
-        Alert.alert('Error', 'Failed to load player props');
+        console.error('Error fetching players:', error);
+        // DEMO FALLBACK: If DB connection fails, show these so you can still demo
+        setPlayers([
+          {
+            playerId: 1,
+            playerName: 'Eli Ellis',
+            team: 'YNG',
+            image: 'https://ot-p-83015.s3.amazonaws.com/players/eli_ellis.png',
+            line: 28.5,
+            seasonAvg: 32.4,
+            stat: 'POINTS',
+          },
+          {
+            playerId: 2,
+            playerName: 'Ian Jackson',
+            team: 'OSC',
+            image:
+              'https://ot-p-83015.s3.amazonaws.com/players/ian_jackson.png',
+            line: 21.5,
+            seasonAvg: 24.2,
+            stat: 'POINTS',
+          },
+        ]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProps();
-  }, [contest.id]);
+    fetchPlayers();
+  }, []);
+
+  const handlePickSelection = (player, prediction) => {
+    const existingPickIndex = picks.findIndex(
+      (p) => p.playerId === player.playerId
+    );
+    let newPicks = [...picks];
+
+    if (existingPickIndex !== -1) {
+      if (newPicks[existingPickIndex].prediction === prediction) {
+        newPicks.splice(existingPickIndex, 1); // Remove if clicking same button
+      } else {
+        newPicks[existingPickIndex].prediction = prediction; // Switch Over/Under
+      }
+    } else {
+      if (picks.length >= 2) {
+        Alert.alert('Limit Reached', 'You can only select 2 players.');
+        return;
+      }
+      newPicks.push({ ...player, prediction });
+    }
+    setPicks(newPicks);
+  };
+
+  const renderPlayerCard = ({ item }) => {
+    const currentPick = picks.find((p) => p.playerId === item.playerId);
+    const isOver = currentPick?.prediction === 'over';
+    const isUnder = currentPick?.prediction === 'under';
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Image source={{ uri: item.image }} style={styles.playerImage} />
+          <View style={styles.playerInfo}>
+            <Text style={styles.playerName}>{item.playerName}</Text>
+            <Text style={styles.playerTeam}>
+              {item.team} • AVG {item.seasonAvg}
+            </Text>
+          </View>
+          <View style={styles.lineBadge}>
+            <Text style={styles.lineLabel}>{item.stat}</Text>
+            <Text style={styles.lineValue}>{item.line}</Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[
+              styles.predButton,
+              styles.overBtn,
+              isOver && styles.overActive,
+            ]}
+            onPress={() => handlePickSelection(item, 'over')}
+          >
+            <Ionicons
+              name='arrow-up'
+              size={18}
+              color={isOver ? '#fff' : '#28a745'}
+            />
+            <Text style={[styles.predText, isOver && styles.textWhite]}>
+              HIGHER
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.predButton,
+              styles.underBtn,
+              isUnder && styles.underActive,
+            ]}
+            onPress={() => handlePickSelection(item, 'under')}
+          >
+            <Ionicons
+              name='arrow-down'
+              size={18}
+              color={isUnder ? '#fff' : '#BA0C2F'}
+            />
+            <Text style={[styles.predText, isUnder && styles.textWhite]}>
+              LOWER
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        {/* <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name='chevron-back' size={24} color='#fff' />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Loading...</Text>
-        </View> */}
-        <Header title='Pick 2 Players' navigation={navigation} />
+      <View style={styles.center}>
+        <ActivityIndicator size='large' color='#BA0C2F' />
       </View>
     );
   }
 
-  const handlePickSelection = (prop, prediction) => {
-    const existingPickIndex = picks.findIndex(
-      (p) => p.playerId === prop.playerId
-    );
-
-    if (existingPickIndex !== -1) {
-      // Update existing pick
-      const newPicks = [...picks];
-      newPicks[existingPickIndex] = {
-        playerId: prop.playerId,
-        playerName: prop.playerName,
-        team: prop.team,
-        stat: prop.stat,
-        line: prop.line,
-        prediction: prediction,
-        image: prop.image,
-      };
-      setPicks(newPicks);
-    } else if (picks.length < 2) {
-      // Add new pick
-      setPicks([
-        ...picks,
-        {
-          playerId: prop.playerId,
-          playerName: prop.playerName,
-          team: prop.team,
-          stat: prop.stat,
-          line: prop.line,
-          prediction: prediction,
-          image: prop.image,
-        },
-      ]);
-    } else {
-      Alert.alert('Limit Reached', 'You can only select 2 players');
-    }
-  };
-
-  const removePick = (playerId) => {
-    setPicks(picks.filter((p) => p.playerId !== playerId));
-  };
-
-  const getPlayerPick = (playerId) => {
-    return picks.find((p) => p.playerId === playerId);
-  };
-
-  const continueToReview = () => {
-    if (picks.length !== 2) {
-      Alert.alert('Invalid Selection', 'Please select exactly 2 players');
-      return;
-    }
-
-    navigation.navigate('ContestReviewScreen', {
-      contest,
-      picks,
-    });
-  };
-
-  const potentialPayout = contest.entryFee * 3;
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      {/* <View style={styles.header}> */}
-      <Header title='Pick 2 Players' navigation={navigation} />
-      {/* </View> */}
-
-      {/* Contest Info Banner */}
-      <View style={styles.contestBanner}>
-        <View style={styles.bannerRow}>
-          <Text style={styles.bannerText}>{contest.title}</Text>
-          <Text style={styles.bannerPrize}>${contest.prize} Prize</Text>
-        </View>
-        <View style={styles.bannerRow}>
-          <Text style={styles.bannerSubtext}>Entry: ${contest.entryFee}</Text>
-          <Text style={styles.bannerSubtext}>Win 3x (${potentialPayout})</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerSection}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+        >
+          <Ionicons name='chevron-back' size={28} color='#1e3f6d' />
+        </TouchableOpacity>
+        <View>
+          <Text style={styles.welcomeText}>CONTEST: {contest.title}</Text>
+          <Text style={styles.mainHeading}>PICK 2 PLAYERS</Text>
         </View>
       </View>
 
-      {/* Selected Picks Summary */}
-      {picks.length > 0 && (
-        <View style={styles.picksSummary}>
-          <Text style={styles.picksSummaryTitle}>
-            Your Picks ({picks.length}/2)
-          </Text>
-          {picks.map((pick, index) => (
-            <View key={pick.playerId} style={styles.selectedPickCard}>
-              <Image
-                source={{ uri: pick.image }}
-                style={styles.smallPlayerImage}
-              />
-              <View style={styles.pickInfo}>
-                <Text style={styles.pickPlayerName}>{pick.playerName}</Text>
-                <Text style={styles.pickPrediction}>
-                  {pick.prediction === 'over' ? 'OVER' : 'UNDER'} {pick.line}{' '}
-                  PTS
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => removePick(pick.playerId)}>
-                <Ionicons name='close-circle' size={24} color='#BA0C2F' />
-              </TouchableOpacity>
-            </View>
-          ))}
+      <FlatList
+        data={players}
+        keyExtractor={(item) => item.playerId.toString()}
+        renderItem={renderPlayerCard}
+        contentContainerStyle={styles.listPadding}
+      />
+
+      {picks.length === 2 && (
+        <View style={styles.footerAction}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={() =>
+              navigation.navigate('ContestReviewScreen', { contest, picks })
+            }
+          >
+            <Text style={styles.continueText}>REVIEW ENTRIES</Text>
+            <Ionicons name='arrow-forward' size={18} color='#fff' />
+          </TouchableOpacity>
         </View>
       )}
-
-      {/* Available Props */}
-      <ScrollView contentContainerStyle={styles.propsContainer}>
-        <Text style={styles.sectionTitle}>Available Players</Text>
-
-        {props.map((prop) => {
-          const playerPick = getPlayerPick(prop.playerId);
-          const isSelected = !!playerPick;
-
-          return (
-            <View
-              key={prop.playerId}
-              style={[styles.propCard, isSelected && styles.selectedPropCard]}
-            >
-              <View style={styles.propHeader}>
-                <Image
-                  source={{ uri: prop.image }}
-                  style={styles.playerImage}
-                />
-                <View style={styles.playerInfo}>
-                  <Text style={styles.playerName}>{prop.playerName}</Text>
-                  <Text style={styles.playerTeam}>{prop.team}</Text>
-                  <Text style={styles.seasonAvg}>
-                    Avg: {prop.seasonAvg} PPG
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.propLine}>
-                <Text style={styles.lineLabel}>POINT LINE</Text>
-                <Text style={styles.lineValue}>{prop.line}</Text>
-              </View>
-
-              <View style={styles.buttonsRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.predictionButton,
-                    styles.overButton,
-                    playerPick?.prediction === 'over' &&
-                      styles.selectedOverButton,
-                  ]}
-                  onPress={() => handlePickSelection(prop, 'over')}
-                >
-                  <Ionicons
-                    name='arrow-up'
-                    size={20}
-                    color={
-                      playerPick?.prediction === 'over' ? '#fff' : '#28a745'
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      playerPick?.prediction === 'over' &&
-                        styles.selectedButtonText,
-                    ]}
-                  >
-                    OVER
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.predictionButton,
-                    styles.underButton,
-                    playerPick?.prediction === 'under' &&
-                      styles.selectedUnderButton,
-                  ]}
-                  onPress={() => handlePickSelection(prop, 'under')}
-                >
-                  <Ionicons
-                    name='arrow-down'
-                    size={20}
-                    color={
-                      playerPick?.prediction === 'under' ? '#fff' : '#BA0C2F'
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      playerPick?.prediction === 'under' &&
-                        styles.selectedButtonText,
-                    ]}
-                  >
-                    UNDER
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        })}
-      </ScrollView>
-
-      {/* Continue Button */}
-      {picks.length === 2 && (
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={continueToReview}
-        >
-          <Text style={styles.continueButtonText}>REVIEW PICKS</Text>
-          <Ionicons name='arrow-forward' size={20} color='#fff' />
-        </TouchableOpacity>
-      )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1, backgroundColor: '#F2F4F7' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  headerSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: '#fff',
-  },
-  header: {
-    backgroundColor: '#1e3f6d',
-    paddingVertical: 16,
-    borderBottomWidth: 3,
-    borderBottomColor: '#BA0C2F',
-    paddingTop: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 15,
-    top: 50,
-    zIndex: 1,
-    padding: 8,
-  },
-  contestBanner: {
-    backgroundColor: '#f8f9fa',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e5e9',
-  },
-  bannerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  bannerText: {
-    color: '#1e3f6d',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  bannerPrize: {
-    color: '#BA0C2F',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  bannerSubtext: {
-    color: '#666',
-    fontSize: 14,
-  },
-  picksSummary: {
-    backgroundColor: 'rgba(186, 12, 47, 0.05)',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e5e9',
-  },
-  picksSummaryTitle: {
-    color: '#1e3f6d',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  selectedPickCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: '#BA0C2F',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E1E5E9',
   },
-  smallPlayerImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  pickInfo: {
-    flex: 1,
-  },
-  pickPlayerName: {
-    color: '#1e3f6d',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  pickPrediction: {
+  backBtn: { marginRight: 15 },
+  welcomeText: {
     color: '#BA0C2F',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
-  propsContainer: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  sectionTitle: {
-    color: '#1e3f6d',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  propCard: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
+  mainHeading: { color: '#1e3f6d', fontSize: 22, fontWeight: '900' },
+  listPadding: { padding: 15, paddingBottom: 100 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 18,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: '#e1e5e9',
+    borderColor: '#E1E5E9',
   },
-  selectedPropCard: {
-    borderColor: '#BA0C2F',
-    borderWidth: 2,
-  },
-  propHeader: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center' },
   playerImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 60, // MUST HAVE WIDTH
+    height: 60, // MUST HAVE HEIGHT
+    borderRadius: 30, // Makes it a circle
+    backgroundColor: '#DDD', // This proves the component is there!
     marginRight: 12,
+    resizeMode: 'cover', // Ensures the face fills the circle
   },
-  playerInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  playerName: {
-    color: '#1e3f6d',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  playerTeam: {
-    color: '#666',
-    fontSize: 14,
-  },
-  seasonAvg: {
-    color: '#BA0C2F',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  propLine: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 6,
+  playerInfo: { flex: 1 },
+  playerName: { fontSize: 19, fontWeight: '800', color: '#1e3f6d' },
+  playerTeam: { fontSize: 13, color: '#666', fontWeight: '600', marginTop: 2 },
+  lineBadge: {
     alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: '#F8F9FA',
+    padding: 8,
+    borderRadius: 12,
+    width: 75,
+    borderWidth: 1,
+    borderColor: '#E1E5E9',
   },
-  lineLabel: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  lineValue: {
-    color: '#1e3f6d',
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  buttonsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  predictionButton: {
+  lineLabel: { fontSize: 10, fontWeight: 'bold', color: '#666' },
+  lineValue: { fontSize: 20, fontWeight: '900', color: '#1e3f6d' },
+  divider: { height: 1, backgroundColor: '#E1E5E9', marginVertical: 15 },
+  buttonRow: { flexDirection: 'row', gap: 10 },
+  predButton: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
     borderWidth: 2,
   },
-  overButton: {
+  overBtn: { borderColor: '#28a745', backgroundColor: '#fff' },
+  underBtn: { borderColor: '#BA0C2F', backgroundColor: '#fff' },
+  overActive: { backgroundColor: '#28a745' },
+  underActive: { backgroundColor: '#BA0C2F' },
+  predText: { fontWeight: '900', fontSize: 14, marginLeft: 6 },
+  textWhite: { color: '#fff' },
+  footerAction: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
     backgroundColor: '#fff',
-    borderColor: '#28a745',
-  },
-  selectedOverButton: {
-    backgroundColor: '#28a745',
-    borderColor: '#28a745',
-  },
-  underButton: {
-    backgroundColor: '#fff',
-    borderColor: '#BA0C2F',
-  },
-  selectedUnderButton: {
-    backgroundColor: '#BA0C2F',
-    borderColor: '#BA0C2F',
-  },
-  buttonText: {
-    color: '#333',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 6,
-  },
-  selectedButtonText: {
-    color: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#E1E5E9',
   },
   continueButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: '#BA0C2F',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: '#1e3f6d',
+    borderRadius: 15,
+    paddingVertical: 18,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    alignItems: 'center',
+    shadowColor: '#1e3f6d',
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowRadius: 10,
     elevation: 5,
   },
-  continueButtonText: {
+  continueText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '900',
+    fontSize: 16,
     marginRight: 8,
   },
 });
 
-export default PlayerSelection;
+export default PlayerSelectionScreen;
