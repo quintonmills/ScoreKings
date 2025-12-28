@@ -67,6 +67,51 @@ export default function MyContestsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Test API connection
+  const testApiConnection = useCallback(async () => {
+    try {
+      console.log('Testing API connection to:', API_URL);
+      const response = await fetch(`${API_URL}/health`);
+      const data = await response.json();
+      console.log('✅ API Connection successful:', data);
+    } catch (error) {
+      console.error('❌ API Connection failed:', error.message);
+
+      // Try alternative URLs
+      const urls = [
+        'https://server-core-1.onrender.com/api/health',
+        'http://localhost:4000/api/health',
+      ];
+
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          console.log(`Testing ${url}:`, res.ok ? '✅ OK' : '❌ Failed');
+        } catch (e) {
+          console.log(`Testing ${url}: ❌ ${e.message}`);
+        }
+      }
+    }
+  }, []);
+
+  // Debug on mount
+  useEffect(() => {
+    console.log('================================');
+    console.log('DEBUG API CONFIGURATION:');
+    console.log('1. API_URL:', API_URL);
+    console.log(
+      '2. process.env.EXPO_PUBLIC_API_URL:',
+      process.env.EXPO_PUBLIC_API_URL
+    );
+    console.log(
+      '3. Window location:',
+      typeof window !== 'undefined' ? window.location.href : 'No window'
+    );
+    console.log('================================');
+
+    testApiConnection();
+  }, [testApiConnection]);
+
   // Group entries by status
   const groupedEntries = entries.reduce((groups, entry) => {
     const status = entry.status?.toUpperCase() || 'ACTIVE';
@@ -78,12 +123,18 @@ export default function MyContestsScreen({ navigation }) {
   // Fetch user data
   const fetchUserData = async (userId = 1) => {
     try {
+      console.log('Fetching user data from:', `${API_URL}/me?userId=${userId}`);
       const response = await fetch(`${API_URL}/me?userId=${userId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user: ${response.status}`);
+      }
       const userData = await response.json();
+      console.log('User data received:', userData);
       setUser(userData);
       return userData.id;
     } catch (error) {
       console.error('Error fetching user:', error);
+      Alert.alert('Error', 'Could not load user data');
       return 1;
     }
   };
@@ -91,10 +142,16 @@ export default function MyContestsScreen({ navigation }) {
   // Fetch contest entries
   const fetchEntries = async (userId) => {
     try {
+      console.log(
+        'Fetching entries from:',
+        `${API_URL}/users/${userId}/entries`
+      );
       const response = await fetch(`${API_URL}/users/${userId}/entries`);
-      if (!response.ok)
+      if (!response.ok) {
         throw new Error(`Failed to fetch entries: ${response.status}`);
+      }
       const data = await response.json();
+      console.log('Entries received:', data);
       setEntries(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching entries:', error);
@@ -109,13 +166,17 @@ export default function MyContestsScreen({ navigation }) {
   // Load all data
   const loadData = useCallback(async () => {
     try {
+      console.log('Loading data...');
       setLoading(true);
       const userId = await fetchUserData();
-      if (userId) await fetchEntries(userId);
+      if (userId) {
+        await fetchEntries(userId);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       Alert.alert('Error', 'Failed to load data');
     } finally {
+      console.log('Loading complete');
       setLoading(false);
       setRefreshing(false);
     }
@@ -123,58 +184,17 @@ export default function MyContestsScreen({ navigation }) {
 
   // Handle refresh
   const onRefresh = useCallback(() => {
+    console.log('Refreshing data...');
     setRefreshing(true);
     loadData();
   }, [loadData]);
 
+  // Initial load
   useEffect(() => {
-    useEffect(() => {
-      // Debug the API URL
-      console.log('================================');
-      console.log('DEBUG API CONFIGURATION:');
-      console.log('1. Imported API_URL:', API_URL);
-      console.log(
-        '2. process.env.EXPO_PUBLIC_API_URL:',
-        process.env.EXPO_PUBLIC_API_URL
-      );
-      console.log(
-        '3. Window location:',
-        typeof window !== 'undefined' ? window.location.href : 'No window'
-      );
-      console.log('================================');
-
-      // Test the API connection
-      testApiConnection();
-    }, []);
-
-    const testApiConnection = async () => {
-      try {
-        console.log('Testing API connection to:', API_URL);
-        const response = await fetch(`${API_URL}/health`);
-        const data = await response.json();
-        console.log('✅ API Connection successful:', data);
-      } catch (error) {
-        console.error('❌ API Connection failed:', error.message);
-
-        // Try alternative URLs
-        const urls = [
-          'https://server-core-1.onrender.com/api/health',
-          'http://localhost:4000/api/health',
-        ];
-
-        for (const url of urls) {
-          try {
-            const res = await fetch(url);
-            console.log(`Testing ${url}:`, res.ok ? '✅ OK' : '❌ Failed');
-          } catch (e) {
-            console.log(`Testing ${url}: ❌ ${e.message}`);
-          }
-        }
-      }
-    };
     loadData();
   }, [loadData]);
 
+  // Refresh when screen comes into focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadData);
     return unsubscribe;
@@ -209,13 +229,17 @@ export default function MyContestsScreen({ navigation }) {
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
   // Handle entry press
@@ -259,15 +283,15 @@ export default function MyContestsScreen({ navigation }) {
               <View key={index} style={styles.pickRow}>
                 <View style={styles.pickInfo}>
                   <Text style={styles.playerName} numberOfLines={1}>
-                    {pick.playerName}
+                    {pick.playerName || 'Unknown Player'}
                   </Text>
                   <View style={styles.predictionChip}>
                     <Text style={styles.predictionText}>
-                      {pick.prediction} {pick.line}
+                      {pick.prediction || 'N/A'} {pick.line || ''}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.teamText}>{pick.team}</Text>
+                <Text style={styles.teamText}>{pick.team || 'N/A'}</Text>
               </View>
             ))}
             {entry.picks.length > 3 && (
@@ -306,7 +330,7 @@ export default function MyContestsScreen({ navigation }) {
   };
 
   // Render status section
-  const renderStatusSection = (title, entries, status) => {
+  const renderStatusSection = (title, entries) => {
     if (!entries || entries.length === 0) return null;
 
     return (
@@ -374,20 +398,24 @@ export default function MyContestsScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         {/* Active Entries */}
-        {renderStatusSection(
-          'ACTIVE CONTESTS',
-          groupedEntries['ACTIVE'],
-          'ACTIVE'
-        )}
+        {renderStatusSection('ACTIVE CONTESTS', groupedEntries['ACTIVE'])}
 
         {/* Pending Entries */}
-        {renderStatusSection('PENDING', groupedEntries['PENDING'], 'PENDING')}
+        {renderStatusSection('PENDING', groupedEntries['PENDING'])}
 
         {/* Won Entries */}
-        {renderStatusSection('WON CONTESTS', groupedEntries['WON'], 'WON')}
+        {renderStatusSection('WON CONTESTS', groupedEntries['WON'])}
 
         {/* Lost Entries */}
-        {renderStatusSection('LOST CONTESTS', groupedEntries['LOST'], 'LOST')}
+        {renderStatusSection('LOST CONTESTS', groupedEntries['LOST'])}
+
+        {/* Other status entries */}
+        {Object.entries(groupedEntries).map(([status, entriesList]) => {
+          if (!['ACTIVE', 'PENDING', 'WON', 'LOST'].includes(status)) {
+            return renderStatusSection(`${status} ENTRIES`, entriesList);
+          }
+          return null;
+        })}
 
         {/* Empty State */}
         {entries.length === 0 && !loading && (
