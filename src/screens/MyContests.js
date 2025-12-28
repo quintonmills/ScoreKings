@@ -128,6 +128,50 @@ export default function MyContestsScreen({ navigation }) {
   }, [loadData]);
 
   useEffect(() => {
+    useEffect(() => {
+      // Debug the API URL
+      console.log('================================');
+      console.log('DEBUG API CONFIGURATION:');
+      console.log('1. Imported API_URL:', API_URL);
+      console.log(
+        '2. process.env.EXPO_PUBLIC_API_URL:',
+        process.env.EXPO_PUBLIC_API_URL
+      );
+      console.log(
+        '3. Window location:',
+        typeof window !== 'undefined' ? window.location.href : 'No window'
+      );
+      console.log('================================');
+
+      // Test the API connection
+      testApiConnection();
+    }, []);
+
+    const testApiConnection = async () => {
+      try {
+        console.log('Testing API connection to:', API_URL);
+        const response = await fetch(`${API_URL}/health`);
+        const data = await response.json();
+        console.log('✅ API Connection successful:', data);
+      } catch (error) {
+        console.error('❌ API Connection failed:', error.message);
+
+        // Try alternative URLs
+        const urls = [
+          'https://server-core-1.onrender.com/api/health',
+          'http://localhost:4000/api/health',
+        ];
+
+        for (const url of urls) {
+          try {
+            const res = await fetch(url);
+            console.log(`Testing ${url}:`, res.ok ? '✅ OK' : '❌ Failed');
+          } catch (e) {
+            console.log(`Testing ${url}: ❌ ${e.message}`);
+          }
+        }
+      }
+    };
     loadData();
   }, [loadData]);
 
