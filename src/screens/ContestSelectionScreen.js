@@ -17,9 +17,9 @@ const ContestSelectionScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch contests function
   const fetchContests = async () => {
     try {
+      // FIX: Added /api to match your server.ts route
       const response = await fetch(`${API_URL}/contests`);
       const data = await response.json();
       setContests(data);
@@ -31,12 +31,10 @@ const ContestSelectionScreen = ({ navigation }) => {
     }
   };
 
-  // Initial fetch
   useEffect(() => {
     fetchContests();
   }, []);
 
-  // Refresh when screen comes into focus (after user submits entry)
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchContests();
@@ -44,7 +42,6 @@ const ContestSelectionScreen = ({ navigation }) => {
     return unsubscribe;
   }, [navigation]);
 
-  // Pull to refresh
   const onRefresh = () => {
     setRefreshing(true);
     fetchContests();
@@ -55,9 +52,12 @@ const ContestSelectionScreen = ({ navigation }) => {
       style={styles.card}
       onPress={() => navigation.navigate('PlayerSelection', { contest: item })}
     >
+      {/* TOP SECTION: Title and Prize */}
       <View style={styles.cardHeader}>
-        <View>
-          <Text style={styles.contestTitle}>{item.title}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.contestTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
           <Text style={styles.contestSubtitle}>2-Pick Prediction</Text>
         </View>
         <View style={styles.prizeBadge}>
@@ -68,21 +68,28 @@ const ContestSelectionScreen = ({ navigation }) => {
 
       <View style={styles.divider} />
 
-      <View style={styles.cardFooter}>
-        <View style={styles.infoRow}>
-          <Ionicons name='ticket-outline' size={16} color='#666' />
-          <Text style={styles.footerText}>Entry: ${item.entryFee}</Text>
+      {/* MIDDLE SECTION: Stats Grid to prevent text smashing */}
+      <View style={styles.statsGrid}>
+        <View style={styles.statItem}>
+          <Ionicons name='ticket-outline' size={14} color='#666' />
+          <Text style={styles.footerText}>${item.entryFee}</Text>
         </View>
-        <View style={styles.infoRow}>
-          <Ionicons name='people-outline' size={16} color='#666' />
-          <Text style={styles.footerText}>{item.participants} joined</Text>
+        <View style={styles.statItem}>
+          <Ionicons name='people-outline' size={14} color='#666' />
+          <Text style={styles.footerText}>{item.participants}</Text>
         </View>
-        <View style={styles.infoRow}>
-          <Ionicons name='time-outline' size={16} color='#666' />
-          <Text style={styles.footerText}>{item.endTime}</Text>
+        <View style={styles.statItem}>
+          <Ionicons name='time-outline' size={14} color='#BA0C2F' />
+          <Text style={[styles.footerText, { color: '#BA0C2F' }]}>
+            {item.endTime}
+          </Text>
         </View>
+      </View>
+
+      {/* BOTTOM SECTION: Play Button */}
+      <View style={styles.cardAction}>
         <View style={styles.playButton}>
-          <Text style={styles.playButtonText}>PLAY</Text>
+          <Text style={styles.playButtonText}>PLAY CONTEST</Text>
           <Ionicons name='chevron-forward' size={14} color='#fff' />
         </View>
       </View>
@@ -115,9 +122,7 @@ const ContestSelectionScreen = ({ navigation }) => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No live contests found.</Text>
-            <Text style={styles.emptySubtext}>
-              Check back soon for more projections!
-            </Text>
+            <Text style={styles.emptySubtext}>Check back soon for more!</Text>
           </View>
         }
       />
@@ -126,128 +131,88 @@ const ContestSelectionScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F4F7', // Light professional grey
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flex: 1, backgroundColor: '#F2F4F7' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerSection: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 10,
+    paddingBottom: 15,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E1E5E9',
   },
   welcomeText: {
     color: '#666',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
+    textTransform: 'uppercase',
   },
-  mainHeading: {
-    color: '#1e3f6d',
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  listPadding: {
-    padding: 15,
-  },
+  mainHeading: { color: '#1e3f6d', fontSize: 24, fontWeight: '900' },
+  listPadding: { padding: 15, paddingBottom: 30 },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 18,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E1E5E9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
-  contestTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#1e3f6d',
-  },
+  contestTitle: { fontSize: 18, fontWeight: '900', color: '#1e3f6d' },
   contestSubtitle: {
-    fontSize: 13,
-    color: '#BA0C2F', // Your brand red
+    fontSize: 12,
+    color: '#BA0C2F',
     fontWeight: '700',
     marginTop: 2,
   },
   prizeBadge: {
-    backgroundColor: 'rgba(186, 12, 47, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: '#FDF2F2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
     alignItems: 'center',
+    minWidth: 60,
   },
-  prizeLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#BA0C2F',
-  },
-  prizeAmount: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#BA0C2F',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E1E5E9',
-    marginVertical: 15,
-  },
-  cardFooter: {
+  prizeLabel: { fontSize: 9, fontWeight: 'bold', color: '#BA0C2F' },
+  prizeAmount: { fontSize: 16, fontWeight: '900', color: '#BA0C2F' },
+  divider: { height: 1, backgroundColor: '#F0F0F0', marginVertical: 12 },
+  statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 15,
+    backgroundColor: '#F8F9FA',
+    padding: 10,
+    borderRadius: 10,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  footerText: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '500',
-  },
+  statItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  footerText: { fontSize: 12, color: '#444', fontWeight: '700' },
+  cardAction: { marginTop: 5 },
   playButton: {
     backgroundColor: '#1e3f6d',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   playButtonText: {
     color: '#fff',
-    fontSize: 12,
-    fontWeight: '800',
-    marginRight: 4,
+    fontSize: 14,
+    fontWeight: '900',
+    marginRight: 6,
   },
-  emptyContainer: {
-    marginTop: 50,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1e3f6d',
-  },
-  emptySubtext: {
-    color: '#666',
-    marginTop: 5,
-  },
+  emptyContainer: { marginTop: 50, alignItems: 'center' },
+  emptyText: { fontSize: 18, fontWeight: 'bold', color: '#1e3f6d' },
+  emptySubtext: { color: '#666', marginTop: 5 },
 });
 
 export default ContestSelectionScreen;
