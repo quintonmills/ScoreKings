@@ -13,7 +13,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api';
 const { width } = Dimensions.get('window');
 
 // Theme Constants
@@ -60,6 +59,7 @@ const CARD_STYLES = {
   borderWidth: 1,
   borderColor: COLORS.cardBorder,
 };
+const API_URL = 'https://server-core-1.onrender.com/api';
 
 export default function MyContestsScreen({ navigation }) {
   const [user, setUser] = useState(null);
