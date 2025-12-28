@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
@@ -14,23 +15,40 @@ import { API_URL } from '../config/api';
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch live contests from your Render database
+  // Fetch contests function
+  const fetchContests = async () => {
+    try {
+      const response = await fetch(`${API_URL}/contests`);
+      const data = await response.json();
+      setContests(data);
+    } catch (error) {
+      console.error('Error fetching contests:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Initial fetch
   useEffect(() => {
-    const fetchContests = async () => {
-      try {
-        const response = await fetch(`${API_URL}/contests`);
-        const data = await response.json();
-        setContests(data);
-      } catch (error) {
-        console.error('Error fetching contests:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchContests();
   }, []);
+
+  // Refresh when screen comes into focus (after user submits entry)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchContests();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  // Pull to refresh
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchContests();
+  };
 
   const renderContestCard = ({ item }) => (
     <TouchableOpacity
@@ -54,6 +72,10 @@ const ContestSelectionScreen = ({ navigation }) => {
         <View style={styles.infoRow}>
           <Ionicons name='ticket-outline' size={16} color='#666' />
           <Text style={styles.footerText}>Entry: ${item.entryFee}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Ionicons name='people-outline' size={16} color='#666' />
+          <Text style={styles.footerText}>{item.participants} joined</Text>
         </View>
         <View style={styles.infoRow}>
           <Ionicons name='time-outline' size={16} color='#666' />
@@ -87,6 +109,9 @@ const ContestSelectionScreen = ({ navigation }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderContestCard}
         contentContainerStyle={styles.listPadding}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No live contests found.</Text>
