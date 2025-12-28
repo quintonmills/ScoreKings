@@ -6,20 +6,24 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  ScrollView,
+  SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { API_URL } from '../config/api';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// Theme Constants (same as ContestReviewScreen)
+// Theme Constants
 const COLORS = {
-  primary: '#1e3f6d', // Dark blue
-  secondary: '#BA0C2F', // Red
-  success: '#34C759', // Green
-  warning: '#FF9500', // Orange
-  danger: '#FF3B30', // Red
+  primary: '#1e3f6d',
+  secondary: '#BA0C2F',
+  success: '#34C759',
+  warning: '#FF9500',
+  danger: '#FF3B30',
   light: '#ffffff',
   dark: '#0A1428',
   gray: '#8E8E93',
@@ -40,9 +44,9 @@ const TYPOGRAPHY = {
 const SPACING = {
   xs: 4,
   sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
+  md: 12, // Reduced from 16
+  lg: 20, // Reduced from 24
+  xl: 28, // Reduced from 32
 };
 
 const CARD_STYLES = {
@@ -50,8 +54,8 @@ const CARD_STYLES = {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 6,
+    elevation: 3,
   },
   borderRadius: 12,
   borderWidth: 1,
@@ -61,11 +65,10 @@ const CARD_STYLES = {
 const PaymentScreen = ({ route, navigation }) => {
   const { contest, picks, potentialPayout } = route.params;
   const [isProcessing, setIsProcessing] = useState(false);
-  const [availableBalance] = useState(10000.0); // Mock balance
+  const [availableBalance] = useState(10000.0);
 
   const handlePayment = async () => {
     setIsProcessing(true);
-
     try {
       const response = await fetch(`${API_URL}/contests/${contest.id}/submit`, {
         method: 'POST',
@@ -101,8 +104,10 @@ const PaymentScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle='light-content' backgroundColor={COLORS.primary} />
+
+      {/* Compact Header */}
       <LinearGradient
         colors={[COLORS.primary, '#2A5298']}
         style={styles.header}
@@ -112,20 +117,32 @@ const PaymentScreen = ({ route, navigation }) => {
           onPress={() => navigation.goBack()}
           disabled={isProcessing}
         >
-          <Ionicons name='chevron-back' size={24} color={COLORS.light} />
+          <Ionicons name='chevron-back' size={22} color={COLORS.light} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>CONFIRM ENTRY</Text>
-          <Text style={styles.headerSubtitle}>Finalize your contest</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            CONFIRM ENTRY
+          </Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>
+            Finalize your contest
+          </Text>
         </View>
+        {/* Empty view for balance */}
+        <View style={styles.headerRight} />
       </LinearGradient>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Entry Summary Card */}
         <View style={[styles.summaryCard, CARD_STYLES.shadow]}>
           <View style={styles.cardHeader}>
-            <Ionicons name='ticket-outline' size={24} color={COLORS.primary} />
-            <Text style={styles.contestTitle}>{contest.title}</Text>
+            <Ionicons name='ticket-outline' size={20} color={COLORS.primary} />
+            <Text style={styles.contestTitle} numberOfLines={1}>
+              {contest.title}
+            </Text>
           </View>
 
           <View style={styles.picksSection}>
@@ -135,7 +152,7 @@ const PaymentScreen = ({ route, navigation }) => {
                 <View style={styles.pickInfo}>
                   <Ionicons
                     name='checkmark-circle'
-                    size={16}
+                    size={14}
                     color={COLORS.success}
                   />
                   <Text style={styles.pickName} numberOfLines={1}>
@@ -180,23 +197,27 @@ const PaymentScreen = ({ route, navigation }) => {
         {/* Payment Method Card */}
         <View style={[styles.paymentCard, CARD_STYLES.shadow]}>
           <View style={styles.cardHeader}>
-            <Ionicons name='wallet-outline' size={24} color={COLORS.primary} />
-            <Text style={styles.paymentTitle}>PAYMENT METHOD</Text>
+            <Ionicons name='wallet-outline' size={20} color={COLORS.primary} />
+            <Text style={styles.paymentTitle} numberOfLines={1}>
+              PAYMENT METHOD
+            </Text>
           </View>
 
           <View style={styles.paymentMethod}>
             <View style={styles.methodIconContainer}>
-              <Ionicons name='wallet' size={20} color={COLORS.primary} />
+              <Ionicons name='wallet' size={18} color={COLORS.primary} />
             </View>
             <View style={styles.methodDetails}>
-              <Text style={styles.methodName}>Virtual Wallet</Text>
-              <Text style={styles.methodBalance}>
+              <Text style={styles.methodName} numberOfLines={1}>
+                Virtual Wallet
+              </Text>
+              <Text style={styles.methodBalance} numberOfLines={1}>
                 Available: ${availableBalance.toFixed(2)}
               </Text>
             </View>
             <Ionicons
               name='checkmark-circle'
-              size={20}
+              size={18}
               color={COLORS.success}
             />
           </View>
@@ -216,7 +237,7 @@ const PaymentScreen = ({ route, navigation }) => {
           <View style={styles.termsHeader}>
             <Ionicons
               name='information-circle-outline'
-              size={16}
+              size={14}
               color={COLORS.primary}
             />
             <Text style={styles.termsTitle}>TERMS & CONDITIONS</Text>
@@ -227,9 +248,12 @@ const PaymentScreen = ({ route, navigation }) => {
             specified time, no changes allowed{'\n'}• All decisions are final
           </Text>
         </View>
-      </View>
 
-      {/* Footer / Action Button */}
+        {/* Extra spacing for footer */}
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+
+      {/* Sticky Footer / Action Button */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.confirmButton, isProcessing && styles.disabledButton]}
@@ -238,7 +262,7 @@ const PaymentScreen = ({ route, navigation }) => {
           activeOpacity={0.8}
         >
           {isProcessing ? (
-            <ActivityIndicator color={COLORS.light} />
+            <ActivityIndicator color={COLORS.light} size='small' />
           ) : (
             <LinearGradient
               colors={[COLORS.primary, COLORS.secondary]}
@@ -248,18 +272,18 @@ const PaymentScreen = ({ route, navigation }) => {
             >
               <Ionicons
                 name='checkmark-circle'
-                size={20}
+                size={18}
                 color={COLORS.light}
-                style={{ marginRight: 8 }}
+                style={{ marginRight: 6 }}
               />
-              <Text style={styles.confirmButtonText}>
+              <Text style={styles.confirmButtonText} numberOfLines={1}>
                 SUBMIT ENTRY • ${contest.entryFee}
               </Text>
             </LinearGradient>
           )}
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -269,32 +293,59 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: SPACING.md,
-    paddingHorizontal: SPACING.md,
+    paddingTop: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
+    paddingBottom: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    height: Platform.OS === 'ios' ? 88 : 78, // Reduced height
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   backButton: {
-    marginRight: SPACING.sm,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.xs,
   },
   headerContent: {
     flex: 1,
+    justifyContent: 'center',
   },
   headerTitle: {
-    ...TYPOGRAPHY.h2,
+    ...TYPOGRAPHY.h3,
+    fontSize: 16,
     color: COLORS.light,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    ...TYPOGRAPHY.caption,
+    ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: SPACING.xs,
+    marginTop: 2,
   },
-  content: {
+  headerRight: {
+    width: 40,
+  },
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     padding: SPACING.md,
+    paddingBottom: SPACING.xl * 2, // Extra padding for footer
   },
   summaryCard: {
     backgroundColor: COLORS.cardBg,
@@ -311,6 +362,7 @@ const styles = StyleSheet.create({
   },
   contestTitle: {
     ...TYPOGRAPHY.h3,
+    fontSize: 16,
     color: COLORS.dark,
     marginLeft: SPACING.sm,
     flex: 1,
@@ -329,24 +381,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
-    paddingVertical: SPACING.xs,
+    marginBottom: 6,
+    paddingVertical: 4,
   },
   pickInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: SPACING.sm,
   },
   pickName: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.dark,
-    marginLeft: SPACING.sm,
+    marginLeft: 6,
     flex: 1,
   },
   predictionChip: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 6,
+    minWidth: 60,
+    alignItems: 'center',
   },
   overChip: {
     backgroundColor: COLORS.success,
@@ -377,12 +433,14 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.gray,
-    marginBottom: 4,
+    marginBottom: 2,
     letterSpacing: 0.5,
   },
   statValue: {
     ...TYPOGRAPHY.h3,
+    fontSize: 18,
     color: COLORS.dark,
     fontWeight: '700',
   },
@@ -391,7 +449,7 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    height: 40,
+    height: 30,
     backgroundColor: COLORS.cardBorder,
   },
   paymentCard: {
@@ -404,6 +462,7 @@ const styles = StyleSheet.create({
   },
   paymentTitle: {
     ...TYPOGRAPHY.h3,
+    fontSize: 16,
     color: COLORS.dark,
     marginLeft: SPACING.sm,
     flex: 1,
@@ -417,9 +476,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   methodIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(30, 63, 109, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -427,9 +486,11 @@ const styles = StyleSheet.create({
   },
   methodDetails: {
     flex: 1,
+    marginRight: SPACING.sm,
   },
   methodName: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.dark,
     fontWeight: '600',
     marginBottom: 2,
@@ -455,6 +516,7 @@ const styles = StyleSheet.create({
   },
   balanceValue: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.dark,
     fontWeight: '700',
   },
@@ -467,26 +529,41 @@ const styles = StyleSheet.create({
   termsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: 6,
   },
   termsTitle: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.primary,
     fontWeight: '600',
-    marginLeft: SPACING.xs,
+    marginLeft: 4,
     letterSpacing: 0.5,
   },
   termsText: {
     ...TYPOGRAPHY.small,
     color: COLORS.gray,
-    lineHeight: 20,
+    lineHeight: 18,
+  },
+  bottomSpacing: {
+    height: SPACING.xl,
   },
   footer: {
     padding: SPACING.md,
+    paddingBottom: Platform.OS === 'ios' ? 28 : SPACING.md,
     backgroundColor: COLORS.light,
     borderTopWidth: 1,
     borderTopColor: COLORS.cardBorder,
-    ...CARD_STYLES.shadow,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   confirmButton: {
     width: '100%',
@@ -495,12 +572,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: 14,
     paddingHorizontal: SPACING.lg,
     borderRadius: 25,
   },
   confirmButtonText: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.light,
     fontWeight: '600',
     letterSpacing: 0.5,
