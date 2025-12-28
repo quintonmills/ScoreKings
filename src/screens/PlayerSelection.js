@@ -44,7 +44,7 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
           team: player.team,
           image: player.image,
           stat: 'POINTS',
-          line: 21.5, // Default line for demo
+          line: Math.round((player.ppg - 0.5) * 10) / 10,
           seasonAvg: player.ppg || 0,
         }));
 
@@ -57,7 +57,8 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
             playerId: 1,
             playerName: 'Eli Ellis',
             team: 'YNG',
-            image: 'https://ot-p-83015.s3.amazonaws.com/players/eli_ellis.png',
+            image:
+              'https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/8e251d72-2e5c-4f4f-86f5-27ecf66c268a.webp',
             line: 28.5,
             seasonAvg: 32.4,
             stat: 'POINTS',
@@ -67,7 +68,7 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
             playerName: 'Ian Jackson',
             team: 'OSC',
             image:
-              'https://ot-p-83015.s3.amazonaws.com/players/ian_jackson.png',
+              'https://images.overtime.tv/ote-games/e3008e5d-0f63-423a-abbc-49f9bbacc2e0/596c2acd-6993-4230-bcb2-04a64d1a6cd8.webp',
             line: 21.5,
             seasonAvg: 24.2,
             stat: 'POINTS',
