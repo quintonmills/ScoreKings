@@ -1,100 +1,136 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Ionicons,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { API_URL } from '../config/api';
 
 export default function MyContestsScreen({ navigation }) {
-  // 1. HARDCODED USER DATA
-  const [user] = useState({
-    id: 4,
-    name: 'Test User',
-    balance: 10000,
-    email: 'test@test.com',
-  });
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // 2. HARDCODED ENTRIES DATA
-  const [entries] = useState([
-    {
-      id: 101,
-      contestTitle: 'NBA Sunday Night Mega',
-      entryFee: 20,
-      potentialPayout: 100,
-      status: 'ACTIVE',
-      picks: [
-        { playerName: 'LeBron James', prediction: 'OVER', line: 25.5 },
-        { playerName: 'Kevin Durant', prediction: 'UNDER', line: 28.5 },
-      ],
-    },
-    {
-      id: 102,
-      contestTitle: 'Lakers vs Warriors Prop',
-      entryFee: 10,
-      potentialPayout: 30,
-      status: 'PENDING',
-      picks: [{ playerName: 'Stephen Curry', prediction: 'OVER', line: 4.5 }],
-    },
-  ]);
+  const fetchData = useCallback(async () => {
+    // Only show the main loader if we aren't pull-to-refreshing
+    if (!refreshing) setLoading(true);
 
-  // We set loading to false immediately because data is local
-  const [loading] = useState(false);
+    try {
+      console.log('Fetching from:', `${API_URL}/me`);
+
+      // 1. Get User Profile
+      const userRes = await fetch(`${API_URL}/me`);
+      if (!userRes.ok) throw new Error(`User fetch failed: ${userRes.status}`);
+      const userData = await userRes.json();
+      setUser(userData);
+
+      // 2. Get User Entries
+      if (userData?.id) {
+        const entriesRes = await fetch(
+          `${API_URL}/users/${userData.id}/entries`
+        );
+        const entriesData = await entriesRes.json();
+        setEntries(Array.isArray(entriesData) ? entriesData : []);
+      }
+    } catch (err) {
+      console.error('MyContests Fetch Error:', err);
+      Alert.alert('Error', 'Could not connect to the server.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [refreshing]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Refresh data when the screen comes back into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchData();
+    });
+    return unsubscribe;
+  }, [navigation, fetchData]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size='large' color='#BA0C2F' />
+        <Text style={{ marginTop: 10 }}>Loading your entries...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerText}>MY ENTRIES</Text>
       </View>
 
-      {/* Balance Card */}
-      <View style={styles.balanceCard}>
-        <View style={styles.balanceRow}>
-          <Text style={styles.balanceLabel}>Virtual Balance</Text>
-          <Text style={styles.balanceAmount}>
-            ${user.balance.toLocaleString()}
-          </Text>
+      {user && (
+        <View style={styles.balanceCard}>
+          <View style={styles.balanceRow}>
+            <Ionicons name='wallet-outline' size={24} color='#1e3f6d' />
+            <View style={styles.balanceInfo}>
+              <Text style={styles.balanceLabel}>User ID: {user.id}</Text>
+              <Text style={styles.balanceAmount}>${user.balance}</Text>
+            </View>
+          </View>
         </View>
-      </View>
+      )}
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.sectionTitle}>
-          ACTIVE ENTRIES ({entries.length})
-        </Text>
-
-        {entries.map((entry) => (
-          <TouchableOpacity key={entry.id} style={styles.entryCard}>
-            <View style={styles.entryHeader}>
-              <Text style={styles.contestName}>{entry.contestTitle}</Text>
-              <Text style={styles.statusText}>{entry.status}</Text>
-            </View>
-
-            <View style={styles.picksSection}>
-              {entry.picks.map((pick, index) => (
-                <Text key={index} style={styles.pickText}>
-                  • {pick.playerName}: {pick.prediction} {pick.line}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {entries.length > 0 ? (
+          entries.map((entry) => (
+            <TouchableOpacity
+              key={entry.id}
+              style={styles.entryCard}
+              onPress={() =>
+                navigation.navigate('EntryDetail', { entryId: entry.id })
+              }
+            >
+              <View style={styles.entryHeader}>
+                <Text style={styles.contestName}>
+                  {entry.contestTitle || 'Contest'}
                 </Text>
-              ))}
-            </View>
-
-            <View style={styles.entryFooter}>
-              <Text style={styles.footerLabel}>Entry: ${entry.entryFee}</Text>
-              <Text style={styles.payoutText}>
-                Win: ${entry.potentialPayout}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+                <Text style={styles.statusText}>
+                  {entry.status?.toUpperCase()}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons name='basketball-outline' size={60} color='#ccc' />
+            <Text style={styles.emptyStateTitle}>No Entries Found</Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f4f4' },
+  container: { flex: 1, backgroundColor: '#fff' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { backgroundColor: '#1e3f6d', paddingTop: 60, paddingBottom: 20 },
   headerText: {
     color: '#fff',
@@ -103,49 +139,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   balanceCard: {
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: 15,
+    backgroundColor: '#f0f2f5',
     borderBottomWidth: 1,
     borderColor: '#ddd',
   },
-  balanceRow: { alignItems: 'center' },
-  balanceLabel: { fontSize: 14, color: '#666' },
-  balanceAmount: { fontSize: 32, fontWeight: 'bold', color: '#1e3f6d' },
+  balanceRow: { flexDirection: 'row', alignItems: 'center' },
+  balanceInfo: { marginLeft: 10 },
+  balanceLabel: { fontSize: 12, color: '#666' },
+  balanceAmount: { fontSize: 20, fontWeight: 'bold', color: '#1e3f6d' },
   scrollContent: { padding: 15 },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 10,
-  },
   entryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
     padding: 15,
-    marginBottom: 15,
-    elevation: 2,
-  },
-  entryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: '#fff',
     marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
-  contestName: { fontSize: 16, fontWeight: 'bold' },
-  statusText: { color: '#BA0C2F', fontWeight: 'bold' },
-  picksSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 10,
-    marginBottom: 10,
-  },
-  pickText: { fontSize: 14, marginVertical: 2 },
-  entryFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 10,
-  },
-  footerLabel: { color: '#666' },
-  payoutText: { fontWeight: 'bold', color: '#28a745' },
+  entryHeader: { flexDirection: 'row', justifyContent: 'space-between' },
+  contestName: { fontWeight: 'bold' },
+  statusText: { color: '#BA0C2F', fontWeight: 'bold', fontSize: 12 },
+  emptyState: { alignItems: 'center', marginTop: 50 },
+  emptyStateTitle: { color: '#999', marginTop: 10 },
 });
