@@ -17,43 +17,40 @@ const PaymentScreen = ({ route, navigation }) => {
   const handlePayment = async () => {
     setIsProcessing(true);
 
-    // 1. SET EMERGENCY TIMEOUT (The "Demo-Proof" Logic)
-    // If the server doesn't respond in 1.5 seconds, just move to Success.
-    const demoTimer = setTimeout(() => {
-      setIsProcessing(false);
-      navigation.replace('SuccessScreen', {
-        payout: potentialPayout,
-      });
-    }, 1500);
-
     try {
-      // 2. ATTEMPT REAL API CALL
-      // Using /entries which is standard for your Prisma schema
-      const response = await fetch(`${API_URL}/entries`, {
+      // Ensure URL matches the pattern /api/contests/[ID]/submit
+      const response = await fetch(`${API_URL}/contests/${contest.id}/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         body: JSON.stringify({
-          userId: 1, // Default MVP User
-          contestId: contest.id,
-          picks: picks,
+          userId: 1,
           entryFee: contest.entryFee,
+          picks: picks.map((p) => ({
+            playerId: p.playerId,
+            playerName: p.playerName,
+            team: p.team || 'OTE',
+            line: p.line,
+            prediction: p.prediction,
+            stat: 'points',
+          })),
         }),
       });
+      const result = await response.json();
 
       if (response.ok) {
-        clearTimeout(demoTimer); // Cancel timer if DB actually works
-        setIsProcessing(false);
-        navigation.replace('SuccessScreen', {
-          payout: potentialPayout,
-        });
+        navigation.replace('SuccessScreen', { payout: potentialPayout });
+      } else {
+        alert(result.error || 'Submission failed');
       }
     } catch (err) {
-      console.log('DB Connection issue, but demo will continue...');
-      // Error is caught, but we don't Alert.alert so the demo doesn't look "broken"
-      // The demoTimer above will trigger the navigation.
+      alert('Connection error. Is your local server running?');
+    } finally {
+      setIsProcessing(false);
     }
   };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
