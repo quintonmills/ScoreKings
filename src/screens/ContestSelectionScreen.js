@@ -2,226 +2,226 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  ScrollView,
-  ActivityIndicator, // Ensure this is imported
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
-import Header from '../components/Header';
 
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch live contests from your Render database
   useEffect(() => {
-    // Note: API_URL already includes /api, so we just call /contests
-    fetch(`${API_URL}/contests`)
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchContests = async () => {
+      try {
+        const response = await fetch(`${API_URL}/contests`);
+        const data = await response.json();
         setContests(data);
+      } catch (error) {
+        console.error('Error fetching contests:', error);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.log(err);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchContests();
   }, []);
 
-  const navigateToPlayerSelection = (contest) => {
-    navigation.navigate('PlayerSelection', { contest });
-  };
+  const renderContestCard = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('PlayerSelection', { contest: item })}
+    >
+      <View style={styles.cardHeader}>
+        <View>
+          <Text style={styles.contestTitle}>{item.title}</Text>
+          <Text style={styles.contestSubtitle}>2-Pick Prediction</Text>
+        </View>
+        <View style={styles.prizeBadge}>
+          <Text style={styles.prizeLabel}>WIN</Text>
+          <Text style={styles.prizeAmount}>${item.prize}</Text>
+        </View>
+      </View>
 
-  // --- MATCHING LOADING STYLE ---
+      <View style={styles.divider} />
+
+      <View style={styles.cardFooter}>
+        <View style={styles.infoRow}>
+          <Ionicons name='ticket-outline' size={16} color='#666' />
+          <Text style={styles.footerText}>Entry: ${item.entryFee}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Ionicons name='time-outline' size={16} color='#666' />
+          <Text style={styles.footerText}>{item.endTime}</Text>
+        </View>
+        <View style={styles.playButton}>
+          <Text style={styles.playButtonText}>PLAY</Text>
+          <Ionicons name='chevron-forward' size={14} color='#fff' />
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size='large' color='#BA0C2F' />
-        <Text style={styles.loadingText}>Fetching active contests...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Header title='MY CONTESTS' navigation={navigation} />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerSection}>
+        <Text style={styles.welcomeText}>Welcome, MVP</Text>
+        <Text style={styles.mainHeading}>AVAILABLE CONTESTS</Text>
+      </View>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.sectionHeader}>
-          <Ionicons name='trophy-outline' size={20} color='#1e3f6d' />
-          <Text style={styles.sectionTitle}>ACTIVE CONTESTS</Text>
-        </View>
-
-        {contests.map((contest) => (
-          <TouchableOpacity
-            key={contest.id}
-            style={styles.contestCard}
-            onPress={() => navigateToPlayerSelection(contest)}
-          >
-            <View style={styles.contestHeader}>
-              <Text style={styles.contestTitle}>{contest.title}</Text>
-              <Text style={styles.contestPrize}>${contest.prize} Prize</Text>
-            </View>
-
-            <View style={styles.contestDetails}>
-              <View style={styles.detailRow}>
-                <Ionicons name='pricetag-outline' size={16} color='#1e3f6d' />
-                <Text style={styles.detailText}>
-                  Entry: ${contest.entryFee}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Ionicons name='people-outline' size={16} color='#1e3f6d' />
-                <Text style={styles.detailText}>
-                  {contest.participants} Joined
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Ionicons name='time-outline' size={16} color='#1e3f6d' />
-                <Text style={styles.detailText}>Ends {contest.endTime}</Text>
-              </View>
-            </View>
-
-            <View style={styles.playersRow}>
-              {contest.players?.map((player, index) => (
-                <View key={index} style={styles.playerPill}>
-                  <Text style={styles.playerPillText}>{player}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.joinButton}>
-              <Text style={styles.joinButtonText}>SELECT PLAYERS</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-
-        <View style={styles.sectionHeader}>
-          <Ionicons name='checkmark-done-outline' size={20} color='#1e3f6d' />
-          <Text style={styles.sectionTitle}>COMPLETED CONTESTS</Text>
-        </View>
-        <View style={styles.emptyState}>
-          <Ionicons name='trophy' size={40} color='#1e3f6d' />
-          <Text style={styles.emptyStateText}>No completed contests yet</Text>
-        </View>
-      </ScrollView>
-    </View>
+      <FlatList
+        data={contests}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderContestCard}
+        contentContainerStyle={styles.listPadding}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No live contests found.</Text>
+            <Text style={styles.emptySubtext}>
+              Check back soon for more projections!
+            </Text>
+          </View>
+        }
+      />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F2F4F7', // Light professional grey
   },
-  // Exact match to your MyContests screen styling
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
     backgroundColor: '#fff',
   },
-  loadingText: {
-    marginTop: 15,
-    color: '#1e3f6d',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    color: '#1e3f6d',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  contestCard: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e1e5e9',
-    elevation: 2,
-  },
-  contestHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  contestTitle: {
-    color: '#1e3f6d',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  contestPrize: {
-    color: '#BA0C2F',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  contestDetails: {
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  detailText: {
+  welcomeText: {
     color: '#666',
     fontSize: 14,
-    marginLeft: 8,
+    fontWeight: '600',
   },
-  playersRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 12,
-  },
-  playerPill: {
-    backgroundColor: 'rgba(30, 63, 109, 0.1)',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  playerPillText: {
+  mainHeading: {
     color: '#1e3f6d',
-    fontSize: 12,
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
-  joinButton: {
-    backgroundColor: '#BA0C2F',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
+  listPadding: {
+    padding: 15,
   },
-  joinButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 18,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: '#e1e5e9',
+    borderColor: '#E1E5E9',
   },
-  emptyStateText: {
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  contestTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1e3f6d',
+  },
+  contestSubtitle: {
+    fontSize: 13,
+    color: '#BA0C2F', // Your brand red
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  prizeBadge: {
+    backgroundColor: 'rgba(186, 12, 47, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  prizeLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#BA0C2F',
+  },
+  prizeAmount: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#BA0C2F',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E1E5E9',
+    marginVertical: 15,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  footerText: {
+    fontSize: 13,
     color: '#666',
-    fontSize: 16,
-    marginTop: 16,
+    fontWeight: '500',
+  },
+  playButton: {
+    backgroundColor: '#1e3f6d',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  playButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+    marginRight: 4,
+  },
+  emptyContainer: {
+    marginTop: 50,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e3f6d',
+  },
+  emptySubtext: {
+    color: '#666',
+    marginTop: 5,
   },
 });
 
