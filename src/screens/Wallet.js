@@ -1,4 +1,3 @@
-// screens/WalletScreen.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -12,21 +11,23 @@ import {
   Dimensions,
   Modal,
   TextInput,
-  ScrollView,
+  SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { API_URL } from '../config/api';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// Theme Constants (same as other screens)
+// Theme Constants with adjusted spacing
 const COLORS = {
-  primary: '#1e3f6d', // Dark blue
-  secondary: '#BA0C2F', // Red
-  success: '#34C759', // Green
-  warning: '#FF9500', // Orange
-  danger: '#FF3B30', // Red
+  primary: '#1e3f6d',
+  secondary: '#BA0C2F',
+  success: '#34C759',
+  warning: '#FF9500',
+  danger: '#FF3B30',
   light: '#ffffff',
   dark: '#0A1428',
   gray: '#8E8E93',
@@ -47,9 +48,9 @@ const TYPOGRAPHY = {
 const SPACING = {
   xs: 4,
   sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
+  md: 12,
+  lg: 20,
+  xl: 28,
 };
 
 const CARD_STYLES = {
@@ -57,8 +58,8 @@ const CARD_STYLES = {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 6,
+    elevation: 3,
   },
   borderRadius: 12,
   borderWidth: 1,
@@ -75,7 +76,7 @@ const WalletScreen = ({ navigation }) => {
   const [amount, setAmount] = useState('');
   const [processing, setProcessing] = useState(false);
 
-  // Mock transaction types for development
+  // Mock transaction types
   const mockTransactions = [
     {
       id: 1,
@@ -129,7 +130,6 @@ const WalletScreen = ({ navigation }) => {
       return userData;
     } catch (error) {
       console.error('Error fetching user:', error);
-      // Mock user for development
       const mockUser = {
         id: 1,
         name: 'Test User',
@@ -144,11 +144,6 @@ const WalletScreen = ({ navigation }) => {
   // Fetch transactions
   const fetchTransactions = async () => {
     try {
-      // TODO: Replace with real API endpoint
-      // const response = await fetch(`${API_URL}/wallet/transactions`);
-      // const data = await response.json();
-
-      // For now, use mock data
       setTransactions(mockTransactions);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -186,22 +181,11 @@ const WalletScreen = ({ navigation }) => {
 
     setProcessing(true);
     try {
-      // TODO: Replace with real API endpoint
-      // await fetch(`${API_URL}/wallet/deposit`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ amount: parseFloat(amount) }),
-      // });
-
-      // Mock success
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update local state
       const depositAmount = parseFloat(amount);
       const newBalance = (user.balance || 0) + depositAmount;
       setUser({ ...user, balance: newBalance });
 
-      // Add to transactions
       const newTransaction = {
         id: transactions.length + 1,
         type: 'DEPOSIT',
@@ -243,21 +227,10 @@ const WalletScreen = ({ navigation }) => {
 
     setProcessing(true);
     try {
-      // TODO: Replace with real API endpoint
-      // await fetch(`${API_URL}/wallet/withdraw`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ amount: withdrawAmount }),
-      // });
-
-      // Mock success
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update local state
       const newBalance = (user.balance || 0) - withdrawAmount;
       setUser({ ...user, balance: newBalance });
 
-      // Add to transactions
       const newTransaction = {
         id: transactions.length + 1,
         type: 'WITHDRAWAL',
@@ -387,10 +360,10 @@ const WalletScreen = ({ navigation }) => {
                 { backgroundColor: config.color + '20' },
               ]}
             >
-              <Ionicons name={config.icon} size={20} color={config.color} />
+              <Ionicons name={config.icon} size={18} color={config.color} />
             </View>
             <View style={styles.transactionInfo}>
-              <Text style={styles.transactionDescription}>
+              <Text style={styles.transactionDescription} numberOfLines={1}>
                 {item.description}
               </Text>
               <View style={styles.transactionMeta}>
@@ -407,6 +380,7 @@ const WalletScreen = ({ navigation }) => {
                 styles.transactionAmount,
                 isPositive ? styles.positiveAmount : styles.negativeAmount,
               ]}
+              numberOfLines={1}
             >
               {isPositive ? '+' : ''}
               {formatCurrency(item.amount)}
@@ -436,86 +410,96 @@ const WalletScreen = ({ navigation }) => {
       onRequestClose={() => setDepositModalVisible(false)}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Funds</Text>
-            <TouchableOpacity onPress={() => setDepositModalVisible(false)}>
-              <Ionicons name='close' size={24} color={COLORS.gray} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.balancePreview}>
-            <Text style={styles.balanceLabel}>Current Balance</Text>
-            <Text style={styles.balanceValue}>
-              {formatCurrency(user?.balance)}
-            </Text>
-          </View>
-
-          <View style={styles.amountInputContainer}>
-            <Text style={styles.inputLabel}>Amount to Deposit</Text>
-            <View style={styles.amountInput}>
-              <Text style={styles.currencySymbol}>$</Text>
-              <TextInput
-                style={styles.amountTextInput}
-                value={amount}
-                onChangeText={setAmount}
-                placeholder='0.00'
-                keyboardType='decimal-pad'
-                placeholderTextColor={COLORS.gray}
-              />
-            </View>
-          </View>
-
-          <View style={styles.quickAmounts}>
-            {[10, 25, 50, 100, 250].map((quickAmount) => (
+        <SafeAreaView style={styles.modalSafeArea}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle} numberOfLines={1}>
+                Add Funds
+              </Text>
               <TouchableOpacity
-                key={quickAmount}
-                style={styles.quickAmountButton}
-                onPress={() => setAmount(quickAmount.toString())}
+                onPress={() => setDepositModalVisible(false)}
+                style={styles.modalCloseButton}
               >
-                <Text style={styles.quickAmountText}>${quickAmount}</Text>
+                <Ionicons name='close' size={22} color={COLORS.gray} />
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
 
-          <View style={styles.newBalancePreview}>
-            <Text style={styles.newBalanceLabel}>New Balance</Text>
-            <Text style={styles.newBalanceValue}>
-              {formatCurrency((user?.balance || 0) + parseFloat(amount || 0))}
+            <View style={styles.balancePreview}>
+              <Text style={styles.balanceLabel}>Current Balance</Text>
+              <Text style={styles.balanceValue} numberOfLines={1}>
+                {formatCurrency(user?.balance)}
+              </Text>
+            </View>
+
+            <View style={styles.amountInputContainer}>
+              <Text style={styles.inputLabel}>Amount to Deposit</Text>
+              <View style={styles.amountInput}>
+                <Text style={styles.currencySymbol}>$</Text>
+                <TextInput
+                  style={styles.amountTextInput}
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder='0.00'
+                  keyboardType='decimal-pad'
+                  placeholderTextColor={COLORS.gray}
+                  returnKeyType='done'
+                />
+              </View>
+            </View>
+
+            <View style={styles.quickAmounts}>
+              {[10, 25, 50, 100, 250].map((quickAmount) => (
+                <TouchableOpacity
+                  key={quickAmount}
+                  style={styles.quickAmountButton}
+                  onPress={() => setAmount(quickAmount.toString())}
+                >
+                  <Text style={styles.quickAmountText} numberOfLines={1}>
+                    ${quickAmount}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.newBalancePreview}>
+              <Text style={styles.newBalanceLabel}>New Balance</Text>
+              <Text style={styles.newBalanceValue} numberOfLines={1}>
+                {formatCurrency((user?.balance || 0) + parseFloat(amount || 0))}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalButton, processing && styles.disabledButton]}
+              onPress={handleDeposit}
+              disabled={processing}
+            >
+              {processing ? (
+                <ActivityIndicator color={COLORS.light} size='small' />
+              ) : (
+                <LinearGradient
+                  colors={[COLORS.success, '#28a745']}
+                  style={styles.modalButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons
+                    name='add-circle'
+                    size={18}
+                    color={COLORS.light}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.modalButtonText} numberOfLines={1}>
+                    DEPOSIT ${parseFloat(amount || 0).toFixed(2)}
+                  </Text>
+                </LinearGradient>
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.modalNote} numberOfLines={2}>
+              Funds will be added instantly to your virtual wallet
             </Text>
           </View>
-
-          <TouchableOpacity
-            style={[styles.modalButton, processing && styles.disabledButton]}
-            onPress={handleDeposit}
-            disabled={processing}
-          >
-            {processing ? (
-              <ActivityIndicator color={COLORS.light} />
-            ) : (
-              <LinearGradient
-                colors={[COLORS.success, '#28a745']}
-                style={styles.modalButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Ionicons
-                  name='add-circle'
-                  size={20}
-                  color={COLORS.light}
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.modalButtonText}>
-                  DEPOSIT ${parseFloat(amount || 0).toFixed(2)}
-                </Text>
-              </LinearGradient>
-            )}
-          </TouchableOpacity>
-
-          <Text style={styles.modalNote}>
-            Funds will be added instantly to your virtual wallet
-          </Text>
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
@@ -529,85 +513,97 @@ const WalletScreen = ({ navigation }) => {
       onRequestClose={() => setWithdrawModalVisible(false)}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Withdraw Funds</Text>
-            <TouchableOpacity onPress={() => setWithdrawModalVisible(false)}>
-              <Ionicons name='close' size={24} color={COLORS.gray} />
+        <SafeAreaView style={styles.modalSafeArea}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle} numberOfLines={1}>
+                Withdraw Funds
+              </Text>
+              <TouchableOpacity
+                onPress={() => setWithdrawModalVisible(false)}
+                style={styles.modalCloseButton}
+              >
+                <Ionicons name='close' size={22} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.balancePreview}>
+              <Text style={styles.balanceLabel}>Available Balance</Text>
+              <Text style={styles.balanceValue} numberOfLines={1}>
+                {formatCurrency(user?.balance)}
+              </Text>
+            </View>
+
+            <View style={styles.amountInputContainer}>
+              <Text style={styles.inputLabel}>Amount to Withdraw</Text>
+              <View style={styles.amountInput}>
+                <Text style={styles.currencySymbol}>$</Text>
+                <TextInput
+                  style={styles.amountTextInput}
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder='0.00'
+                  keyboardType='decimal-pad'
+                  placeholderTextColor={COLORS.gray}
+                  returnKeyType='done'
+                />
+              </View>
+            </View>
+
+            <View style={styles.quickAmounts}>
+              {[50, 100, 250, 500, 1000].map((quickAmount) => (
+                <TouchableOpacity
+                  key={quickAmount}
+                  style={styles.quickAmountButton}
+                  onPress={() => setAmount(quickAmount.toString())}
+                >
+                  <Text style={styles.quickAmountText} numberOfLines={1}>
+                    ${quickAmount}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.withdrawalInfo}>
+              <Ionicons
+                name='information-circle'
+                size={18}
+                color={COLORS.warning}
+              />
+              <Text style={styles.withdrawalInfoText} numberOfLines={3}>
+                Withdrawals are processed within 24-48 hours. Minimum
+                withdrawal: $10.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalButton, processing && styles.disabledButton]}
+              onPress={handleWithdraw}
+              disabled={processing}
+            >
+              {processing ? (
+                <ActivityIndicator color={COLORS.light} size='small' />
+              ) : (
+                <LinearGradient
+                  colors={[COLORS.warning, '#e68900']}
+                  style={styles.modalButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons
+                    name='arrow-up-circle'
+                    size={18}
+                    color={COLORS.light}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.modalButtonText} numberOfLines={1}>
+                    REQUEST WITHDRAWAL
+                  </Text>
+                </LinearGradient>
+              )}
             </TouchableOpacity>
           </View>
-
-          <View style={styles.balancePreview}>
-            <Text style={styles.balanceLabel}>Available Balance</Text>
-            <Text style={styles.balanceValue}>
-              {formatCurrency(user?.balance)}
-            </Text>
-          </View>
-
-          <View style={styles.amountInputContainer}>
-            <Text style={styles.inputLabel}>Amount to Withdraw</Text>
-            <View style={styles.amountInput}>
-              <Text style={styles.currencySymbol}>$</Text>
-              <TextInput
-                style={styles.amountTextInput}
-                value={amount}
-                onChangeText={setAmount}
-                placeholder='0.00'
-                keyboardType='decimal-pad'
-                placeholderTextColor={COLORS.gray}
-              />
-            </View>
-          </View>
-
-          <View style={styles.quickAmounts}>
-            {[50, 100, 250, 500, 1000].map((quickAmount) => (
-              <TouchableOpacity
-                key={quickAmount}
-                style={styles.quickAmountButton}
-                onPress={() => setAmount(quickAmount.toString())}
-              >
-                <Text style={styles.quickAmountText}>${quickAmount}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.withdrawalInfo}>
-            <Ionicons
-              name='information-circle'
-              size={20}
-              color={COLORS.warning}
-            />
-            <Text style={styles.withdrawalInfoText}>
-              Withdrawals are processed within 24-48 hours. Minimum withdrawal:
-              $10.
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.modalButton, processing && styles.disabledButton]}
-            onPress={handleWithdraw}
-            disabled={processing}
-          >
-            {processing ? (
-              <ActivityIndicator color={COLORS.light} />
-            ) : (
-              <LinearGradient
-                colors={[COLORS.warning, '#e68900']}
-                style={styles.modalButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Ionicons
-                  name='arrow-up-circle'
-                  size={20}
-                  color={COLORS.light}
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.modalButtonText}>REQUEST WITHDRAWAL</Text>
-              </LinearGradient>
-            )}
-          </TouchableOpacity>
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
@@ -622,15 +618,21 @@ const WalletScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle='light-content' backgroundColor={COLORS.primary} />
+
+      {/* Compact Header */}
       <LinearGradient
         colors={[COLORS.primary, '#2A5298']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>MY WALLET</Text>
-          <Text style={styles.headerSubtitle}>Manage your funds</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            MY WALLET
+          </Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>
+            Manage your funds
+          </Text>
         </View>
       </LinearGradient>
 
@@ -638,11 +640,11 @@ const WalletScreen = ({ navigation }) => {
       <View style={[styles.balanceCard, CARD_STYLES.shadow]}>
         <View style={styles.balanceHeader}>
           <View style={styles.balanceIconContainer}>
-            <Ionicons name='wallet' size={24} color={COLORS.primary} />
+            <Ionicons name='wallet' size={22} color={COLORS.primary} />
           </View>
           <View style={styles.balanceInfo}>
             <Text style={styles.balanceLabel}>AVAILABLE BALANCE</Text>
-            <Text style={styles.balanceAmount}>
+            <Text style={styles.balanceAmount} numberOfLines={1}>
               {formatCurrency(user?.balance)}
             </Text>
           </View>
@@ -662,11 +664,13 @@ const WalletScreen = ({ navigation }) => {
             >
               <Ionicons
                 name='add-circle'
-                size={20}
+                size={18}
                 color={COLORS.light}
-                style={{ marginRight: 8 }}
+                style={{ marginRight: 6 }}
               />
-              <Text style={styles.actionButtonText}>ADD FUNDS</Text>
+              <Text style={styles.actionButtonText} numberOfLines={1}>
+                ADD FUNDS
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -682,11 +686,13 @@ const WalletScreen = ({ navigation }) => {
             >
               <Ionicons
                 name='arrow-up-circle'
-                size={20}
+                size={18}
                 color={COLORS.light}
-                style={{ marginRight: 8 }}
+                style={{ marginRight: 6 }}
               />
-              <Text style={styles.actionButtonText}>WITHDRAW</Text>
+              <Text style={styles.actionButtonText} numberOfLines={1}>
+                WITHDRAW
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -703,10 +709,15 @@ const WalletScreen = ({ navigation }) => {
                 { backgroundColor: COLORS.success + '20' },
               ]}
             >
-              <Ionicons name='trending-up' size={20} color={COLORS.success} />
+              <Ionicons name='trending-up' size={18} color={COLORS.success} />
             </View>
-            <Text style={styles.statLabel}>Total Wins</Text>
-            <Text style={[styles.statValue, { color: COLORS.success }]}>
+            <Text style={styles.statLabel} numberOfLines={1}>
+              Total Wins
+            </Text>
+            <Text
+              style={[styles.statValue, { color: COLORS.success }]}
+              numberOfLines={1}
+            >
               {formatCurrency(stats.totalWins)}
             </Text>
           </View>
@@ -718,10 +729,15 @@ const WalletScreen = ({ navigation }) => {
                 { backgroundColor: COLORS.primary + '20' },
               ]}
             >
-              <Ionicons name='cash' size={20} color={COLORS.primary} />
+              <Ionicons name='cash' size={18} color={COLORS.primary} />
             </View>
-            <Text style={styles.statLabel}>Total Deposits</Text>
-            <Text style={[styles.statValue, { color: COLORS.primary }]}>
+            <Text style={styles.statLabel} numberOfLines={1}>
+              Total Deposits
+            </Text>
+            <Text
+              style={[styles.statValue, { color: COLORS.primary }]}
+              numberOfLines={1}
+            >
               {formatCurrency(stats.totalDeposits)}
             </Text>
           </View>
@@ -733,10 +749,15 @@ const WalletScreen = ({ navigation }) => {
                 { backgroundColor: COLORS.secondary + '20' },
               ]}
             >
-              <Ionicons name='ticket' size={20} color={COLORS.secondary} />
+              <Ionicons name='ticket' size={18} color={COLORS.secondary} />
             </View>
-            <Text style={styles.statLabel}>Total Spent</Text>
-            <Text style={[styles.statValue, { color: COLORS.secondary }]}>
+            <Text style={styles.statLabel} numberOfLines={1}>
+              Total Spent
+            </Text>
+            <Text
+              style={[styles.statValue, { color: COLORS.secondary }]}
+              numberOfLines={1}
+            >
               {formatCurrency(stats.totalSpent)}
             </Text>
           </View>
@@ -755,11 +776,13 @@ const WalletScreen = ({ navigation }) => {
             >
               <Ionicons
                 name={stats.netProfit >= 0 ? 'arrow-up' : 'arrow-down'}
-                size={20}
+                size={18}
                 color={stats.netProfit >= 0 ? COLORS.success : COLORS.danger}
               />
             </View>
-            <Text style={styles.statLabel}>Net Profit</Text>
+            <Text style={styles.statLabel} numberOfLines={1}>
+              Net Profit
+            </Text>
             <Text
               style={[
                 styles.statValue,
@@ -767,6 +790,7 @@ const WalletScreen = ({ navigation }) => {
                   color: stats.netProfit >= 0 ? COLORS.success : COLORS.danger,
                 },
               ]}
+              numberOfLines={1}
             >
               {stats.netProfit >= 0 ? '+' : ''}
               {formatCurrency(stats.netProfit)}
@@ -778,9 +802,11 @@ const WalletScreen = ({ navigation }) => {
       {/* Transaction History */}
       <View style={styles.transactionsSection}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>RECENT TRANSACTIONS</Text>
-          <TouchableOpacity onPress={onRefresh}>
-            <Ionicons name='refresh-outline' size={20} color={COLORS.gray} />
+          <Text style={styles.sectionTitle} numberOfLines={1}>
+            RECENT TRANSACTIONS
+          </Text>
+          <TouchableOpacity onPress={onRefresh} style={styles.refreshButton}>
+            <Ionicons name='refresh-outline' size={18} color={COLORS.gray} />
           </TouchableOpacity>
         </View>
 
@@ -799,12 +825,15 @@ const WalletScreen = ({ navigation }) => {
                 colors={[COLORS.primary]}
               />
             }
+            ListFooterComponent={<View style={styles.listFooter} />}
           />
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name='receipt-outline' size={60} color={COLORS.gray} />
-            <Text style={styles.emptyTitle}>No Transactions Yet</Text>
-            <Text style={styles.emptyText}>
+            <Ionicons name='receipt-outline' size={50} color={COLORS.gray} />
+            <Text style={styles.emptyTitle} numberOfLines={1}>
+              No Transactions Yet
+            </Text>
+            <Text style={styles.emptyText} numberOfLines={2}>
               Your transaction history will appear here
             </Text>
           </View>
@@ -814,7 +843,7 @@ const WalletScreen = ({ navigation }) => {
       {/* Modals */}
       {renderDepositModal()}
       {renderWithdrawModal()}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -831,27 +860,46 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...TYPOGRAPHY.caption,
+    fontSize: 13,
     color: COLORS.gray,
     marginTop: SPACING.md,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: SPACING.lg,
+    paddingTop: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
+    paddingBottom: SPACING.md,
     paddingHorizontal: SPACING.md,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    height: Platform.OS === 'ios' ? 88 : 78,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   headerContent: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    ...TYPOGRAPHY.h2,
+    ...TYPOGRAPHY.h3,
+    fontSize: 16,
     color: COLORS.light,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    ...TYPOGRAPHY.caption,
+    ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: SPACING.xs,
+    marginTop: 2,
   },
   balanceCard: {
     backgroundColor: COLORS.cardBg,
@@ -869,9 +917,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   balanceIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(30, 63, 109, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -882,12 +930,14 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.gray,
     letterSpacing: 0.5,
     marginBottom: SPACING.xs,
   },
   balanceAmount: {
     ...TYPOGRAPHY.h1,
+    fontSize: 24,
     color: COLORS.primary,
   },
   actionButtons: {
@@ -901,12 +951,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: 14,
     paddingHorizontal: SPACING.md,
     borderRadius: 25,
   },
   actionButtonText: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.light,
     fontWeight: '600',
     letterSpacing: 0.5,
@@ -920,6 +971,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.h3,
+    fontSize: 16,
     color: COLORS.dark,
     marginBottom: SPACING.md,
   },
@@ -938,20 +990,22 @@ const styles = StyleSheet.create({
     ...CARD_STYLES.shadow,
   },
   statIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.sm,
   },
   statLabel: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.gray,
     marginBottom: SPACING.xs,
   },
   statValue: {
     ...TYPOGRAPHY.h3,
+    fontSize: 16,
     fontWeight: '700',
   },
   transactionsSection: {
@@ -964,8 +1018,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
+  refreshButton: {
+    padding: SPACING.xs,
+  },
   transactionsList: {
-    paddingBottom: SPACING.xl,
+    paddingBottom: SPACING.xl + 60, // Extra padding for bottom tab bar
+  },
+  listFooter: {
+    height: 20,
   },
   transactionCard: {
     backgroundColor: COLORS.cardBg,
@@ -984,22 +1044,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: SPACING.sm,
   },
   transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.sm,
   },
   transactionInfo: {
     flex: 1,
+    marginRight: SPACING.sm,
   },
   transactionDescription: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.dark,
-    marginBottom: SPACING.xs,
+    marginBottom: 4,
   },
   transactionMeta: {
     flexDirection: 'row',
@@ -1008,23 +1071,27 @@ const styles = StyleSheet.create({
   },
   transactionType: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.gray,
     backgroundColor: 'rgba(30, 63, 109, 0.1)',
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   transactionDate: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.gray,
   },
   transactionAmountContainer: {
     alignItems: 'flex-end',
+    minWidth: 80,
   },
   transactionAmount: {
     ...TYPOGRAPHY.h3,
+    fontSize: 16,
     fontWeight: '700',
-    marginBottom: SPACING.xs,
+    marginBottom: 4,
   },
   positiveAmount: {
     color: COLORS.success,
@@ -1033,14 +1100,14 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
   },
   statusBadge: {
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   statusText: {
     ...TYPOGRAPHY.small,
-    fontWeight: '600',
     fontSize: 10,
+    fontWeight: '600',
     letterSpacing: 0.5,
   },
   emptyState: {
@@ -1049,12 +1116,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...TYPOGRAPHY.h3,
+    fontSize: 16,
     color: COLORS.dark,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
   },
   emptyText: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.gray,
     textAlign: 'center',
     paddingHorizontal: SPACING.xl,
@@ -1063,14 +1132,17 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalSafeArea: {
+    flex: 1,
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: COLORS.light,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: SPACING.lg,
-    maxHeight: '90%',
+    maxHeight: height * 0.85,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1078,9 +1150,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.lg,
   },
+  modalCloseButton: {
+    padding: SPACING.xs,
+  },
   modalTitle: {
     ...TYPOGRAPHY.h2,
+    fontSize: 20,
     color: COLORS.dark,
+    flex: 1,
+    marginRight: SPACING.sm,
   },
   balancePreview: {
     backgroundColor: 'rgba(30, 63, 109, 0.05)',
@@ -1091,11 +1169,13 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.gray,
     marginBottom: SPACING.xs,
   },
   balanceValue: {
     ...TYPOGRAPHY.h1,
+    fontSize: 24,
     color: COLORS.primary,
   },
   amountInputContainer: {
@@ -1103,6 +1183,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.dark,
     fontWeight: '600',
     marginBottom: SPACING.sm,
@@ -1118,6 +1199,7 @@ const styles = StyleSheet.create({
   },
   currencySymbol: {
     ...TYPOGRAPHY.h2,
+    fontSize: 20,
     color: COLORS.primary,
     fontWeight: '700',
     marginRight: SPACING.xs,
@@ -1125,6 +1207,7 @@ const styles = StyleSheet.create({
   amountTextInput: {
     flex: 1,
     ...TYPOGRAPHY.h2,
+    fontSize: 20,
     color: COLORS.dark,
     fontWeight: '700',
   },
@@ -1139,9 +1222,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: 20,
+    minWidth: 60,
+    alignItems: 'center',
   },
   quickAmountText: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.primary,
     fontWeight: '600',
   },
@@ -1154,11 +1240,13 @@ const styles = StyleSheet.create({
   },
   newBalanceLabel: {
     ...TYPOGRAPHY.small,
+    fontSize: 11,
     color: COLORS.success,
     marginBottom: SPACING.xs,
   },
   newBalanceValue: {
     ...TYPOGRAPHY.h2,
+    fontSize: 20,
     color: COLORS.success,
     fontWeight: '700',
   },
@@ -1172,6 +1260,7 @@ const styles = StyleSheet.create({
   },
   withdrawalInfoText: {
     ...TYPOGRAPHY.small,
+    fontSize: 12,
     color: COLORS.warning,
     marginLeft: SPACING.sm,
     flex: 1,
@@ -1183,18 +1272,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: 14,
     paddingHorizontal: SPACING.lg,
     borderRadius: 25,
   },
   modalButtonText: {
     ...TYPOGRAPHY.body,
+    fontSize: 14,
     color: COLORS.light,
     fontWeight: '600',
     letterSpacing: 0.5,
   },
   modalNote: {
     ...TYPOGRAPHY.small,
+    fontSize: 12,
     color: COLORS.gray,
     textAlign: 'center',
     fontStyle: 'italic',
