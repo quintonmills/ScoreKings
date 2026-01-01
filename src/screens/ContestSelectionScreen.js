@@ -16,13 +16,13 @@ import { API_URL } from '../config/api';
 
 const { width } = Dimensions.get('window');
 
-// Theme Constants (same as MyContestsScreen)
+// Theme Constants
 const COLORS = {
-  primary: '#1e3f6d', // Dark blue
-  secondary: '#BA0C2F', // Red
-  success: '#34C759', // Green
-  warning: '#FF9500', // Orange
-  danger: '#FF3B30', // Red
+  primary: '#1e3f6d',
+  secondary: '#BA0C2F',
+  success: '#34C759',
+  warning: '#FF9500',
+  danger: '#FF3B30',
   light: '#ffffff',
   dark: '#0A1428',
   gray: '#8E8E93',
@@ -143,7 +143,6 @@ const ContestSelectionScreen = ({ navigation }) => {
         }
         activeOpacity={0.8}
       >
-        {/* Card Header */}
         <View style={styles.cardHeader}>
           <View style={styles.titleContainer}>
             <Text style={styles.contestTitle} numberOfLines={1}>
@@ -164,10 +163,8 @@ const ContestSelectionScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Contest Info Section */}
         <View style={styles.infoSection}>
           <Text style={styles.sectionLabel}>CONTEST DETAILS</Text>
-
           <View style={styles.infoGrid}>
             <View style={styles.infoItem}>
               <View style={styles.infoIconContainer}>
@@ -184,7 +181,6 @@ const ContestSelectionScreen = ({ navigation }) => {
                 </Text>
               </View>
             </View>
-
             <View style={styles.infoItem}>
               <View style={styles.infoIconContainer}>
                 <Ionicons
@@ -200,7 +196,6 @@ const ContestSelectionScreen = ({ navigation }) => {
                 </Text>
               </View>
             </View>
-
             <View style={styles.infoItem}>
               <View style={styles.infoIconContainer}>
                 <Ionicons
@@ -217,7 +212,6 @@ const ContestSelectionScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Card Footer - Play Button */}
         <LinearGradient
           colors={['#F8F9FA', '#FFFFFF']}
           start={{ x: 0, y: 0 }}
@@ -261,16 +255,34 @@ const ContestSelectionScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* --- MODIFIED HEADER SECTION --- */}
       <LinearGradient
         colors={[COLORS.primary, '#2A5298']}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>AVAILABLE CONTESTS</Text>
+        <View style={styles.headerTopRow}>
+          {/* Left spacer for centering title */}
+          <View style={styles.headerSideItem} />
+
+          <View style={styles.headerCenterItem}>
+            <Text style={styles.headerTitle}>AVAILABLE CONTESTS</Text>
+          </View>
+
+          {/* Profile Icon on Right */}
+          <TouchableOpacity
+            style={styles.headerSideItem}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Ionicons
+              name='person-circle-outline'
+              size={32}
+              color={COLORS.light}
+            />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.headerSubtitle}>Pick your game</Text>
       </LinearGradient>
 
-      {/* Main Content */}
       <FlatList
         data={contests}
         keyExtractor={(item) => item.id.toString()}
@@ -331,6 +343,21 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
+  // Header Layout Styles
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerCenterItem: {
+    flex: 3,
+    alignItems: 'center',
+  },
+  headerSideItem: {
+    flex: 1,
+    alignItems: 'flex-end',
+    minWidth: 40,
+  },
   headerTitle: {
     ...TYPOGRAPHY.h2,
     color: COLORS.light,
@@ -351,7 +378,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     borderRadius: CARD_STYLES.borderRadius,
     borderWidth: CARD_STYLES.borderWidth,
-    borderColor: CARD_STYLES.borderColor,
+    borderColor: COLORS.cardBorder,
     overflow: 'hidden',
   },
   cardHeader: {
