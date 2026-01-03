@@ -9,6 +9,8 @@ import {
   SafeAreaView,
   RefreshControl,
   Dimensions,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,9 +45,9 @@ const TYPOGRAPHY = {
 const SPACING = {
   xs: 4,
   sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
+  md: 12, // Matched to Wallet SPACING
+  lg: 20, // Matched to Wallet SPACING
+  xl: 28, // Matched to Wallet SPACING
 };
 
 const CARD_STYLES = {
@@ -53,8 +55,8 @@ const CARD_STYLES = {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 6,
+    elevation: 3,
   },
   borderRadius: 12,
   borderWidth: 1,
@@ -83,192 +85,43 @@ const ContestSelectionScreen = ({ navigation }) => {
     fetchContests();
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchContests();
-    });
-    return unsubscribe;
-  }, [navigation]);
-
   const onRefresh = () => {
     setRefreshing(true);
     fetchContests();
   };
 
-  const formatCurrency = (amount) => {
-    return `$${parseFloat(amount || 0).toFixed(2)}`;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch (error) {
-      return 'Invalid date';
-    }
-  };
-
-  const getContestStatusConfig = (status) => {
-    const statusUpper = status?.toUpperCase();
-    switch (statusUpper) {
-      case 'UPCOMING':
-        return { color: COLORS.warning, label: 'UPCOMING', bg: '#FFF3E0' };
-      case 'LIVE':
-        return { color: COLORS.success, label: 'LIVE', bg: '#E8F5E9' };
-      case 'COMPLETED':
-        return { color: COLORS.gray, label: 'COMPLETED', bg: '#F5F5F5' };
-      default:
-        return {
-          color: COLORS.gray,
-          label: statusUpper || 'UNKNOWN',
-          bg: '#F5F5F5',
-        };
-    }
-  };
-
-  const renderContestCard = ({ item }) => {
-    const statusConfig = getContestStatusConfig(item.status);
-
-    return (
-      <TouchableOpacity
-        style={[styles.contestCard, CARD_STYLES.shadow]}
-        onPress={() =>
-          navigation.navigate('PlayerSelection', { contest: item })
-        }
-        activeOpacity={0.8}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.contestTitle} numberOfLines={1}>
-              {item.title || 'Contest'}
-            </Text>
-            <View
-              style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}
-            >
-              <Text style={[styles.statusText, { color: statusConfig.color }]}>
-                {statusConfig.label}
-              </Text>
-            </View>
-          </View>
-          {item.endTime && (
-            <Text style={styles.contestDate}>
-              Ends: {formatDate(item.endTime)}
-            </Text>
-          )}
-        </View>
-
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionLabel}>CONTEST DETAILS</Text>
-          <View style={styles.infoGrid}>
-            <View style={styles.infoItem}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons
-                  name='trophy-outline'
-                  size={16}
-                  color={COLORS.primary}
-                />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>PRIZE POOL</Text>
-                <Text style={styles.infoValue}>
-                  {formatCurrency(item.prize)}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.infoItem}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons
-                  name='ticket-outline'
-                  size={16}
-                  color={COLORS.primary}
-                />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>ENTRY FEE</Text>
-                <Text style={styles.infoValue}>
-                  {formatCurrency(item.entryFee)}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.infoItem}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons
-                  name='people-outline'
-                  size={16}
-                  color={COLORS.primary}
-                />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>PARTICIPANTS</Text>
-                <Text style={styles.infoValue}>{item.participants || 0}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <LinearGradient
-          colors={['#F8F9FA', '#FFFFFF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.cardFooter}
-        >
-          <TouchableOpacity
-            style={styles.playButton}
-            onPress={() =>
-              navigation.navigate('PlayerSelection', { contest: item })
-            }
-          >
-            <LinearGradient
-              colors={[COLORS.primary, '#2A5298']}
-              style={styles.playButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.playButtonText}>PLAY CONTEST</Text>
-              <Ionicons
-                name='arrow-forward'
-                size={16}
-                color='#FFF'
-                style={{ marginLeft: 8 }}
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        </LinearGradient>
-      </TouchableOpacity>
-    );
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size='large' color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading contests...</Text>
+  const renderContestCard = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.contestCard, CARD_STYLES.shadow]}
+      onPress={() => navigation.navigate('PlayerSelection', { contest: item })}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.contestTitle}>{item.title || 'Contest'}</Text>
+        <Text style={styles.prizeText}>Prize: ${item.prize}</Text>
       </View>
-    );
-  }
+      <View style={styles.cardFooter}>
+        <Text style={styles.entryFeeText}>Entry: ${item.entryFee}</Text>
+        <Ionicons name='chevron-forward' size={20} color={COLORS.primary} />
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
-    <View style={styles.container}>
-      {/* --- MODIFIED HEADER SECTION --- */}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle='light-content' />
+
+      {/* --- HEADER MATCHED EXACTLY TO WALLET --- */}
       <LinearGradient
         colors={[COLORS.primary, '#2A5298']}
         style={styles.header}
       >
         <View style={styles.headerTopRow}>
-          {/* Left spacer for centering title */}
           <View style={styles.headerSideItem} />
 
           <View style={styles.headerCenterItem}>
             <Text style={styles.headerTitle}>AVAILABLE CONTESTS</Text>
           </View>
 
-          {/* Profile Icon on Right */}
           <TouchableOpacity
             style={styles.headerSideItem}
             onPress={() => navigation.navigate('Profile')}
@@ -293,57 +146,24 @@ const ContestSelectionScreen = ({ navigation }) => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={COLORS.primary}
-            colors={[COLORS.primary]}
           />
         }
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name='trophy-outline' size={80} color={COLORS.gray} />
-            <Text style={styles.emptyTitle}>No Contests Available</Text>
-            <Text style={styles.emptyDescription}>
-              There are no active contests at the moment. Check back soon!
-            </Text>
-            <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
-              <Ionicons
-                name='refresh'
-                size={20}
-                color={COLORS.primary}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.refreshButtonText}>REFRESH</Text>
-            </TouchableOpacity>
-          </View>
-        }
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.lightGray,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.lightGray,
-  },
-  loadingText: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.gray,
-    marginTop: SPACING.md,
-  },
+  container: { flex: 1, backgroundColor: COLORS.lightGray },
+
+  // Header Styles - EXACT COPY FROM WALLET
   header: {
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
     paddingBottom: SPACING.lg,
     paddingHorizontal: SPACING.md,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  // Header Layout Styles
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -361,157 +181,44 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...TYPOGRAPHY.h2,
     color: COLORS.light,
-    textAlign: 'center',
+    fontSize: 20, // Matched to Wallet
   },
   headerSubtitle: {
     ...TYPOGRAPHY.caption,
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
-    marginTop: SPACING.xs,
+    marginTop: 4, // Matched to Wallet
   },
+
+  // List Styles
   scrollContent: {
     padding: SPACING.md,
-    paddingBottom: SPACING.xl,
+    paddingTop: SPACING.lg, // Give some space since there's no balance card overlapping
   },
   contestCard: {
     backgroundColor: COLORS.cardBg,
-    marginBottom: SPACING.md,
-    borderRadius: CARD_STYLES.borderRadius,
-    borderWidth: CARD_STYLES.borderWidth,
-    borderColor: COLORS.cardBorder,
-    overflow: 'hidden',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   cardHeader: {
-    padding: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
-  },
-  titleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: SPACING.xs,
+    marginBottom: 10,
   },
-  contestTitle: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.dark,
-    flex: 1,
-    marginRight: SPACING.sm,
-  },
-  statusBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  statusText: {
-    ...TYPOGRAPHY.small,
-    fontWeight: '600',
-    fontSize: 10,
-    letterSpacing: 0.5,
-  },
-  contestDate: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-  },
-  infoSection: {
-    padding: SPACING.md,
-  },
-  sectionLabel: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-    fontWeight: '600',
-    marginBottom: SPACING.md,
-    letterSpacing: 0.5,
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  infoItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xs,
-  },
-  infoIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(30, 63, 109, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: SPACING.xs,
-  },
-  infoContent: {
-    alignItems: 'center',
-  },
-  infoLabel: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  infoValue: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.dark,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
+  contestTitle: { fontSize: 16, fontWeight: '700', color: COLORS.dark },
+  prizeText: { fontSize: 14, fontWeight: '600', color: COLORS.success },
   cardFooter: {
-    padding: SPACING.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: COLORS.cardBorder,
+    borderTopColor: '#F0F0F0',
+    paddingTop: 10,
   },
-  playButton: {
-    width: '100%',
-  },
-  playButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    borderRadius: 25,
-  },
-  playButtonText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.light,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.xl * 2,
-  },
-  emptyTitle: {
-    ...TYPOGRAPHY.h2,
-    color: COLORS.dark,
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
-  },
-  emptyDescription: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginBottom: SPACING.xl,
-    lineHeight: 24,
-  },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.light,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  refreshButtonText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.primary,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
+  entryFeeText: { fontSize: 14, color: COLORS.gray },
 });
 
 export default ContestSelectionScreen;
