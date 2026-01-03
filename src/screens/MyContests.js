@@ -17,11 +17,11 @@ const { width } = Dimensions.get('window');
 
 // Theme Constants
 const COLORS = {
-  primary: '#1e3f6d', // Dark blue
-  secondary: '#BA0C2F', // Red
-  success: '#34C759', // Green
-  warning: '#FF9500', // Orange
-  danger: '#FF3B30', // Red
+  primary: '#1e3f6d',
+  secondary: '#BA0C2F',
+  success: '#34C759',
+  warning: '#FF9500',
+  danger: '#FF3B30',
   light: '#ffffff',
   dark: '#0A1428',
   gray: '#8E8E93',
@@ -67,52 +67,19 @@ export default function MyContestsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Test API connection
   const testApiConnection = useCallback(async () => {
     try {
-      console.log('Testing API connection to:', API_URL);
       const response = await fetch(`${API_URL}/health`);
-      const data = await response.json();
-      console.log('✅ API Connection successful:', data);
+      await response.json();
     } catch (error) {
       console.error('❌ API Connection failed:', error.message);
-
-      // Try alternative URLs
-      const urls = [
-        'https://server-core-1.onrender.com/api/health',
-        'http://localhost:4000/api/health',
-      ];
-
-      for (const url of urls) {
-        try {
-          const res = await fetch(url);
-          console.log(`Testing ${url}:`, res.ok ? '✅ OK' : '❌ Failed');
-        } catch (e) {
-          console.log(`Testing ${url}: ❌ ${e.message}`);
-        }
-      }
     }
   }, []);
 
-  // Debug on mount
   useEffect(() => {
-    console.log('================================');
-    console.log('DEBUG API CONFIGURATION:');
-    console.log('1. API_URL:', API_URL);
-    console.log(
-      '2. process.env.EXPO_PUBLIC_API_URL:',
-      process.env.EXPO_PUBLIC_API_URL
-    );
-    console.log(
-      '3. Window location:',
-      typeof window !== 'undefined' ? window.location.href : 'No window'
-    );
-    console.log('================================');
-
     testApiConnection();
   }, [testApiConnection]);
 
-  // Group entries by status
   const groupedEntries = entries.reduce((groups, entry) => {
     const status = entry.status?.toUpperCase() || 'ACTIVE';
     if (!groups[status]) groups[status] = [];
@@ -120,87 +87,60 @@ export default function MyContestsScreen({ navigation }) {
     return groups;
   }, {});
 
-  // Fetch user data
   const fetchUserData = async (userId = 1) => {
     try {
-      console.log('Fetching user data from:', `${API_URL}/me?userId=${userId}`);
       const response = await fetch(`${API_URL}/me?userId=${userId}`);
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`Failed to fetch user: ${response.status}`);
-      }
       const userData = await response.json();
-      console.log('User data received:', userData);
       setUser(userData);
       return userData.id;
     } catch (error) {
-      console.error('Error fetching user:', error);
       Alert.alert('Error', 'Could not load user data');
       return 1;
     }
   };
 
-  // Fetch contest entries
   const fetchEntries = async (userId) => {
     try {
-      console.log(
-        'Fetching entries from:',
-        `${API_URL}/users/${userId}/entries`
-      );
       const response = await fetch(`${API_URL}/users/${userId}/entries`);
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`Failed to fetch entries: ${response.status}`);
-      }
       const data = await response.json();
-      console.log('Entries received:', data);
       setEntries(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching entries:', error);
-      Alert.alert(
-        'Error',
-        'Could not load your entries. Please check your connection.'
-      );
+      Alert.alert('Error', 'Could not load your entries.');
       setEntries([]);
     }
   };
 
-  // Load all data
   const loadData = useCallback(async () => {
     try {
-      console.log('Loading data...');
       setLoading(true);
       const userId = await fetchUserData();
-      if (userId) {
-        await fetchEntries(userId);
-      }
+      if (userId) await fetchEntries(userId);
     } catch (error) {
-      console.error('Error loading data:', error);
       Alert.alert('Error', 'Failed to load data');
     } finally {
-      console.log('Loading complete');
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  // Handle refresh
   const onRefresh = useCallback(() => {
-    console.log('Refreshing data...');
     setRefreshing(true);
     loadData();
   }, [loadData]);
 
-  // Initial load
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Refresh when screen comes into focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadData);
     return unsubscribe;
   }, [navigation, loadData]);
 
-  // Format status text with colors
   const getStatusConfig = (status) => {
     const statusUpper = status?.toUpperCase();
     switch (statusUpper) {
@@ -221,12 +161,8 @@ export default function MyContestsScreen({ navigation }) {
     }
   };
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return `$${parseFloat(amount || 0).toFixed(2)}`;
-  };
+  const formatCurrency = (amount) => `$${parseFloat(amount || 0).toFixed(2)}`;
 
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -242,15 +178,11 @@ export default function MyContestsScreen({ navigation }) {
     }
   };
 
-  // Handle entry press
-  const handleEntryPress = (entry) => {
+  const handleEntryPress = (entry) =>
     navigation.navigate('EntryDetail', { entryId: entry.id });
-  };
 
-  // Render entry card
   const renderEntryCard = (entry) => {
     const statusConfig = getStatusConfig(entry.status);
-
     return (
       <TouchableOpacity
         key={entry.id}
@@ -258,7 +190,6 @@ export default function MyContestsScreen({ navigation }) {
         onPress={() => handleEntryPress(entry)}
         activeOpacity={0.8}
       >
-        {/* Card Header */}
         <View style={styles.cardHeader}>
           <View style={styles.titleContainer}>
             <Text style={styles.contestTitle} numberOfLines={1}>
@@ -275,7 +206,6 @@ export default function MyContestsScreen({ navigation }) {
           <Text style={styles.entryDate}>{formatDate(entry.createdAt)}</Text>
         </View>
 
-        {/* Picks Preview */}
         {entry.picks && entry.picks.length > 0 && (
           <View style={styles.picksSection}>
             <Text style={styles.sectionLabel}>YOUR PICKS</Text>
@@ -302,7 +232,6 @@ export default function MyContestsScreen({ navigation }) {
           </View>
         )}
 
-        {/* Card Footer - Payout Info */}
         <LinearGradient
           colors={['#F8F9FA', '#FFFFFF']}
           start={{ x: 0, y: 0 }}
@@ -329,10 +258,8 @@ export default function MyContestsScreen({ navigation }) {
     );
   };
 
-  // Render status section
   const renderStatusSection = (title, entries) => {
     if (!entries || entries.length === 0) return null;
-
     return (
       <View style={styles.statusSection}>
         <View style={styles.sectionHeader}>
@@ -355,16 +282,30 @@ export default function MyContestsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* --- UPDATED HEADER WITH PROFILE ICON --- */}
       <LinearGradient
         colors={[COLORS.primary, '#2A5298']}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>MY ENTRIES</Text>
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerSideItem} />
+          <View style={styles.headerCenterItem}>
+            <Text style={styles.headerTitle}>MY ENTRIES</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.headerSideItem}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Ionicons
+              name='person-circle-outline'
+              size={32}
+              color={COLORS.light}
+            />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.headerSubtitle}>Track your contests</Text>
       </LinearGradient>
 
-      {/* User Balance Card */}
       {user && (
         <View style={[styles.balanceCard, CARD_STYLES.shadow]}>
           <View style={styles.balanceHeader}>
@@ -383,7 +324,6 @@ export default function MyContestsScreen({ navigation }) {
         </View>
       )}
 
-      {/* Main Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -397,19 +337,11 @@ export default function MyContestsScreen({ navigation }) {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Active Entries */}
         {renderStatusSection('ACTIVE CONTESTS', groupedEntries['ACTIVE'])}
-
-        {/* Pending Entries */}
         {renderStatusSection('PENDING', groupedEntries['PENDING'])}
-
-        {/* Won Entries */}
         {renderStatusSection('WON CONTESTS', groupedEntries['WON'])}
-
-        {/* Lost Entries */}
         {renderStatusSection('LOST CONTESTS', groupedEntries['LOST'])}
 
-        {/* Other status entries */}
         {Object.entries(groupedEntries).map(([status, entriesList]) => {
           if (!['ACTIVE', 'PENDING', 'WON', 'LOST'].includes(status)) {
             return renderStatusSection(`${status} ENTRIES`, entriesList);
@@ -417,14 +349,12 @@ export default function MyContestsScreen({ navigation }) {
           return null;
         })}
 
-        {/* Empty State */}
         {entries.length === 0 && !loading && (
           <View style={styles.emptyState}>
             <Ionicons name='trophy-outline' size={80} color={COLORS.gray} />
             <Text style={styles.emptyTitle}>No Entries Yet</Text>
             <Text style={styles.emptyDescription}>
-              You haven't entered any contests. Join one to see your entries
-              here!
+              You haven't entered any contests.
             </Text>
             <TouchableOpacity
               style={styles.browseButton}
@@ -437,18 +367,11 @@ export default function MyContestsScreen({ navigation }) {
                 end={{ x: 1, y: 0 }}
               >
                 <Text style={styles.browseButtonText}>BROWSE CONTESTS</Text>
-                <Ionicons
-                  name='arrow-forward'
-                  size={16}
-                  color='#FFF'
-                  style={{ marginLeft: 8 }}
-                />
               </LinearGradient>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Refresh Prompt */}
         {entries.length > 0 && (
           <TouchableOpacity style={styles.refreshPrompt} onPress={onRefresh}>
             <Ionicons name='refresh-circle' size={20} color={COLORS.primary} />
@@ -461,10 +384,7 @@ export default function MyContestsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.lightGray,
-  },
+  container: { flex: 1, backgroundColor: COLORS.lightGray },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -483,11 +403,21 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
-  headerTitle: {
-    ...TYPOGRAPHY.h2,
-    color: COLORS.light,
-    textAlign: 'center',
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
+  headerCenterItem: {
+    flex: 3,
+    alignItems: 'center',
+  },
+  headerSideItem: {
+    flex: 1,
+    alignItems: 'flex-end',
+    minWidth: 40,
+  },
+  headerTitle: { ...TYPOGRAPHY.h2, color: COLORS.light, textAlign: 'center' },
   headerSubtitle: {
     ...TYPOGRAPHY.caption,
     color: 'rgba(255, 255, 255, 0.8)',
@@ -500,7 +430,7 @@ const styles = StyleSheet.create({
     marginTop: -SPACING.lg,
     borderRadius: CARD_STYLES.borderRadius,
     borderWidth: CARD_STYLES.borderWidth,
-    borderColor: CARD_STYLES.borderColor,
+    borderColor: COLORS.cardBorder,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
   },
@@ -509,39 +439,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
-  userInfo: {
-    marginLeft: SPACING.sm,
-  },
-  userName: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.dark,
-  },
-  userEmail: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-  },
-  balanceContent: {
-    alignItems: 'center',
-  },
+  userInfo: { marginLeft: SPACING.sm },
+  userName: { ...TYPOGRAPHY.h3, color: COLORS.dark },
+  userEmail: { ...TYPOGRAPHY.small, color: COLORS.gray },
+  balanceContent: { alignItems: 'center' },
   balanceLabel: {
     ...TYPOGRAPHY.small,
     color: COLORS.gray,
     letterSpacing: 0.5,
     marginBottom: SPACING.xs,
   },
-  balanceAmount: {
-    ...TYPOGRAPHY.h1,
-    color: COLORS.primary,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: SPACING.xl,
-  },
-  statusSection: {
-    marginBottom: SPACING.lg,
-  },
+  balanceAmount: { ...TYPOGRAPHY.h1, color: COLORS.primary },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: SPACING.xl },
+  statusSection: { marginBottom: SPACING.lg },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -549,10 +460,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
   },
-  sectionTitle: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.dark,
-  },
+  sectionTitle: { ...TYPOGRAPHY.h3, color: COLORS.dark },
   sectionCount: {
     ...TYPOGRAPHY.body,
     fontWeight: '600',
@@ -568,7 +476,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     borderRadius: CARD_STYLES.borderRadius,
     borderWidth: CARD_STYLES.borderWidth,
-    borderColor: CARD_STYLES.borderColor,
+    borderColor: COLORS.cardBorder,
     overflow: 'hidden',
   },
   cardHeader: {
@@ -599,13 +507,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.5,
   },
-  entryDate: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-  },
-  picksSection: {
-    padding: SPACING.md,
-  },
+  entryDate: { ...TYPOGRAPHY.small, color: COLORS.gray },
+  picksSection: { padding: SPACING.md },
   sectionLabel: {
     ...TYPOGRAPHY.small,
     color: COLORS.gray,
@@ -619,11 +522,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.sm,
   },
-  pickInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
+  pickInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   playerName: {
     ...TYPOGRAPHY.body,
     color: COLORS.dark,
@@ -644,10 +543,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  teamText: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-  },
+  teamText: { ...TYPOGRAPHY.small, color: COLORS.gray },
   morePicks: {
     ...TYPOGRAPHY.small,
     color: COLORS.primary,
@@ -665,29 +561,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  payoutItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
+  payoutItem: { alignItems: 'center', flex: 1 },
   payoutLabel: {
     ...TYPOGRAPHY.small,
     color: COLORS.gray,
     marginBottom: 4,
     letterSpacing: 0.5,
   },
-  payoutValue: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.dark,
-    fontWeight: '700',
-  },
-  payoutWin: {
-    color: COLORS.success,
-  },
-  divider: {
-    width: 1,
-    height: 40,
-    backgroundColor: COLORS.cardBorder,
-  },
+  payoutValue: { ...TYPOGRAPHY.h3, color: COLORS.dark, fontWeight: '700' },
+  payoutWin: { color: COLORS.success },
+  divider: { width: 1, height: 40, backgroundColor: COLORS.cardBorder },
   emptyState: {
     alignItems: 'center',
     paddingHorizontal: SPACING.xl,
@@ -706,9 +589,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     lineHeight: 24,
   },
-  browseButton: {
-    width: '100%',
-  },
+  browseButton: { width: '100%' },
   browseButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
