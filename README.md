@@ -4,6 +4,8 @@
 
 OTE Pick'em is a fantasy sports application where users can enter daily contests by predicting player performances. Users select 2 players and choose whether they'll score **Over** or **Under** their projected point totals. If both picks are correct, they win 3x their entry fee!
 
+🔗 [View Live Application](https://fantasy-sports-app-1.vercel.app/)
+
 ### Key Features
 
 - **Daily Contests** with various entry fees and prize pools
