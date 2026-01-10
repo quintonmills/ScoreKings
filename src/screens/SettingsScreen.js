@@ -23,8 +23,7 @@ const COLORS = {
   cardBorder: '#E5E5EA',
 };
 
-const SettingsScreen = ({ navigation }) => {
-  // Replace these with your actual hosted URLs
+export const SettingsScreen = ({ navigation }) => {
   const TERMS_URL = 'https://quintonmills.github.io/sc-legal/terms.html';
   const PRIVACY_URL = 'https://quintonmills.github.io/sc-legal/privacy.html';
 
@@ -164,5 +163,3 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
-
-export default SettingsScreen;

@@ -4,8 +4,7 @@ import PaymentScreen from './src/screens/Payment';
 import MainTabs from './src/navigation/MainTabs';
 import LoginScreen from './src/screens/Login';
 import SuccessScreen from './src/screens/SuccessScreen';
-import SettingsScreen from './src/screens/SettingsSCreen';
-
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
