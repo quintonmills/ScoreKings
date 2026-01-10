@@ -25,8 +25,8 @@ const COLORS = {
 
 const SettingsScreen = ({ navigation }) => {
   // Replace these with your actual hosted URLs
-  const TERMS_URL = 'https://your-domain.com/terms';
-  const PRIVACY_URL = 'https://your-domain.com/privacy';
+  const TERMS_URL = 'https://quintonmills.github.io/sc-legal/terms.html';
+  const PRIVACY_URL = 'https://quintonmills.github.io/sc-legal/privacy.html';
 
   const handleOpenLink = async (url) => {
     const supported = await Linking.canOpenURL(url);
