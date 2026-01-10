@@ -4,6 +4,7 @@ import PaymentScreen from './src/screens/Payment';
 import MainTabs from './src/navigation/MainTabs';
 import LoginScreen from './src/screens/Login';
 import SuccessScreen from './src/screens/SuccessScreen';
+import SettingsScreen from './src/screens/SettingsSCreen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -40,6 +41,11 @@ export default function App() {
         <Stack.Screen
           name='PaymentScreen'
           component={PaymentScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name='Settings'
+          component={SettingsScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
