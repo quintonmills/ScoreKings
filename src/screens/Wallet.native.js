@@ -64,7 +64,7 @@ const WalletScreen = ({ navigation }) => {
       try {
         await IAP.initConnection();
         console.log(
-          'StoreKit Initialized - Sandbox menu should appear in Settings now.'
+          'StoreKit Initialized - Sandbox menu should appear in Settings now.',
         );
         // This call wakes up the sandbox environment
         await IAP.getProducts({ skus: itemSkus });
