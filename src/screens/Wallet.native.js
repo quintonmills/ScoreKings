@@ -14,6 +14,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as IAP from 'react-native-iap';
 
 const API_URL = 'https://server-core-1.onrender.com/api';
@@ -23,18 +24,16 @@ const itemSkus = Platform.select({
   android: ['com.scorekings.credits.500'],
 });
 
-// --- ADMIN THEME CONSTANTS ---
 const COLORS = {
-  primary: '#0A1F44', // Deep Navy
-  accent: '#7D1324', // Maroon Stripe
-  background: '#F0F2F5', // Light gray background
-  cardBg: '#ffffff',
-  textMain: '#1A1A1A',
-  textMuted: '#65676B',
-  success: '#28A745',
-  danger: '#DC3545',
-  border: '#E4E6EB',
+  primary: '#1e3f6d',
+  secondary: '#2A5298',
   light: '#ffffff',
+  dark: '#0A1428',
+  gray: '#8E8E93',
+  success: '#28A745',
+  danger: '#FF3B30',
+  lightGray: '#F5F5F7',
+  cardBorder: '#E5E5EA',
 };
 
 const WalletScreen = ({ navigation }) => {
@@ -78,7 +77,6 @@ const WalletScreen = ({ navigation }) => {
     };
   }, []);
 
-  // ==================== DATA FETCHING ====================
   const fetchUserData = async () => {
     try {
       const response = await fetch(`${API_URL}/me?userId=1`);
@@ -148,29 +146,24 @@ const WalletScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle='light-content' backgroundColor={COLORS.primary} />
+      <StatusBar barStyle='light-content' />
 
-      {/* --- BOXY CENTERED ADMIN HEADER --- */}
-      <View style={styles.headerWrapper}>
+      {/* --- SQUARE GRADIENT HEADER --- */}
+      <LinearGradient
+        colors={[COLORS.primary, COLORS.secondary]}
+        style={styles.header}
+      >
         <SafeAreaView>
           <View style={styles.headerContent}>
             <TouchableOpacity
               style={styles.headerSideItem}
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name='chevron-back' size={24} color={COLORS.light} />
+              <Ionicons name='arrow-back' size={24} color={COLORS.light} />
             </TouchableOpacity>
 
             <View style={styles.headerCenterItem}>
-              <View style={styles.titleRow}>
-                <Ionicons
-                  name='wallet-outline'
-                  size={18}
-                  color={COLORS.light}
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.headerTitle}>MY WALLET</Text>
-              </View>
+              <Text style={styles.headerTitle}>MY WALLET</Text>
               <Text style={styles.headerSubtitle}>FINANCIAL OVERVIEW</Text>
             </View>
 
@@ -186,36 +179,54 @@ const WalletScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </SafeAreaView>
-        <View style={styles.headerAccentLine} />
-      </View>
+      </LinearGradient>
 
       <FlatList
         data={transactions}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         ListHeaderComponent={
           <>
-            {/* --- STATS SUMMARY BOX --- */}
+            {/* --- PREMIUM WALLET BALANCE CARD --- */}
             <View style={styles.statsContainer}>
               <View style={styles.statBox}>
-                <Text style={styles.statLabel}>AVAILABLE BALANCE</Text>
+                <View style={styles.walletLabelRow}>
+                  <Text style={styles.statLabel}>AVAILABLE BALANCE</Text>
+                  <Ionicons
+                    name='shield-checkmark'
+                    size={14}
+                    color={COLORS.success}
+                  />
+                </View>
                 <Text style={styles.statValue}>
                   {formatCurrency(user?.balance)}
                 </Text>
-                <View style={styles.statIndicator} />
 
-                <TouchableOpacity
-                  style={styles.depositButton}
-                  onPress={handleDeposit}
-                  disabled={processing}
-                >
-                  {processing ? (
-                    <ActivityIndicator color={COLORS.light} size='small' />
-                  ) : (
-                    <Text style={styles.depositButtonText}>
-                      DEPOSIT $5.00 CREDITS
-                    </Text>
-                  )}
-                </TouchableOpacity>
+                <View style={styles.buttonWrapper}>
+                  <TouchableOpacity
+                    style={[
+                      styles.depositButton,
+                      processing && { opacity: 0.7 },
+                    ]}
+                    onPress={handleDeposit}
+                    disabled={processing}
+                  >
+                    {processing ? (
+                      <ActivityIndicator color={COLORS.light} size='small' />
+                    ) : (
+                      <>
+                        <Ionicons
+                          name='add-circle'
+                          size={18}
+                          color={COLORS.light}
+                          style={{ marginRight: 8 }}
+                        />
+                        <Text style={styles.depositButtonText}>
+                          DEPOSIT $5.00 CREDITS
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
             <Text style={styles.sectionTitle}>TRANSACTION LOG</Text>
@@ -223,6 +234,13 @@ const WalletScreen = ({ navigation }) => {
         }
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name={item.amount > 0 ? 'arrow-down-circle' : 'arrow-up-circle'}
+                size={24}
+                color={item.amount > 0 ? COLORS.success : COLORS.gray}
+              />
+            </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.transactionDescription}>
                 {item.description?.toUpperCase()}
@@ -238,7 +256,7 @@ const WalletScreen = ({ navigation }) => {
             <Text
               style={[
                 styles.transactionAmount,
-                { color: item.amount > 0 ? COLORS.success : COLORS.danger },
+                { color: item.amount > 0 ? COLORS.success : COLORS.dark },
               ]}
             >
               {item.amount > 0 ? '+' : '-'}
@@ -256,7 +274,14 @@ const WalletScreen = ({ navigation }) => {
           />
         }
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No transactions found in system.</Text>
+          <View style={styles.emptyContainer}>
+            <Ionicons
+              name='receipt-outline'
+              size={48}
+              color={COLORS.cardBorder}
+            />
+            <Text style={styles.emptyText}>No transactions found.</Text>
+          </View>
         }
       />
     </View>
@@ -264,118 +289,145 @@ const WalletScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: COLORS.lightGray },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   // --- Header ---
-  headerWrapper: { backgroundColor: COLORS.primary, zIndex: 100 },
+  header: {
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3.84,
+  },
   headerContent: {
+    height: 64,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    paddingTop: Platform.OS === 'android' ? 10 : 0,
+    paddingHorizontal: 15,
   },
   headerSideItem: { width: 40, alignItems: 'center' },
   headerCenterItem: { flex: 1, alignItems: 'center' },
-  titleRow: { flexDirection: 'row', alignItems: 'center' },
   headerTitle: {
     color: COLORS.light,
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   headerSubtitle: {
-    color: 'rgba(255, 255, 255, 0.5)',
-    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
     fontWeight: '600',
     marginTop: 2,
-    letterSpacing: 0.5,
   },
-  headerAccentLine: { height: 4, backgroundColor: COLORS.accent },
 
-  // --- Stats & Deposit ---
+  // --- Wallet Card ---
   statsContainer: { padding: 16 },
   statBox: {
-    backgroundColor: COLORS.cardBg,
-    padding: 20,
-    borderRadius: 2,
+    backgroundColor: COLORS.light,
+    padding: 24,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    elevation: 2,
+    borderColor: COLORS.cardBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  walletLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   statLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.gray,
     letterSpacing: 1,
+    marginRight: 6,
   },
   statValue: {
-    fontSize: 32,
+    fontSize: 38,
     fontWeight: '900',
-    color: COLORS.primary,
-    marginTop: 4,
-  },
-  statIndicator: {
-    height: 3,
-    width: 40,
-    backgroundColor: COLORS.accent,
-    marginTop: 12,
+    color: COLORS.dark,
     marginBottom: 20,
+  },
+  buttonWrapper: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+    paddingTop: 20,
   },
   depositButton: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 2,
+    height: 54,
+    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   depositButtonText: {
     color: COLORS.light,
     fontWeight: '800',
-    fontSize: 13,
+    fontSize: 14,
     letterSpacing: 1,
   },
 
-  // --- List ---
+  // --- Transaction List ---
   sectionTitle: {
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    paddingHorizontal: 20,
+    marginBottom: 12,
     fontSize: 11,
     fontWeight: '800',
-    color: COLORS.textMuted,
+    color: COLORS.gray,
     letterSpacing: 1,
   },
   list: { flex: 1 },
   transactionCard: {
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.light,
     padding: 16,
     marginHorizontal: 16,
-    marginBottom: 1,
+    marginBottom: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.cardBorder,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  iconContainer: {
+    marginRight: 12,
   },
   transactionDescription: {
     fontWeight: '700',
     fontSize: 13,
-    color: COLORS.textMain,
+    color: COLORS.dark,
   },
   transactionDate: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    marginTop: 4,
-    fontWeight: '600',
+    fontSize: 11,
+    color: COLORS.gray,
+    marginTop: 2,
+    fontWeight: '500',
   },
-  transactionAmount: { fontWeight: '900', fontSize: 15 },
+  transactionAmount: {
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 60,
+  },
   emptyText: {
-    textAlign: 'center',
-    marginTop: 40,
-    color: COLORS.textMuted,
-    fontSize: 12,
+    marginTop: 12,
+    color: COLORS.gray,
+    fontSize: 13,
     fontWeight: '600',
   },
 });

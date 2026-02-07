@@ -47,7 +47,7 @@ export const SettingsScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: () => console.log('Delete Account Triggered'),
         },
-      ]
+      ],
     );
   };
 
