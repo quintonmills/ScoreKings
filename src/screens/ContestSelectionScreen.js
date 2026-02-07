@@ -5,70 +5,36 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   SafeAreaView,
   RefreshControl,
-  Dimensions,
   Platform,
   StatusBar,
   TouchableWithoutFeedback,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { API_URL } from '../config/api';
 
 const { width } = Dimensions.get('window');
 
-// Theme Constants
+// --- THEME CONSTANTS (Admin Dashboard Palette) ---
 const COLORS = {
-  primary: '#1e3f6d',
-  secondary: '#BA0C2F',
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
-  light: '#ffffff',
-  dark: '#0A1428',
-  gray: '#8E8E93',
-  lightGray: '#F5F5F7',
+  primary: '#0A1F44', // Deep Navy Admin Header
+  accent: '#7D1324', // Maroon Accent Stripe
+  background: '#F0F2F5', // Light Grayish Web Background
   cardBg: '#ffffff',
-  cardBorder: '#E5E5EA',
-};
-
-const TYPOGRAPHY = {
-  h1: { fontSize: 28, fontWeight: '800', lineHeight: 34 },
-  h2: { fontSize: 22, fontWeight: '700', lineHeight: 28 },
-  h3: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
-  body: { fontSize: 16, fontWeight: '400', lineHeight: 22 },
-  caption: { fontSize: 14, fontWeight: '400', lineHeight: 18 },
-  small: { fontSize: 12, fontWeight: '400', lineHeight: 16 },
-};
-
-const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 20,
-  xl: 28,
-};
-
-const CARD_STYLES = {
-  shadow: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5, // Higher elevation for the dropdown
-  },
-  borderRadius: 12,
-  borderWidth: 1,
-  borderColor: COLORS.cardBorder,
+  textMain: '#1A1A1A',
+  textMuted: '#65676B',
+  success: '#28A745',
+  border: '#E4E6EB',
+  light: '#ffffff',
 };
 
 const ContestSelectionScreen = ({ navigation }) => {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false); // Dropdown State
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const fetchContests = async () => {
     try {
@@ -94,57 +60,74 @@ const ContestSelectionScreen = ({ navigation }) => {
 
   const renderContestCard = ({ item }) => (
     <TouchableOpacity
-      style={[
-        styles.contestCard,
-        { shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
-      ]}
+      style={styles.contestCard}
+      activeOpacity={0.7}
       onPress={() => navigation.navigate('PlayerSelection', { contest: item })}
     >
-      <View style={styles.cardHeader}>
-        <Text style={styles.contestTitle}>{item.title || 'Contest'}</Text>
-        <Text style={styles.prizeText}>Prize: ${item.prize}</Text>
+      <View style={styles.cardContent}>
+        <View>
+          <Text style={styles.contestTitle}>{item.title || 'Contest'}</Text>
+          <Text style={styles.entryFeeText}>Entry Fee: ${item.entryFee}</Text>
+        </View>
+        <View style={styles.prizeBadge}>
+          <Text style={styles.prizeText}>${item.prize} Prize</Text>
+        </View>
       </View>
       <View style={styles.cardFooter}>
-        <Text style={styles.entryFeeText}>Entry: ${item.entryFee}</Text>
-        <Ionicons name='chevron-forward' size={20} color={COLORS.primary} />
+        <Text style={styles.cardStatus}>
+          STATUS: <Text style={{ color: COLORS.success }}>ACTIVE</Text>
+        </Text>
+        <Ionicons name='chevron-forward' size={18} color={COLORS.textMuted} />
       </View>
     </TouchableOpacity>
   );
 
   return (
     <TouchableWithoutFeedback onPress={() => setShowDropdown(false)}>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle='light-content' />
+      <View style={styles.container}>
+        <StatusBar barStyle='light-content' backgroundColor={COLORS.primary} />
 
-        {/* --- HEADER --- */}
-        <LinearGradient
-          colors={[COLORS.primary, '#2A5298']}
-          style={styles.header}
-        >
-          <View style={styles.headerTopRow}>
-            <View style={styles.headerSideItem} />
+        {/* --- BOXY ADMIN HEADER --- */}
+        <View style={styles.headerWrapper}>
+          <SafeAreaView>
+            <View style={styles.headerContent}>
+              {/* Left Spacer for centering */}
+              <View style={styles.headerSideItem} />
 
-            <View style={styles.headerCenterItem}>
-              <Text style={styles.headerTitle}>AVAILABLE CONTESTS</Text>
+              {/* Centered Title Group */}
+              <View style={styles.headerCenterItem}>
+                <View style={styles.titleRow}>
+                  <Ionicons
+                    name='basketball'
+                    size={18}
+                    color={COLORS.light}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.headerTitle}>Available Contests</Text>
+                </View>
+                <Text style={styles.headerSubtitle}>Pick your game</Text>
+              </View>
+
+              {/* Profile Action */}
+              <TouchableOpacity
+                style={styles.headerSideItem}
+                onPress={() => setShowDropdown(!showDropdown)}
+              >
+                <Ionicons
+                  name={showDropdown ? 'close' : 'person-circle-outline'}
+                  size={28}
+                  color={COLORS.light}
+                />
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.headerSideItem}
-              onPress={() => setShowDropdown(!showDropdown)}
-            >
-              <Ionicons
-                name={showDropdown ? 'close-circle' : 'person-circle-outline'}
-                size={32}
-                color={COLORS.light}
-              />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.headerSubtitle}>Pick your game</Text>
-        </LinearGradient>
+          </SafeAreaView>
+          {/* Maroon stripe from the web dashboard */}
+          <View style={styles.headerAccentLine} />
+        </View>
 
         {/* --- DROPDOWN MENU --- */}
         {showDropdown && (
-          <View style={[styles.dropdownContainer, CARD_STYLES.shadow]}>
+          <View style={styles.dropdownContainer}>
             <TouchableOpacity
               style={styles.dropdownItem}
               onPress={() => {
@@ -152,12 +135,14 @@ const ContestSelectionScreen = ({ navigation }) => {
                 navigation.navigate('Profile');
               }}
             >
-              <Ionicons name='person-outline' size={20} color={COLORS.dark} />
+              <Ionicons
+                name='person-outline'
+                size={20}
+                color={COLORS.textMain}
+              />
               <Text style={styles.dropdownText}>My Profile</Text>
             </TouchableOpacity>
-
             <View style={styles.dropdownDivider} />
-
             <TouchableOpacity
               style={styles.dropdownItem}
               onPress={() => {
@@ -165,12 +150,17 @@ const ContestSelectionScreen = ({ navigation }) => {
                 navigation.navigate('Settings');
               }}
             >
-              <Ionicons name='settings-outline' size={20} color={COLORS.dark} />
+              <Ionicons
+                name='settings-outline'
+                size={20}
+                color={COLORS.textMain}
+              />
               <Text style={styles.dropdownText}>Settings</Text>
             </TouchableOpacity>
           </View>
         )}
 
+        {/* --- LIST CONTENT --- */}
         <FlatList
           data={contests}
           keyExtractor={(item) => item.id.toString()}
@@ -184,109 +174,152 @@ const ContestSelectionScreen = ({ navigation }) => {
             />
           }
         />
-      </SafeAreaView>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.lightGray },
-
-  // Header Styles
-  header: {
-    paddingTop: Platform.OS === 'android' ? 40 : 10,
-    paddingBottom: SPACING.lg,
-    paddingHorizontal: SPACING.md,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    zIndex: 10,
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
   },
-  headerTopRow: {
+
+  // --- Header Styles ---
+  headerWrapper: {
+    backgroundColor: COLORS.primary,
+    zIndex: 100,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  headerCenterItem: {
-    flex: 3,
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: Platform.OS === 'android' ? 10 : 0,
   },
   headerSideItem: {
+    width: 40,
+    alignItems: 'center',
+  },
+  headerCenterItem: {
     flex: 1,
-    alignItems: 'flex-end',
-    minWidth: 40,
+    alignItems: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerTitle: {
-    ...TYPOGRAPHY.h2,
     color: COLORS.light,
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   headerSubtitle: {
-    ...TYPOGRAPHY.caption,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    marginTop: 4,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 9,
+    fontWeight: '600',
+    marginTop: 2,
+    letterSpacing: 0.5,
+  },
+  headerAccentLine: {
+    height: 4,
+    backgroundColor: COLORS.accent,
   },
 
-  // Dropdown Styles
+  // --- Dropdown Styles ---
   dropdownContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 110 : 100, // Adjusts so it sits right under the header
-    right: 20,
+    top: Platform.OS === 'ios' ? 105 : 95,
+    right: 16,
     backgroundColor: COLORS.light,
     width: 180,
-    borderRadius: 12,
+    borderRadius: 4,
     zIndex: 1000,
-    paddingVertical: 5,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: COLORS.border,
   },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   dropdownText: {
-    ...TYPOGRAPHY.body,
-    fontSize: 15,
-    marginLeft: 10,
-    color: COLORS.dark,
+    fontSize: 14,
+    marginLeft: 12,
+    color: COLORS.textMain,
+    fontWeight: '500',
   },
   dropdownDivider: {
     height: 1,
-    backgroundColor: COLORS.cardBorder,
-    marginHorizontal: 10,
+    backgroundColor: COLORS.border,
   },
 
-  // List Styles
+  // --- Contest List Styles ---
   scrollContent: {
-    padding: SPACING.md,
-    paddingTop: SPACING.lg,
+    padding: 16,
   },
   contestCard: {
     backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
+    borderRadius: 2, // Very boxy web-look
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: COLORS.border,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  contestTitle: { fontSize: 16, fontWeight: '700', color: COLORS.dark },
-  prizeText: { fontSize: 14, fontWeight: '600', color: COLORS.success },
-  cardFooter: {
+  cardContent: {
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 10,
   },
-  entryFeeText: { fontSize: 14, color: COLORS.gray },
+  contestTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textMain,
+    marginBottom: 4,
+  },
+  entryFeeText: {
+    fontSize: 13,
+    color: COLORS.textMuted,
+  },
+  prizeBadge: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  prizeText: {
+    color: COLORS.success,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  cardFooter: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#FAFBFC',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardStatus: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+  },
 });
 
 export default ContestSelectionScreen;

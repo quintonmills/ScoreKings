@@ -6,61 +6,24 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   RefreshControl,
-  Dimensions,
   Platform,
   StatusBar,
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
-
-// Theme Constants - Character-for-character match with Wallet
+// --- THEME CONSTANTS (Admin Dashboard Palette) ---
 const COLORS = {
-  primary: '#1e3f6d',
-  secondary: '#BA0C2F',
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
-  light: '#ffffff',
-  dark: '#0A1428',
-  gray: '#8E8E93',
-  lightGray: '#F5F5F7',
+  primary: '#0A1F44', // Deep Navy
+  accent: '#7D1324', // Maroon Stripe
+  background: '#F0F2F5', // Admin gray background
   cardBg: '#ffffff',
-  cardBorder: '#E5E5EA',
-};
-
-const TYPOGRAPHY = {
-  h1: { fontSize: 28, fontWeight: '800', lineHeight: 34 },
-  h2: { fontSize: 22, fontWeight: '700', lineHeight: 28 },
-  h3: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
-  body: { fontSize: 16, fontWeight: '400', lineHeight: 22 },
-  caption: { fontSize: 14, fontWeight: '400', lineHeight: 18 },
-  small: { fontSize: 12, fontWeight: '400', lineHeight: 16 },
-};
-
-const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12, // Matched to Wallet
-  lg: 20, // Matched to Wallet
-  xl: 28, // Matched to Wallet
-};
-
-const CARD_STYLES = {
-  shadow: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6, // Matched to Wallet
-    elevation: 3,
-  },
-  borderRadius: 12,
-  borderWidth: 1,
-  borderColor: COLORS.cardBorder,
+  textMain: '#1A1A1A',
+  textMuted: '#65676B',
+  success: '#28A745',
+  border: '#E4E6EB',
+  light: '#ffffff',
 };
 
 const API_URL = 'https://server-core-1.onrender.com/api';
@@ -79,12 +42,7 @@ export default function MyContestsScreen({ navigation }) {
       setUser(userData);
       return userData.id;
     } catch (error) {
-      setUser({
-        id: 1,
-        name: 'Test User',
-        email: 'test@example.com',
-        balance: 0,
-      });
+      setUser({ id: 1, name: 'Admin User', balance: 0 });
       return 1;
     }
   };
@@ -123,33 +81,44 @@ export default function MyContestsScreen({ navigation }) {
     return (
       <TouchableOpacity
         key={entry.id}
-        style={[styles.entryCard, CARD_STYLES.shadow]}
+        style={styles.entryCard}
         onPress={() =>
           navigation.navigate('EntryDetail', { entryId: entry.id })
         }
       >
-        <View style={styles.cardHeader}>
-          <Text style={styles.contestTitle}>
-            {entry.contestTitle || 'Contest'}
-          </Text>
-          <Text
+        <View style={styles.cardContent}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.contestTitle}>
+              {entry.contestTitle || 'Contest'}
+            </Text>
+            <Text style={styles.payoutLabel}>
+              POTENTIAL PAYOUT:{' '}
+              <Text style={styles.payoutValue}>
+                {formatCurrency(entry.potentialPayout)}
+              </Text>
+            </Text>
+          </View>
+          <View
             style={[
-              styles.statusText,
+              styles.statusBadge,
               {
-                color: statusUpper === 'WON' ? COLORS.success : COLORS.primary,
+                borderColor:
+                  statusUpper === 'WON' ? COLORS.success : COLORS.border,
               },
             ]}
           >
-            {statusUpper}
-          </Text>
-        </View>
-        <View style={styles.payoutInfo}>
-          <Text style={styles.payoutLabel}>
-            Payout:{' '}
-            <Text style={styles.payoutValue}>
-              {formatCurrency(entry.potentialPayout)}
+            <Text
+              style={[
+                styles.statusText,
+                {
+                  color:
+                    statusUpper === 'WON' ? COLORS.success : COLORS.textMuted,
+                },
+              ]}
+            >
+              {statusUpper}
             </Text>
-          </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -164,44 +133,39 @@ export default function MyContestsScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle='light-content' />
+    <View style={styles.container}>
+      <StatusBar barStyle='light-content' backgroundColor={COLORS.primary} />
 
-      {/* --- CLONED WALLET HEADER --- */}
-      <LinearGradient
-        colors={[COLORS.primary, '#2A5298']}
-        style={styles.header}
-      >
-        <View style={styles.headerTopRow}>
-          <View style={styles.headerSideItem} />
-          <View style={styles.headerCenterItem}>
-            <Text style={styles.headerTitle}>MY ENTRIES</Text>
+      {/* --- BOXY CENTERED ADMIN HEADER --- */}
+      <View style={styles.headerWrapper}>
+        <SafeAreaView>
+          <View style={styles.headerContent}>
+            <View style={styles.headerSideItem} />
+            <View style={styles.headerCenterItem}>
+              <View style={styles.titleRow}>
+                <Ionicons
+                  name='basketball'
+                  size={18}
+                  color={COLORS.light}
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.headerTitle}>MY ENTRIES</Text>
+              </View>
+              <Text style={styles.headerSubtitle}>ADMIN DASHBOARD VIEW</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.headerSideItem}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <Ionicons
+                name='person-circle-outline'
+                size={28}
+                color={COLORS.light}
+              />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.headerSideItem}
-            onPress={() => navigation.navigate('Profile')}
-          >
-            <Ionicons
-              name='person-circle-outline'
-              size={32}
-              color={COLORS.light}
-            />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.headerSubtitle}>Track your contests</Text>
-      </LinearGradient>
-
-      {/* Balance Card - Matched Overlap to Wallet */}
-      <View style={[styles.balanceCard, CARD_STYLES.shadow]}>
-        <View style={styles.balanceHeader}>
-          <Ionicons name='wallet' size={24} color={COLORS.primary} />
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.balanceLabel}>AVAILABLE BALANCE</Text>
-            <Text style={styles.balanceAmount}>
-              {formatCurrency(user?.balance)}
-            </Text>
-          </View>
-        </View>
+        </SafeAreaView>
+        <View style={styles.headerAccentLine} />
       </View>
 
       <ScrollView
@@ -215,95 +179,159 @@ export default function MyContestsScreen({ navigation }) {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* --- STATS SUMMARY BOX --- */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>AVAILABLE BALANCE</Text>
+            <Text style={styles.statValue}>
+              {formatCurrency(user?.balance)}
+            </Text>
+            <View style={styles.statIndicator} />
+          </View>
+        </View>
+
         <View style={styles.scrollContent}>
+          <Text style={styles.sectionTitle}>RECENT ENTRIES</Text>
           {entries.length > 0 ? (
             entries.map(renderEntryCard)
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name='trophy-outline' size={60} color={COLORS.gray} />
-              <Text style={styles.emptyTitle}>No Entries Yet</Text>
+              <Ionicons
+                name='file-tray-outline'
+                size={48}
+                color={COLORS.textMuted}
+              />
+              <Text style={styles.emptyTitle}>No entries found in system</Text>
               <TouchableOpacity
                 style={styles.browseButton}
                 onPress={() => navigation.navigate('Contests')}
               >
-                <Text style={styles.browseButtonText}>BROWSE CONTESTS</Text>
+                <Text style={styles.browseButtonText}>CREATE NEW ENTRY</Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.lightGray },
+  container: { flex: 1, backgroundColor: COLORS.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  // EXACT WALLET HEADER CLONE
-  header: {
-    paddingTop: Platform.OS === 'android' ? 40 : 10,
-    paddingBottom: SPACING.lg,
-    paddingHorizontal: SPACING.md,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  // --- Boxy Header Styles ---
+  headerWrapper: { backgroundColor: COLORS.primary, zIndex: 100 },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: Platform.OS === 'android' ? 10 : 0,
   },
-  headerTopRow: {
+  headerSideItem: { width: 40, alignItems: 'center' },
+  headerCenterItem: { flex: 1, alignItems: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
+  headerTitle: {
+    color: COLORS.light,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  headerSubtitle: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 9,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  headerAccentLine: { height: 4, backgroundColor: COLORS.accent },
+
+  // --- Admin Stats Box ---
+  statsContainer: { padding: 16 },
+  statBox: {
+    backgroundColor: COLORS.cardBg,
+    padding: 20,
+    borderRadius: 2, // Boxy
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 1,
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: COLORS.primary,
+    marginTop: 4,
+  },
+  statIndicator: {
+    height: 3,
+    width: 30,
+    backgroundColor: COLORS.accent,
+    marginTop: 12,
+  },
+
+  // --- Entry Card Styles ---
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    marginBottom: 12,
+    letterSpacing: 1,
+  },
+  entryCard: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 2,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  cardContent: {
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  headerCenterItem: { flex: 3, alignItems: 'center' },
-  headerSideItem: { flex: 1, alignItems: 'flex-end', minWidth: 40 },
-  headerTitle: { ...TYPOGRAPHY.h2, color: COLORS.light, fontSize: 20 },
-  headerSubtitle: {
-    ...TYPOGRAPHY.caption,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    marginTop: 4,
+  contestTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textMain,
+    marginBottom: 4,
   },
-
-  // Balance Card - Exact Wallet Overlap
-  balanceCard: {
-    backgroundColor: COLORS.cardBg,
-    marginHorizontal: SPACING.md,
-    marginTop: -20, // Overlap the header exactly like Wallet
-    borderRadius: 15,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
-  },
-  balanceHeader: { flexDirection: 'row', alignItems: 'center' },
-  balanceLabel: { ...TYPOGRAPHY.small, color: COLORS.gray, fontSize: 10 },
-  balanceAmount: { ...TYPOGRAPHY.h1, color: COLORS.primary, fontSize: 24 },
-
-  scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: SPACING.md, paddingBottom: 40 },
-  entryCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
+  payoutLabel: { fontSize: 11, color: COLORS.textMuted, fontWeight: '600' },
+  payoutValue: { color: COLORS.textMain },
+  statusBadge: {
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 2,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  contestTitle: { ...TYPOGRAPHY.h3, fontSize: 16, color: COLORS.dark },
-  statusText: { fontWeight: '700', fontSize: 12 },
-  payoutInfo: { borderTopWidth: 1, borderTopColor: '#F5F5F7', paddingTop: 8 },
-  payoutLabel: { ...TYPOGRAPHY.small, color: COLORS.gray },
-  payoutValue: { color: COLORS.dark, fontWeight: '700' },
+  statusText: { fontSize: 10, fontWeight: '800' },
 
-  emptyState: { alignItems: 'center', marginTop: 60 },
-  emptyTitle: { ...TYPOGRAPHY.h3, color: COLORS.gray, marginVertical: 20 },
+  // --- Empty State ---
+  emptyState: { alignItems: 'center', marginTop: 40, padding: 20 },
+  emptyTitle: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    marginVertical: 16,
+    fontWeight: '600',
+  },
   browseButton: {
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 25,
+    borderRadius: 2,
   },
-  browseButtonText: { color: COLORS.light, fontWeight: '700' },
+  browseButtonText: { color: COLORS.light, fontWeight: '800', fontSize: 12 },
 });

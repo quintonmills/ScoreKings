@@ -14,27 +14,27 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as IAP from 'react-native-iap';
 
 const API_URL = 'https://server-core-1.onrender.com/api';
 
-// Product ID must match exactly what you created in App Store Connect
 const itemSkus = Platform.select({
-  ios: ['com.scorekings.credits.500'], // Updated to match backend SKU mapping
+  ios: ['com.scorekings.credits.500'],
   android: ['com.scorekings.credits.500'],
 });
 
+// --- ADMIN THEME CONSTANTS ---
 const COLORS = {
-  primary: '#1e3f6d',
-  secondary: '#BA0C2F',
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
+  primary: '#0A1F44', // Deep Navy
+  accent: '#7D1324', // Maroon Stripe
+  background: '#F0F2F5', // Light gray background
+  cardBg: '#ffffff',
+  textMain: '#1A1A1A',
+  textMuted: '#65676B',
+  success: '#28A745',
+  danger: '#DC3545',
+  border: '#E4E6EB',
   light: '#ffffff',
-  dark: '#0A1428',
-  gray: '#8E8E93',
-  lightGray: '#F5F5F7',
 };
 
 const WalletScreen = ({ navigation }) => {
@@ -45,7 +45,6 @@ const WalletScreen = ({ navigation }) => {
   const [processing, setProcessing] = useState(false);
 
   // ==================== IAP SETUP ====================
-
   useEffect(() => {
     let purchaseUpdateSubscription;
     let purchaseErrorSubscription;
@@ -53,17 +52,12 @@ const WalletScreen = ({ navigation }) => {
     const initIAP = async () => {
       try {
         await IAP.initConnection();
-        if (Platform.OS === 'ios') {
-          await IAP.clearTransactionIOS();
-        }
+        if (Platform.OS === 'ios') await IAP.clearTransactionIOS();
 
-        // Listen for successful purchases
         purchaseUpdateSubscription = IAP.purchaseUpdatedListener(
           async (purchase) => {
             const receipt = purchase.transactionReceipt;
-            if (receipt) {
-              await validateWithBackend(receipt, purchase);
-            }
+            if (receipt) await validateWithBackend(receipt, purchase);
           },
         );
 
@@ -77,7 +71,6 @@ const WalletScreen = ({ navigation }) => {
     };
 
     initIAP();
-
     return () => {
       if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
       if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
@@ -86,7 +79,6 @@ const WalletScreen = ({ navigation }) => {
   }, []);
 
   // ==================== DATA FETCHING ====================
-
   const fetchUserData = async () => {
     try {
       const response = await fetch(`${API_URL}/me?userId=1`);
@@ -108,36 +100,20 @@ const WalletScreen = ({ navigation }) => {
     fetchUserData();
   }, []);
 
-  // ==================== TRANSACTION VALIDATION ====================
-
   const validateWithBackend = async (receipt, purchase) => {
     try {
-      // THIS CALLS YOUR NEW SECURE BACKEND ROUTE
       const response = await fetch(`${API_URL}/payments/verify-apple`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 1, // Change to actual logged in user ID
-          receipt: receipt,
-        }),
+        body: JSON.stringify({ userId: 1, receipt }),
       });
-
-      const result = await response.json();
-
       if (response.ok) {
         Alert.alert('Success', 'Deposit confirmed!');
         fetchUserData();
-      } else {
-        Alert.alert(
-          'Verification Failed',
-          result.error || 'Server rejected receipt',
-        );
       }
-
-      // Tell Apple the transaction is finished
       await IAP.finishTransaction({ purchase, isConsumable: true });
     } catch (err) {
-      Alert.alert('Error', 'Could not reach server to verify purchase.');
+      Alert.alert('Error', 'Could not verify purchase.');
     } finally {
       setProcessing(false);
     }
@@ -146,14 +122,19 @@ const WalletScreen = ({ navigation }) => {
   const handleDeposit = async () => {
     setProcessing(true);
     try {
+      const products = await IAP.getProducts({ skus: itemSkus });
+      if (!products || products.length === 0) {
+        Alert.alert('Error', 'Product not found in store.');
+        setProcessing(false);
+        return;
+      }
       await IAP.requestPurchase({ sku: itemSkus[0] });
     } catch (err) {
-      console.warn(err);
+      if (err.code !== 'E_USER_CANCELLED')
+        Alert.alert('Payment Error', err.message);
       setProcessing(false);
     }
   };
-
-  // ==================== RENDER ====================
 
   const formatCurrency = (val) =>
     `$${Math.abs(parseFloat(val || 0)).toFixed(2)}`;
@@ -166,71 +147,92 @@ const WalletScreen = ({ navigation }) => {
     );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle='light-content' />
-      <LinearGradient
-        colors={[COLORS.primary, '#2A5298']}
-        style={styles.header}
-      >
-        <View style={styles.headerTopRow}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name='chevron-back' size={28} color='#fff' />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>MY WALLET</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-            <Ionicons
-              name='person-circle-outline'
-              size={32}
-              color={COLORS.light}
-            />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+    <View style={styles.container}>
+      <StatusBar barStyle='light-content' backgroundColor={COLORS.primary} />
 
-      <View style={styles.balanceCard}>
-        <View style={styles.balanceHeader}>
-          <View style={styles.balanceIconContainer}>
-            <Ionicons name='wallet' size={24} color={COLORS.primary} />
-          </View>
-          <View>
-            <Text style={styles.balanceLabel}>AVAILABLE BALANCE</Text>
-            <Text style={styles.balanceAmount}>
-              {formatCurrency(user?.balance)}
-            </Text>
-          </View>
-        </View>
+      {/* --- BOXY CENTERED ADMIN HEADER --- */}
+      <View style={styles.headerWrapper}>
+        <SafeAreaView>
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              style={styles.headerSideItem}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name='chevron-back' size={24} color={COLORS.light} />
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleDeposit}
-          disabled={processing}
-        >
-          <LinearGradient
-            colors={[COLORS.success, '#28a745']}
-            style={styles.actionButtonGradient}
-          >
-            {processing ? (
-              <ActivityIndicator color='#fff' />
-            ) : (
-              <Text style={styles.actionButtonText}>ADD $500.00 CREDITS</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+            <View style={styles.headerCenterItem}>
+              <View style={styles.titleRow}>
+                <Ionicons
+                  name='wallet-outline'
+                  size={18}
+                  color={COLORS.light}
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.headerTitle}>MY WALLET</Text>
+              </View>
+              <Text style={styles.headerSubtitle}>FINANCIAL OVERVIEW</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.headerSideItem}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <Ionicons
+                name='person-circle-outline'
+                size={28}
+                color={COLORS.light}
+              />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+        <View style={styles.headerAccentLine} />
       </View>
-
-      <Text style={styles.sectionTitle}>Transaction History</Text>
 
       <FlatList
         data={transactions}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+        ListHeaderComponent={
+          <>
+            {/* --- STATS SUMMARY BOX --- */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statBox}>
+                <Text style={styles.statLabel}>AVAILABLE BALANCE</Text>
+                <Text style={styles.statValue}>
+                  {formatCurrency(user?.balance)}
+                </Text>
+                <View style={styles.statIndicator} />
+
+                <TouchableOpacity
+                  style={styles.depositButton}
+                  onPress={handleDeposit}
+                  disabled={processing}
+                >
+                  {processing ? (
+                    <ActivityIndicator color={COLORS.light} size='small' />
+                  ) : (
+                    <Text style={styles.depositButtonText}>
+                      DEPOSIT $5.00 CREDITS
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+            <Text style={styles.sectionTitle}>TRANSACTION LOG</Text>
+          </>
+        }
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.transactionDescription}>
-                {item.description}
+                {item.description?.toUpperCase()}
               </Text>
               <Text style={styles.transactionDate}>
-                {new Date(item.createdAt).toLocaleDateString()}
+                {new Date(item.createdAt).toLocaleDateString()} •{' '}
+                {new Date(item.createdAt).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </Text>
             </View>
             <Text
@@ -239,84 +241,143 @@ const WalletScreen = ({ navigation }) => {
                 { color: item.amount > 0 ? COLORS.success : COLORS.danger },
               ]}
             >
-              {item.amount > 0 ? '+' : ''}
+              {item.amount > 0 ? '+' : '-'}
               {formatCurrency(item.amount)}
             </Text>
           </View>
         )}
         style={styles.list}
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={fetchUserData} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={fetchUserData}
+            tintColor={COLORS.primary}
+          />
         }
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No transactions yet.</Text>
+          <Text style={styles.emptyText}>No transactions found in system.</Text>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.lightGray },
+  container: { flex: 1, backgroundColor: COLORS.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 20, paddingBottom: 40 },
-  headerTopRow: {
+
+  // --- Header ---
+  headerWrapper: { backgroundColor: COLORS.primary, zIndex: 100 },
+  headerContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: Platform.OS === 'android' ? 10 : 0,
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#fff' },
-  balanceCard: {
-    backgroundColor: '#fff',
-    margin: 15,
-    marginTop: -25,
-    borderRadius: 15,
+  headerSideItem: { width: 40, alignItems: 'center' },
+  headerCenterItem: { flex: 1, alignItems: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
+  headerTitle: {
+    color: COLORS.light,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  headerSubtitle: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 9,
+    fontWeight: '600',
+    marginTop: 2,
+    letterSpacing: 0.5,
+  },
+  headerAccentLine: { height: 4, backgroundColor: COLORS.accent },
+
+  // --- Stats & Deposit ---
+  statsContainer: { padding: 16 },
+  statBox: {
+    backgroundColor: COLORS.cardBg,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    elevation: 2,
   },
-  balanceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 1,
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: COLORS.primary,
+    marginTop: 4,
+  },
+  statIndicator: {
+    height: 3,
+    width: 40,
+    backgroundColor: COLORS.accent,
+    marginTop: 12,
     marginBottom: 20,
   },
-  balanceIconContainer: {
-    width: 45,
-    height: 45,
-    backgroundColor: '#f0f4f8',
-    borderRadius: 22,
-    justifyContent: 'center',
+  depositButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    borderRadius: 2,
     alignItems: 'center',
-    marginRight: 15,
+    justifyContent: 'center',
   },
-  balanceLabel: { fontSize: 10, color: COLORS.gray, letterSpacing: 1 },
-  balanceAmount: { fontSize: 28, fontWeight: '800', color: COLORS.primary },
-  actionButtonGradient: { padding: 15, borderRadius: 12, alignItems: 'center' },
-  actionButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  depositButtonText: {
+    color: COLORS.light,
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 1,
+  },
+
+  // --- List ---
   sectionTitle: {
-    marginHorizontal: 20,
-    marginVertical: 10,
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.gray,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 1,
   },
-  list: { paddingHorizontal: 15 },
+  list: { flex: 1 },
   transactionCard: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 8,
+    backgroundColor: COLORS.cardBg,
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 1,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  transactionDescription: { fontWeight: '600', fontSize: 14 },
-  transactionDate: { fontSize: 12, color: COLORS.gray, marginTop: 2 },
-  transactionAmount: { fontWeight: 'bold', fontSize: 16 },
-  emptyText: { textAlign: 'center', marginTop: 20, color: COLORS.gray },
+  transactionDescription: {
+    fontWeight: '700',
+    fontSize: 13,
+    color: COLORS.textMain,
+  },
+  transactionDate: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  transactionAmount: { fontWeight: '900', fontSize: 15 },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+  },
 });
 
 export default WalletScreen;
