@@ -10,56 +10,25 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { API_URL } from '../config/api';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-// Theme Constants
+// --- ADMIN THEME CONSTANTS ---
 const COLORS = {
-  primary: '#1e3f6d',
-  secondary: '#BA0C2F',
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
-  light: '#ffffff',
-  dark: '#0A1428',
-  gray: '#8E8E93',
-  lightGray: '#F5F5F7',
+  primary: '#0A1F44', // Deep Navy
+  accent: '#7D1324', // Maroon Stripe
+  background: '#F0F2F5',
   cardBg: '#ffffff',
-  cardBorder: '#E5E5EA',
-};
-
-const TYPOGRAPHY = {
-  h1: { fontSize: 28, fontWeight: '800', lineHeight: 34 },
-  h2: { fontSize: 22, fontWeight: '700', lineHeight: 28 },
-  h3: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
-  body: { fontSize: 16, fontWeight: '400', lineHeight: 22 },
-  caption: { fontSize: 14, fontWeight: '400', lineHeight: 18 },
-  small: { fontSize: 12, fontWeight: '400', lineHeight: 16 },
-};
-
-const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12, // Reduced from 16
-  lg: 20, // Reduced from 24
-  xl: 28, // Reduced from 32
-};
-
-const CARD_STYLES = {
-  shadow: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  borderRadius: 12,
-  borderWidth: 1,
-  borderColor: COLORS.cardBorder,
+  textMain: '#1A1A1A',
+  textMuted: '#65676B',
+  success: '#28A745',
+  danger: '#DC3545',
+  border: '#E4E6EB',
+  light: '#ffffff',
 };
 
 const PaymentScreen = ({ route, navigation }) => {
@@ -94,77 +63,67 @@ const PaymentScreen = ({ route, navigation }) => {
       if (response.ok) {
         navigation.replace('SuccessScreen', { payout: potentialPayout });
       } else {
-        alert(result.error || 'Submission failed');
+        Alert.alert('Submission Error', result.error || 'Check system logs.');
       }
     } catch (err) {
-      alert('Connection error. Please try again.');
+      Alert.alert('System Error', 'Connection failed.');
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle='light-content' backgroundColor={COLORS.primary} />
 
-      {/* Compact Header */}
-      <LinearGradient
-        colors={[COLORS.primary, '#2A5298']}
-        style={styles.header}
-      >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          disabled={isProcessing}
-        >
-          <Ionicons name='chevron-back' size={22} color={COLORS.light} />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            CONFIRM ENTRY
-          </Text>
-          <Text style={styles.headerSubtitle} numberOfLines={1}>
-            Finalize your contest
-          </Text>
-        </View>
-        {/* Empty view for balance */}
-        <View style={styles.headerRight} />
-      </LinearGradient>
+      {/* --- BOXY CENTERED HEADER --- */}
+      <View style={styles.headerWrapper}>
+        <SafeAreaView>
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              style={styles.headerSideItem}
+              onPress={() => navigation.goBack()}
+              disabled={isProcessing}
+            >
+              <Ionicons name='chevron-back' size={24} color={COLORS.light} />
+            </TouchableOpacity>
+
+            <View style={styles.headerCenterItem}>
+              <Text style={styles.headerTitle}>FINAL SUBMISSION</Text>
+              <Text style={styles.headerSubtitle}>TRANSACTION VALIDATION</Text>
+            </View>
+
+            <View style={styles.headerSideItem} />
+          </View>
+        </SafeAreaView>
+        <View style={styles.headerAccentLine} />
+      </View>
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Entry Summary Card */}
-        <View style={[styles.summaryCard, CARD_STYLES.shadow]}>
-          <View style={styles.cardHeader}>
-            <Ionicons name='ticket-outline' size={20} color={COLORS.primary} />
-            <Text style={styles.contestTitle} numberOfLines={1}>
-              {contest.title}
+        {/* Ledger Summary Card */}
+        <View style={styles.adminBox}>
+          <Text style={styles.boxLabel}>ENTRY SUMMARY</Text>
+          <View style={styles.contestRow}>
+            <Ionicons name='receipt-outline' size={18} color={COLORS.primary} />
+            <Text style={styles.contestTitle}>
+              {contest.title.toUpperCase()}
             </Text>
           </View>
 
           <View style={styles.picksSection}>
-            <Text style={styles.sectionLabel}>YOUR PICKS</Text>
             {picks.map((pick) => (
               <View key={pick.playerId} style={styles.pickRow}>
-                <View style={styles.pickInfo}>
-                  <Ionicons
-                    name='checkmark-circle'
-                    size={14}
-                    color={COLORS.success}
-                  />
-                  <Text style={styles.pickName} numberOfLines={1}>
-                    {pick.playerName}
-                  </Text>
-                </View>
+                <Text style={styles.pickName}>
+                  {pick.playerName.toUpperCase()}
+                </Text>
                 <View
                   style={[
-                    styles.predictionChip,
-                    pick.prediction === 'over'
-                      ? styles.overChip
-                      : styles.underChip,
+                    styles.predictionBadge,
+                    pick.prediction === 'over' ? styles.overBg : styles.underBg,
                   ]}
                 >
                   <Text style={styles.predictionText}>
@@ -179,412 +138,265 @@ const PaymentScreen = ({ route, navigation }) => {
 
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>ENTRY FEE</Text>
-              <Text style={styles.statValue}>${contest.entryFee}</Text>
+              <Text style={styles.statLabel}>DEBIT AMOUNT</Text>
+              <Text style={styles.statValue}>
+                ${contest.entryFee.toFixed(2)}
+              </Text>
             </View>
-
-            <View style={styles.statDivider} />
-
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>TO WIN</Text>
-              <Text style={[styles.statValue, styles.payoutValue]}>
-                ${potentialPayout}
+              <Text style={styles.statLabel}>POTENTIAL CREDIT</Text>
+              <Text style={[styles.statValue, { color: COLORS.success }]}>
+                ${potentialPayout.toFixed(2)}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Payment Method Card */}
-        <View style={[styles.paymentCard, CARD_STYLES.shadow]}>
-          <View style={styles.cardHeader}>
-            <Ionicons name='wallet-outline' size={20} color={COLORS.primary} />
-            <Text style={styles.paymentTitle} numberOfLines={1}>
-              PAYMENT METHOD
-            </Text>
-          </View>
-
-          <View style={styles.paymentMethod}>
-            <View style={styles.methodIconContainer}>
-              <Ionicons name='wallet' size={18} color={COLORS.primary} />
+        {/* Payment Account Box */}
+        <View style={styles.adminBox}>
+          <Text style={styles.boxLabel}>FUNDING SOURCE</Text>
+          <View style={styles.methodRow}>
+            <View style={styles.methodIcon}>
+              <Ionicons name='wallet' size={20} color={COLORS.light} />
             </View>
-            <View style={styles.methodDetails}>
-              <Text style={styles.methodName} numberOfLines={1}>
-                Virtual Wallet
-              </Text>
-              <Text style={styles.methodBalance} numberOfLines={1}>
-                Available: ${availableBalance.toFixed(2)}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.methodName}>OTE VIRTUAL WALLET</Text>
+              <Text style={styles.methodBalance}>
+                CURRENT: ${availableBalance.toFixed(2)}
               </Text>
             </View>
             <Ionicons
               name='checkmark-circle'
-              size={18}
+              size={20}
               color={COLORS.success}
             />
           </View>
 
-          <View style={styles.balanceInfo}>
-            <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>New Balance:</Text>
-              <Text style={styles.balanceValue}>
-                ${(availableBalance - contest.entryFee).toFixed(2)}
-              </Text>
-            </View>
+          <View style={styles.balanceFooter}>
+            <Text style={styles.footerLabel}>
+              ESTIMATED POST-TRANSACTION BALANCE
+            </Text>
+            <Text style={styles.footerValue}>
+              ${(availableBalance - contest.entryFee).toFixed(2)}
+            </Text>
           </View>
         </View>
 
-        {/* Terms & Conditions */}
-        <View style={styles.termsCard}>
-          <View style={styles.termsHeader}>
+        {/* Compliance Footer */}
+        <View style={styles.complianceBox}>
+          <View style={styles.complianceHeader}>
             <Ionicons
-              name='information-circle-outline'
+              name='shield-checkmark'
               size={14}
-              color={COLORS.primary}
+              color={COLORS.textMuted}
             />
-            <Text style={styles.termsTitle}>TERMS & CONDITIONS</Text>
+            <Text style={styles.complianceTitle}>SYSTEM TERMS</Text>
           </View>
-          <Text style={styles.termsText}>
-            • Entry fee will be deducted from your virtual wallet{'\n'}• Both
-            picks must be correct to win the payout{'\n'}• Contest locks at
-            specified time, no changes allowed{'\n'}• All decisions are final
+          <Text style={styles.complianceText}>
+            • Transaction is irreversible once submitted.{'\n'}• Winning
+            distributions are processed upon contest finalization.{'\n'}•
+            Account will be audited for compliance with platform rules.
           </Text>
         </View>
-
-        {/* Extra spacing for footer */}
-        <View style={styles.bottomSpacing} />
       </ScrollView>
 
-      {/* Sticky Footer / Action Button */}
-      <View style={styles.footer}>
+      {/* --- FOOTER ACTION --- */}
+      <SafeAreaView style={styles.footer}>
         <TouchableOpacity
-          style={[styles.confirmButton, isProcessing && styles.disabledButton]}
+          style={[styles.confirmButton, isProcessing && { opacity: 0.7 }]}
           onPress={handlePayment}
           disabled={isProcessing}
-          activeOpacity={0.8}
         >
           {isProcessing ? (
             <ActivityIndicator color={COLORS.light} size='small' />
           ) : (
-            <LinearGradient
-              colors={[COLORS.primary, COLORS.secondary]}
-              style={styles.confirmGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
+            <>
               <Ionicons
-                name='checkmark-circle'
-                size={18}
+                name='lock-closed'
+                size={16}
                 color={COLORS.light}
-                style={{ marginRight: 6 }}
+                style={{ marginRight: 8 }}
               />
-              <Text style={styles.confirmButtonText} numberOfLines={1}>
-                SUBMIT ENTRY • ${contest.entryFee}
+              <Text style={styles.confirmButtonText}>
+                AUTHORIZE ENTRY • ${contest.entryFee.toFixed(2)}
               </Text>
-            </LinearGradient>
+            </>
           )}
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.lightGray,
-  },
-  header: {
-    paddingTop: Platform.OS === 'ios' ? 0 : StatusBar.currentHeight,
-    paddingBottom: SPACING.sm,
-    paddingHorizontal: SPACING.sm,
+  container: { flex: 1, backgroundColor: COLORS.background },
+
+  // Header
+  headerWrapper: { backgroundColor: COLORS.primary, zIndex: 100 },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: Platform.OS === 'ios' ? 88 : 78, // Reduced height
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: Platform.OS === 'android' ? 10 : 0,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: SPACING.xs,
-  },
-  headerContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
+  headerSideItem: { width: 40, alignItems: 'center' },
+  headerCenterItem: { flex: 1, alignItems: 'center' },
   headerTitle: {
-    ...TYPOGRAPHY.h3,
-    fontSize: 16,
     color: COLORS.light,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   headerSubtitle: {
-    ...TYPOGRAPHY.small,
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 9,
+    fontWeight: '600',
     marginTop: 2,
   },
-  headerRight: {
-    width: 40,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: SPACING.md,
-    paddingBottom: SPACING.xl * 2, // Extra padding for footer
-  },
-  summaryCard: {
+  headerAccentLine: { height: 4, backgroundColor: COLORS.accent },
+
+  scrollView: { flex: 1 },
+  scrollContent: { padding: 16 },
+
+  // Admin Style Boxes
+  adminBox: {
     backgroundColor: COLORS.cardBg,
-    borderRadius: CARD_STYLES.borderRadius,
-    borderWidth: CARD_STYLES.borderWidth,
-    borderColor: CARD_STYLES.borderColor,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 16,
+    borderRadius: 2,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.md,
+  boxLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 1,
+    marginBottom: 14,
   },
+  contestRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   contestTitle: {
-    ...TYPOGRAPHY.h3,
-    fontSize: 16,
-    color: COLORS.dark,
-    marginLeft: SPACING.sm,
-    flex: 1,
+    fontSize: 14,
+    fontWeight: '900',
+    color: COLORS.primary,
+    marginLeft: 8,
   },
-  picksSection: {
-    marginBottom: SPACING.md,
-  },
-  sectionLabel: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-    fontWeight: '600',
-    marginBottom: SPACING.sm,
-    letterSpacing: 0.5,
-  },
+
+  // Picks Row
+  picksSection: { marginBottom: 16 },
   pickRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F2F5',
   },
-  pickInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: SPACING.sm,
-  },
-  pickName: {
-    ...TYPOGRAPHY.body,
-    fontSize: 14,
-    color: COLORS.dark,
-    marginLeft: 6,
-    flex: 1,
-  },
-  predictionChip: {
+  pickName: { fontSize: 12, fontWeight: '700', color: COLORS.textMain },
+  predictionBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    minWidth: 60,
-    alignItems: 'center',
+    paddingVertical: 4,
+    borderRadius: 2,
   },
-  overChip: {
-    backgroundColor: COLORS.success,
-  },
-  underChip: {
-    backgroundColor: COLORS.secondary,
-  },
-  predictionText: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.light,
-    fontWeight: '600',
-    fontSize: 10,
-    letterSpacing: 0.5,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.cardBorder,
-    marginVertical: SPACING.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
+  overBg: { backgroundColor: COLORS.success },
+  underBg: { backgroundColor: COLORS.danger },
+  predictionText: { color: COLORS.light, fontSize: 10, fontWeight: '900' },
+
+  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: 16 },
+
+  statsGrid: { flexDirection: 'row', justifyContent: 'space-between' },
+  statItem: { flex: 1 },
   statLabel: {
-    ...TYPOGRAPHY.small,
-    fontSize: 11,
-    color: COLORS.gray,
-    marginBottom: 2,
-    letterSpacing: 0.5,
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    marginBottom: 4,
   },
-  statValue: {
-    ...TYPOGRAPHY.h3,
-    fontSize: 18,
-    color: COLORS.dark,
-    fontWeight: '700',
-  },
-  payoutValue: {
-    color: COLORS.secondary,
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: COLORS.cardBorder,
-  },
-  paymentCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: CARD_STYLES.borderRadius,
-    borderWidth: CARD_STYLES.borderWidth,
-    borderColor: CARD_STYLES.borderColor,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  paymentTitle: {
-    ...TYPOGRAPHY.h3,
-    fontSize: 16,
-    color: COLORS.dark,
-    marginLeft: SPACING.sm,
-    flex: 1,
-  },
-  paymentMethod: {
+  statValue: { fontSize: 20, fontWeight: '900', color: COLORS.textMain },
+
+  // Method Row
+  methodRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(30, 63, 109, 0.05)',
-    padding: SPACING.md,
-    borderRadius: 8,
-    marginBottom: SPACING.md,
+    backgroundColor: '#FAFBFC',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  methodIconContainer: {
+  methodIcon: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(30, 63, 109, 0.1)',
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: SPACING.sm,
+    marginRight: 12,
   },
-  methodDetails: {
-    flex: 1,
-    marginRight: SPACING.sm,
-  },
-  methodName: {
-    ...TYPOGRAPHY.body,
-    fontSize: 14,
-    color: COLORS.dark,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
+  methodName: { fontSize: 12, fontWeight: '800', color: COLORS.textMain },
   methodBalance: {
-    ...TYPOGRAPHY.small,
+    fontSize: 10,
     color: COLORS.success,
-    fontWeight: '600',
-  },
-  balanceInfo: {
-    padding: SPACING.sm,
-    backgroundColor: 'rgba(30, 63, 109, 0.05)',
-    borderRadius: 6,
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  balanceLabel: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-  },
-  balanceValue: {
-    ...TYPOGRAPHY.body,
-    fontSize: 14,
-    color: COLORS.dark,
     fontWeight: '700',
+    marginTop: 2,
   },
-  termsCard: {
-    backgroundColor: 'rgba(30, 63, 109, 0.05)',
-    padding: SPACING.md,
-    borderRadius: 8,
-    marginBottom: SPACING.xl,
+
+  balanceFooter: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
-  termsHeader: {
+  footerLabel: { fontSize: 9, fontWeight: '700', color: COLORS.textMuted },
+  footerValue: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: COLORS.primary,
+    marginTop: 2,
+  },
+
+  // Compliance
+  complianceBox: { padding: 8, marginBottom: 40 },
+  complianceHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  termsTitle: {
-    ...TYPOGRAPHY.small,
-    fontSize: 11,
-    color: COLORS.primary,
-    fontWeight: '600',
-    marginLeft: 4,
+  complianceTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    marginLeft: 6,
     letterSpacing: 0.5,
   },
-  termsText: {
-    ...TYPOGRAPHY.small,
-    color: COLORS.gray,
-    lineHeight: 18,
+  complianceText: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    lineHeight: 16,
+    fontWeight: '500',
   },
-  bottomSpacing: {
-    height: SPACING.xl,
-  },
+
+  // Footer
   footer: {
-    padding: SPACING.md,
-    paddingBottom: Platform.OS === 'ios' ? 28 : SPACING.md,
     backgroundColor: COLORS.light,
     borderTopWidth: 1,
-    borderTopColor: COLORS.cardBorder,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
+    borderTopColor: COLORS.border,
+    padding: 16,
   },
   confirmButton: {
-    width: '100%',
-  },
-  confirmGradient: {
+    backgroundColor: COLORS.primary,
+    height: 54,
+    borderRadius: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: SPACING.lg,
-    borderRadius: 25,
   },
   confirmButtonText: {
-    ...TYPOGRAPHY.body,
-    fontSize: 14,
     color: COLORS.light,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  disabledButton: {
-    opacity: 0.6,
+    fontWeight: '900',
+    fontSize: 14,
+    letterSpacing: 1,
   },
 });
 
