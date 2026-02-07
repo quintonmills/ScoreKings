@@ -38,28 +38,25 @@ const PaymentScreen = ({ route, navigation }) => {
   const handlePayment = async () => {
     setIsProcessing(true);
     try {
-      const response = await fetch(
-        `${API_URL}/api/contests/${contest.id}/submit`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            userId: 1,
-            entryFee: contest.entryFee,
-            picks: picks.map((p) => ({
-              playerId: p.playerId,
-              playerName: p.playerName,
-              team: p.team || 'OTE',
-              line: p.line,
-              prediction: p.prediction,
-              stat: 'points',
-            })),
-          }),
+      const response = await fetch(`${API_URL}/contests/${contest.id}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
-      );
+        body: JSON.stringify({
+          userId: 1,
+          entryFee: contest.entryFee,
+          picks: picks.map((p) => ({
+            playerId: p.playerId,
+            playerName: p.playerName,
+            team: p.team || 'OTE',
+            line: p.line,
+            prediction: p.prediction,
+            stat: 'points',
+          })),
+        }),
+      });
       const result = await response.json();
 
       if (response.ok) {

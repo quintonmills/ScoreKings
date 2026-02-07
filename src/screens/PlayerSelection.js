@@ -38,7 +38,7 @@ const PlayerSelectionScreen = ({ navigation, route }) => {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/players`);
+        const response = await fetch(`${API_URL}/players`);
         const data = await response.json();
         const transformedData = data.map((player) => ({
           playerId: player.id,
