@@ -11,7 +11,14 @@ User Experience
 
 <img width="1170" height="2532" alt="IMG_1480" src="https://github.com/user-attachments/assets/43d47272-58f2-4003-820f-f3e7df38a9e0" />
 
-<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/541f1cfd-191f-493b-a9cf-d87508ad0691" />
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/3b8f8017-0d3f-4360-bfe5-1b8375fa69b7" />
+
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/875fee1b-91c4-475a-9a48-7b15e20d2a62" />
+
+
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/0a0ab156-6a48-4eec-b5dc-9b4f29349645" />
+
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/07c5f0fe-e12f-4da4-be2c-96f2c730e9e6" />
 
 Available Contests	Player Selection	My Entries
 Admin Management
