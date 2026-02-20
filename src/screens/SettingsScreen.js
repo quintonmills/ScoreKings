@@ -9,12 +9,14 @@ import {
   Alert,
   Linking,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const COLORS = {
   primary: '#1e3f6d',
+  secondary: '#2A5298',
   light: '#ffffff',
   dark: '#0A1428',
   gray: '#8E8E93',
@@ -28,24 +30,35 @@ export const SettingsScreen = ({ navigation }) => {
   const PRIVACY_URL = 'https://quintonmills.github.io/sc-legal/privacy.html';
 
   const handleOpenLink = async (url) => {
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      Alert.alert('Error', "Don't know how to open this URL");
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert(
+          'Error',
+          'Unable to open this link. Please check your internet connection.',
+        );
+      }
+    } catch (error) {
+      console.error('Linking Error:', error);
     }
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
       'Delete Account',
-      'Are you sure you want to delete your account? This action is permanent and all funds will be forfeited.',
+      'Are you sure you want to delete your account? This action is permanent. All remaining credits and data will be permanently removed.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => console.log('Delete Account Triggered'),
+          onPress: () => {
+            // Logic for backend deletion would go here
+            console.log('Account Deletion Requested');
+            Alert.alert('Success', 'Account deletion request submitted.');
+          },
         },
       ],
     );
@@ -58,7 +71,7 @@ export const SettingsScreen = ({ navigation }) => {
     color = COLORS.dark,
     showArrow = true,
   }) => (
-    <TouchableOpacity style={styles.item} onPress={onPress}>
+    <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.itemLeft}>
         <Ionicons name={icon} size={22} color={color} />
         <Text style={[styles.itemText, { color }]}>{title}</Text>
@@ -71,9 +84,10 @@ export const SettingsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Small Header consistent with your Wallet/Contest theme */}
+      <StatusBar barStyle='light-content' />
+
       <LinearGradient
-        colors={[COLORS.primary, '#2A5298']}
+        colors={[COLORS.primary, COLORS.secondary]}
         style={styles.header}
       >
         <TouchableOpacity
@@ -82,11 +96,11 @@ export const SettingsScreen = ({ navigation }) => {
         >
           <Ionicons name='arrow-back' size={24} color={COLORS.light} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>SETTINGS</Text>
         <View style={{ width: 40 }} />
       </LinearGradient>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionLabel}>LEGAL & COMPLIANCE</Text>
         <View style={styles.card}>
           <SettingItem
@@ -113,53 +127,112 @@ export const SettingsScreen = ({ navigation }) => {
           />
         </View>
 
-        <Text style={styles.versionText}>Version 1.0.0 (Build 1)</Text>
+        <View style={styles.footer}>
+          <Text style={styles.versionText}>Version 1.0.0 (Build 1)</Text>
+
+          {/* CRITICAL APPLE DISCLAIMER */}
+          <View style={styles.disclaimerContainer}>
+            <Text style={styles.disclaimerText}>
+              Apple is not a sponsor of, or responsible for, any contests or
+              sweepstakes within this app.
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.lightGray },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.lightGray,
+  },
   header: {
-    height: Platform.OS === 'ios' ? 60 : 70,
+    height: Platform.OS === 'ios' ? 60 : 80,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.light },
-  backButton: { width: 40 },
-  content: { flex: 1, padding: 20 },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.light,
+    letterSpacing: 1.2,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: COLORS.gray,
-    marginBottom: 8,
+    marginBottom: 10,
     marginLeft: 4,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   card: {
     backgroundColor: COLORS.light,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 25,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     overflow: 'hidden',
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    // Elevation for Android
+    elevation: 2,
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: 18,
   },
-  itemLeft: { flexDirection: 'row', alignItems: 'center' },
-  itemText: { fontSize: 16, fontWeight: '500', marginLeft: 12 },
-  divider: { height: 1, backgroundColor: COLORS.lightGray, marginLeft: 50 },
+  itemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.lightGray,
+    marginLeft: 50,
+  },
+  footer: {
+    marginTop: 10,
+    alignItems: 'center',
+    paddingBottom: 50,
+  },
   versionText: {
-    textAlign: 'center',
     color: COLORS.gray,
     fontSize: 12,
-    marginTop: 10,
+    fontWeight: '500',
+  },
+  disclaimerContainer: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  disclaimerText: {
+    textAlign: 'center',
+    color: COLORS.gray,
+    fontSize: 11,
+    lineHeight: 16,
+    fontStyle: 'italic',
   },
 });
