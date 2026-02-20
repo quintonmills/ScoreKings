@@ -9,12 +9,22 @@ OTE Pick'em is a fantasy sports application where users can enter daily contests
 📸 Screenshots
 User Experience
 
+<img width="1170" height="2532" alt="IMG_1480" src="https://github.com/user-attachments/assets/43d47272-58f2-4003-820f-f3e7df38a9e0" />
 
-Admin Dashb<img width="1170" height="2532" alt="IMG_1183" src="https://github.com/user-attachments/assets/04567bc0-4d7a-466e-885f-5d1e7b344cb2" />
-oard	Grading<img width="1170" height="2532" alt="IMG_1231" src="https://github.com/user-attachments/assets/22c5a179-1b0b-4ade-95d8-18de7e4c316f" />
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/3b8f8017-0d3f-4360-bfe5-1b8375fa69b7" />
+
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/875fee1b-91c4-475a-9a48-7b15e20d2a62" />
+
+
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/0a0ab156-6a48-4eec-b5dc-9b4f29349645" />
+
+<img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/07c5f0fe-e12f-4da4-be2c-96f2c730e9e6" />
 
 Available Contests	Player Selection	My Entries
 Admin Management
+
+
+
 ![Image 1-5-26 at 6 51 PM (1)](https://github.com/user-attachments/assets/fb632496-a7be-4490-8852-177bb60343b6)
 
 ![Image 1-5-26 at 6 51 PM (2)](https://github.com/user-attachments/assets/01d91fe6-70e7-4691-924d-f3ea909ff3bc)

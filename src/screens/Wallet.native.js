@@ -8,14 +8,24 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  Dimensions,
   SafeAreaView,
   Platform,
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as IAP from 'react-native-iap';
+
+// FIX 1: Use named exports for v12+
+import {
+  initConnection,
+  endConnection,
+  getProducts,
+  requestPurchase,
+  clearTransactionIOS,
+  purchaseUpdatedListener,
+  purchaseErrorListener,
+  finishTransaction,
+} from 'react-native-iap';
 
 const API_URL = 'https://server-core-1.onrender.com/api';
 
@@ -43,37 +53,56 @@ const WalletScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // ==================== IAP SETUP ====================
+  // ==================== IAP IMPLEMENTATION ====================
   useEffect(() => {
     let purchaseUpdateSubscription;
     let purchaseErrorSubscription;
 
     const initIAP = async () => {
       try {
-        await IAP.initConnection();
-        if (Platform.OS === 'ios') await IAP.clearTransactionIOS();
+        // FIX 2: Removed "IAP." prefix
+        await initConnection();
+        if (Platform.OS === 'ios') {
+          await clearTransactionIOS();
+        }
 
-        purchaseUpdateSubscription = IAP.purchaseUpdatedListener(
+        purchaseUpdateSubscription = purchaseUpdatedListener(
           async (purchase) => {
             const receipt = purchase.transactionReceipt;
-            if (receipt) await validateWithBackend(receipt, purchase);
+            if (receipt) {
+              try {
+                await validateWithBackend(receipt, purchase);
+                // FIX 3: Removed "IAP." prefix
+                await finishTransaction({ purchase, isConsumable: true });
+              } catch (err) {
+                console.error('Transaction Finish Error:', err);
+              } finally {
+                setProcessing(false);
+              }
+            }
           },
         );
 
-        purchaseErrorSubscription = IAP.purchaseErrorListener((error) => {
-          console.warn('IAP Error', error);
+        purchaseErrorSubscription = purchaseErrorListener((error) => {
           setProcessing(false);
+          if (error.code !== 'E_USER_CANCELLED') {
+            Alert.alert(
+              'Payment Error',
+              error.message || 'The transaction could not be completed.',
+            );
+          }
         });
       } catch (err) {
-        console.warn('IAP Init Error', err);
+        console.warn('IAP Connection Error:', err);
       }
     };
 
     initIAP();
+
     return () => {
       if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
       if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
-      IAP.endConnection();
+      endConnection();
     };
   }, []);
 
@@ -85,9 +114,9 @@ const WalletScreen = ({ navigation }) => {
 
       const transRes = await fetch(`${API_URL}/users/1/transactions`);
       const transData = await transRes.json();
-      setTransactions(transData);
+      setTransactions(Array.isArray(transData) ? transData : []);
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error('Data Fetch Error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -103,33 +132,57 @@ const WalletScreen = ({ navigation }) => {
       const response = await fetch(`${API_URL}/payments/verify-apple`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 1, receipt }),
+        body: JSON.stringify({
+          userId: 1,
+          receipt,
+          productId: purchase.productId,
+          transactionId: purchase.transactionId,
+        }),
       });
+
       if (response.ok) {
-        Alert.alert('Success', 'Deposit confirmed!');
+        Alert.alert('Success', 'Deposit confirmed! Your credits are ready.');
         fetchUserData();
+      } else {
+        throw new Error('Validation failed');
       }
-      await IAP.finishTransaction({ purchase, isConsumable: true });
     } catch (err) {
-      Alert.alert('Error', 'Could not verify purchase.');
-    } finally {
-      setProcessing(false);
+      Alert.alert(
+        'Verification Error',
+        'Purchase was successful, but wallet sync failed. Please contact support.',
+      );
+      throw err;
     }
   };
 
   const handleDeposit = async () => {
+    if (processing) return;
     setProcessing(true);
     try {
-      const products = await IAP.getProducts({ skus: itemSkus });
+      // Re-ensure connection is active
+      await initConnection();
+
+      // FIX 4: Use destructured getProducts
+      const products = await getProducts({ skus: itemSkus });
+      console.log('Available Store Products:', products);
+
       if (!products || products.length === 0) {
-        Alert.alert('Error', 'Product not found in store.');
+        Alert.alert(
+          'Store Error',
+          'Product ID not found. Ensure your Sandbox user is logged in and the ID matches App Store Connect.',
+        );
         setProcessing(false);
         return;
       }
-      await IAP.requestPurchase({ sku: itemSkus[0] });
+
+      // FIX 5: Use destructured requestPurchase
+      await requestPurchase({
+        sku: itemSkus[0],
+        andFlush: Platform.OS === 'ios',
+      });
     } catch (err) {
-      if (err.code !== 'E_USER_CANCELLED')
-        Alert.alert('Payment Error', err.message);
+      console.error('Detailed Purchase Error:', err);
+      Alert.alert('Payment Error', err.message);
       setProcessing(false);
     }
   };
@@ -137,18 +190,18 @@ const WalletScreen = ({ navigation }) => {
   const formatCurrency = (val) =>
     `$${Math.abs(parseFloat(val || 0)).toFixed(2)}`;
 
-  if (loading)
+  if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size='large' color={COLORS.primary} />
       </View>
     );
+  }
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle='light-content' />
 
-      {/* --- SQUARE GRADIENT HEADER --- */}
       <LinearGradient
         colors={[COLORS.primary, COLORS.secondary]}
         style={styles.header}
@@ -186,7 +239,6 @@ const WalletScreen = ({ navigation }) => {
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         ListHeaderComponent={
           <>
-            {/* --- PREMIUM WALLET BALANCE CARD --- */}
             <View style={styles.statsContainer}>
               <View style={styles.statBox}>
                 <View style={styles.walletLabelRow}>
@@ -246,11 +298,7 @@ const WalletScreen = ({ navigation }) => {
                 {item.description?.toUpperCase()}
               </Text>
               <Text style={styles.transactionDate}>
-                {new Date(item.createdAt).toLocaleDateString()} •{' '}
-                {new Date(item.createdAt).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {new Date(item.createdAt).toLocaleDateString()}
               </Text>
             </View>
             <Text
@@ -273,26 +321,15 @@ const WalletScreen = ({ navigation }) => {
             tintColor={COLORS.primary}
           />
         }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons
-              name='receipt-outline'
-              size={48}
-              color={COLORS.cardBorder}
-            />
-            <Text style={styles.emptyText}>No transactions found.</Text>
-          </View>
-        }
       />
     </View>
   );
 };
 
+// ... keep your existing styles ...
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.lightGray },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-
-  // --- Header ---
   header: {
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     elevation: 4,
@@ -323,8 +360,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
-
-  // --- Wallet Card ---
   statsContainer: { padding: 16 },
   statBox: {
     backgroundColor: COLORS.light,
@@ -380,8 +415,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 1,
   },
-
-  // --- Transaction List ---
   sectionTitle: {
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -402,9 +435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  iconContainer: {
-    marginRight: 12,
-  },
+  iconContainer: { marginRight: 12 },
   transactionDescription: {
     fontWeight: '700',
     fontSize: 13,
@@ -416,14 +447,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '500',
   },
-  transactionAmount: {
-    fontWeight: '800',
-    fontSize: 15,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 60,
-  },
+  transactionAmount: { fontWeight: '800', fontSize: 15 },
+  emptyContainer: { alignItems: 'center', marginTop: 60 },
   emptyText: {
     marginTop: 12,
     color: COLORS.gray,
