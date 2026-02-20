@@ -9,40 +9,42 @@ import {
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-// --- ADMIN THEME CONSTANTS ---
 const COLORS = {
-  primary: '#0A1F44', // Deep Navy
-  accent: '#7D1324', // Maroon Stripe
-  background: '#F0F2F5',
-  cardBg: '#ffffff',
-  textMain: '#1A1A1A',
-  textMuted: '#65676B',
-  success: '#28A745',
-  border: '#E4E6EB',
+  primary: '#1e3f6d',
+  secondary: '#2A5298',
   light: '#ffffff',
+  dark: '#0A1428',
+  gray: '#8E8E93',
+  success: '#28A745',
+  lightGray: '#F5F5F7',
+  cardBorder: '#E5E5EA',
 };
 
 const SuccessScreen = ({ navigation, route }) => {
   const payout = route.params?.payout ?? 0;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
+      Animated.spring(fadeAnim, {
         toValue: 1,
-        duration: 600,
+        tension: 20,
+        friction: 7,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 20,
+        friction: 7,
         useNativeDriver: true,
       }),
     ]).start();
@@ -64,69 +66,69 @@ const SuccessScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle='dark-content' backgroundColor={COLORS.background} />
+      <StatusBar barStyle='dark-content' />
 
       <Animated.View
         style={[
           styles.content,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
         ]}
       >
-        {/* --- TECHNICAL SUCCESS BADGE --- */}
+        {/* --- PREMIUM SUCCESS BADGE --- */}
         <View style={styles.badgeContainer}>
-          <View style={styles.outerCircle}>
+          <LinearGradient
+            colors={[COLORS.success, '#34D399']}
+            style={styles.outerCircle}
+          >
             <View style={styles.innerCircle}>
-              <Ionicons name='checkmark' size={50} color={COLORS.light} />
+              <Ionicons name='checkmark' size={60} color={COLORS.light} />
             </View>
-          </View>
-          <View style={styles.badgeAccent} />
+          </LinearGradient>
         </View>
 
-        <Text style={styles.statusTitle}>TRANSACTION CONFIRMED</Text>
+        <Text style={styles.statusTitle}>ENTRY CONFIRMED</Text>
         <Text style={styles.statusSubtitle}>
-          ENTRY LOGGED TO OTE CENTRAL DATABASE
+          YOUR PREDICTIONS HAVE BEEN LOCKED IN
         </Text>
 
-        {/* --- PERFORMANCE RECORD (PAYOUT CARD) --- */}
-        <View style={styles.adminBox}>
-          <Text style={styles.boxLabel}>ESTIMATED PAYOUT RECORD</Text>
+        {/* --- PAYOUT CARD (Premium Rounded) --- */}
+        <View style={styles.premiumCard}>
+          <Text style={styles.boxLabel}>ESTIMATED PAYOUT</Text>
           <View style={styles.payoutRow}>
             <Text style={styles.payoutCurrency}>$</Text>
             <Text style={styles.payoutValue}>{payout.toFixed(2)}</Text>
           </View>
-          <View style={styles.divider} />
+
           <View style={styles.metaGrid}>
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>STATUS</Text>
-              <Text style={[styles.metaValue, { color: COLORS.success }]}>
-                PENDING LOCK
-              </Text>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusBadgeText}>PENDING LOCK</Text>
+              </View>
             </View>
             <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>SYSTEM</Text>
-              <Text style={styles.metaValue}>V1.0-AUTH</Text>
+              <Text style={styles.metaLabel}>NETWORK</Text>
+              <Text style={styles.metaValue}>V1.0-LIVE</Text>
             </View>
           </View>
         </View>
 
-        {/* --- SYSTEM LOGS (NEXT STEPS) --- */}
+        {/* --- TRANSACTION LOGS --- */}
         <View style={styles.logsBox}>
           <View style={styles.logItem}>
-            <Ionicons name='radio-button-on' size={12} color={COLORS.accent} />
+            <View style={styles.logDot} />
             <Text style={styles.logText}>
-              Balance successfully debited from Virtual Wallet.
+              Balance debited from Virtual Wallet.
             </Text>
           </View>
           <View style={styles.logItem}>
-            <Ionicons name='radio-button-on' size={12} color={COLORS.accent} />
-            <Text style={styles.logText}>
-              Predictions synchronized with live game feed.
-            </Text>
+            <View style={styles.logDot} />
+            <Text style={styles.logText}>Live game feed synchronized.</Text>
           </View>
           <View style={styles.logItem}>
-            <Ionicons name='radio-button-on' size={12} color={COLORS.accent} />
+            <View style={styles.logDot} />
             <Text style={styles.logText}>
-              Payouts will auto-credit upon stat verification.
+              Payout verified for final results.
             </Text>
           </View>
         </View>
@@ -134,10 +136,11 @@ const SuccessScreen = ({ navigation, route }) => {
         {/* --- ACTION BUTTONS --- */}
         <View style={styles.footer}>
           <TouchableOpacity
+            activeOpacity={0.8}
             style={styles.primaryButton}
             onPress={handleGoToEntries}
           >
-            <Text style={styles.primaryButtonText}>OPEN MY ENTRIES</Text>
+            <Text style={styles.primaryButtonText}>VIEW MY ENTRIES</Text>
             <Ionicons
               name='arrow-forward'
               size={18}
@@ -150,19 +153,17 @@ const SuccessScreen = ({ navigation, route }) => {
             style={styles.secondaryButton}
             onPress={() => navigation.navigate('Contests')}
           >
-            <Text style={styles.secondaryButtonText}>RETURN TO DASHBOARD</Text>
+            <Text style={styles.secondaryButtonText}>RETURN TO LOBBY</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.redirectNotice}>
           <ActivityIndicator
             size='small'
-            color={COLORS.textMuted}
+            color={COLORS.gray}
             style={{ marginRight: 10 }}
           />
-          <Text style={styles.redirectText}>
-            Auto-redirecting to Entry Ledger...
-          </Text>
+          <Text style={styles.redirectText}>Redirecting to My Contests...</Text>
         </View>
       </Animated.View>
     </View>
@@ -172,142 +173,175 @@ const SuccessScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.lightGray,
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
   },
   content: { alignItems: 'center', width: '100%' },
 
   // Success Badge
-  badgeContainer: { marginBottom: 30, alignItems: 'center' },
+  badgeContainer: { marginBottom: 24, alignItems: 'center' },
   outerCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 2, // Boxy circle
-    backgroundColor: COLORS.primary,
-    padding: 10,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.success,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
   },
   innerCircle: {
-    width: '100%',
-    height: '100%',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  badgeAccent: {
-    width: 40,
-    height: 4,
-    backgroundColor: COLORS.accent,
-    marginTop: -2,
   },
 
   statusTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: COLORS.primary,
-    letterSpacing: 1,
-    marginBottom: 4,
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.dark,
+    letterSpacing: 0.5,
+    marginBottom: 6,
   },
   statusSubtitle: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
-    marginBottom: 30,
+    color: COLORS.gray,
+    letterSpacing: 1,
+    marginBottom: 32,
+    textAlign: 'center',
   },
 
-  // Admin Box
-  adminBox: {
-    backgroundColor: COLORS.cardBg,
+  // Premium Payout Card
+  premiumCard: {
+    backgroundColor: COLORS.light,
     width: '100%',
-    padding: 20,
+    padding: 24,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 2,
-    marginBottom: 20,
+    borderColor: COLORS.cardBorder,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
   boxLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
-    color: COLORS.textMuted,
+    color: COLORS.gray,
     letterSpacing: 1,
-    marginBottom: 15,
+    marginBottom: 12,
     textAlign: 'center',
   },
   payoutRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-start',
+    marginBottom: 24,
   },
   payoutCurrency: {
-    fontSize: 20,
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '800',
     color: COLORS.primary,
-    marginTop: 4,
+    marginTop: 8,
     marginRight: 2,
   },
-  payoutValue: { fontSize: 48, fontWeight: '900', color: COLORS.primary },
-  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: 20 },
-  metaGrid: { flexDirection: 'row', justifyContent: 'space-between' },
+  payoutValue: { fontSize: 56, fontWeight: '900', color: COLORS.primary },
+
+  metaGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+  },
   metaItem: { flex: 1, alignItems: 'center' },
   metaLabel: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
-    color: COLORS.textMuted,
-    marginBottom: 4,
+    color: COLORS.gray,
+    marginBottom: 6,
   },
-  metaValue: { fontSize: 12, fontWeight: '800', color: COLORS.textMain },
-
-  // Logs Box
-  logsBox: { width: '100%', marginBottom: 30 },
-  logItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  logText: {
+  metaValue: { fontSize: 13, fontWeight: '700', color: COLORS.dark },
+  statusBadge: {
+    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusBadgeText: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    fontWeight: '800',
+    color: COLORS.success,
+  },
+
+  // Transaction Logs
+  logsBox: { width: '100%', marginBottom: 32, paddingHorizontal: 10 },
+  logItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  logDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.primary,
+    opacity: 0.5,
+  },
+  logText: {
+    fontSize: 12,
+    color: COLORS.gray,
     fontWeight: '600',
-    marginLeft: 10,
+    marginLeft: 12,
   },
 
   // Footer
-  footer: { width: '100%', gap: 10 },
+  footer: { width: '100%', gap: 12 },
   primaryButton: {
     backgroundColor: COLORS.primary,
-    height: 52,
-    borderRadius: 2,
+    height: 56,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   primaryButtonText: {
     color: COLORS.light,
-    fontWeight: '900',
-    fontSize: 13,
+    fontWeight: '800',
+    fontSize: 15,
     letterSpacing: 1,
   },
   secondaryButton: {
-    height: 52,
-    borderRadius: 2,
-    borderWidth: 1.5,
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 2,
     borderColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondaryButtonText: {
     color: COLORS.primary,
-    fontWeight: '900',
-    fontSize: 13,
+    fontWeight: '800',
+    fontSize: 15,
     letterSpacing: 1,
   },
 
-  redirectNotice: { flexDirection: 'row', alignItems: 'center', marginTop: 30 },
+  redirectNotice: { flexDirection: 'row', alignItems: 'center', marginTop: 32 },
   redirectText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.gray,
   },
 });
 
