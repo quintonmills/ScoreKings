@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,7 +14,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fantasysportsapp1.app"
+      "bundleIdentifier": "com.fantasysportsapp1.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.in-app-payments": []
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,13 +28,27 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.fantasysportsapp1.app",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": ["com.android.vending.BILLING"]
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "output": "single"
     },
-    "plugins": ["expo-secure-store"]
+    "plugins": [
+      "expo-secure-store",
+      [
+        "react-native-iap",
+        {
+          "configureStoreKit2": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "98d3c197-aa85-4764-a9a9-588c2a70eed8"
+      }
+    }
   }
 }
