@@ -16,10 +16,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
 
-// --- VIBRANT THEME CONSTANTS ---
 const COLORS = {
-  primary: '#1e3f6d', // Vibrant Navy
-  secondary: '#BA0C2F', // ScoreKings Red
+  primary: '#1e3f6d',
+  secondary: '#BA0C2F',
   background: '#0A1428',
   cardBg: 'rgba(255, 255, 255, 0.05)',
   border: 'rgba(255, 255, 255, 0.2)',
@@ -35,18 +34,24 @@ const LoginScreen = ({ navigation }) => {
   const buttonScale = new Animated.Value(1);
   const Background = require('../assets/LoginBackground.png');
 
-  // 1. AUTO-LOGIN LOGIC
-  useEffect(() => {
-    const checkExistingSession = async () => {
-      const token = await AsyncStorage.getItem('userToken');
-      if (token) {
-        navigation.replace('MainTabs');
-      }
-    };
-    checkExistingSession();
-  }, []);
+  // useEffect(() => {
+  //   const checkExistingSession = async () => {
+  //     const token = await AsyncStorage.getItem('userToken');
+  //     if (token) {
+  //       navigation.replace('MainTabs');
+  //     }
+  //   };
+  //   checkExistingSession();
+  // }, []);
 
-  // 2. ANIMATION HELPER
+  useEffect(() => {
+    const clearAuth = async () => {
+      await AsyncStorage.clear(); // This wipes EVERYTHING stored locally
+      console.log('Storage Cleared');
+    };
+    clearAuth();
+  });
+
   const animateButton = () => {
     Animated.sequence([
       Animated.timing(buttonScale, {
@@ -62,11 +67,10 @@ const LoginScreen = ({ navigation }) => {
     ]).start();
   };
 
-  // 3. ACTUAL LOGIN LOGIC
   const handleLogin = async () => {
     animateButton();
 
-    // DEVELOPER BACKDOOR
+    // DEVELOPER BACKDOOR FOR APPLE REVIEWERS
     if (email.toLowerCase() === 'admin' && password === 'admin') {
       await AsyncStorage.setItem('userToken', 'dev-bypass-token');
       await AsyncStorage.setItem('userId', '1');
@@ -74,7 +78,6 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
-    // VALIDATION
     if (!email || !password) {
       Alert.alert('Error', 'Please enter both email and password');
       return;
@@ -180,26 +183,7 @@ const LoginScreen = ({ navigation }) => {
             </Animated.View>
           </View>
 
-          {/* Social Section */}
-          <View style={styles.socialSection}>
-            <Text style={styles.socialTitle}>OR LOGIN WITH</Text>
-            <View style={styles.socialRow}>
-              <TouchableOpacity style={styles.socialTile}>
-                <Ionicons name='logo-google' size={20} color={COLORS.light} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.socialTile, { backgroundColor: '#000' }]}
-              >
-                <Ionicons name='logo-apple' size={20} color={COLORS.light} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.socialTile, { backgroundColor: '#1877F2' }]}
-              >
-                <Ionicons name='logo-facebook' size={20} color={COLORS.light} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
+          {/* Footer Section */}
           <View style={styles.footer}>
             <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
               <Text style={styles.footerText}>
@@ -218,7 +202,6 @@ const styles = StyleSheet.create({
   backgroundImage: { flex: 1 },
   overlay: { flex: 1, backgroundColor: 'rgba(10, 20, 40, 0.8)' },
   container: { flex: 1, padding: 25, justifyContent: 'center' },
-
   headerSection: { alignItems: 'center', marginBottom: 40 },
   logoText: {
     fontSize: 36,
@@ -238,7 +221,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     letterSpacing: 2,
   },
-
   formContainer: {
     backgroundColor: COLORS.cardBg,
     padding: 20,
@@ -253,7 +235,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 20,
   },
-
   inputGroup: { marginBottom: 15 },
   label: {
     fontSize: 9,
@@ -285,7 +266,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   eyeIcon: { padding: 10 },
-
   loginButton: {
     backgroundColor: COLORS.secondary,
     height: 55,
@@ -301,26 +281,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 1,
   },
-
-  socialSection: { marginTop: 30, alignItems: 'center' },
-  socialTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.4)',
-    marginBottom: 15,
-  },
-  socialRow: { flexDirection: 'row', gap: 15 },
-  socialTile: {
-    width: 55,
-    height: 45,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-
   footer: { marginTop: 30, alignItems: 'center' },
   footerText: { color: COLORS.light, fontSize: 14, opacity: 0.8 },
   linkText: { color: COLORS.secondary, fontWeight: 'bold' },
