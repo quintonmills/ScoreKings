@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.fantasysportsapp1.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "This app requires your location to verify eligibility for contests and deposits based on your current state."
       },
       "entitlements": {
         "com.apple.developer.in-app-payments": []
@@ -29,7 +30,12 @@
       },
       "package": "com.fantasysportsapp1.app",
       "edgeToEdgeEnabled": true,
-      "permissions": ["com.android.vending.BILLING"]
+      "permissions": [
+        "com.android.vending.BILLING",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -42,6 +48,12 @@
         "react-native-iap",
         {
           "configureStoreKit2": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow ScoreKings to use your location to verify state eligibility."
         }
       ]
     ],
