@@ -15,8 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// FIX 1: Use named exports for v12+
+import { verifyLocation } from '../util/geo';
 import {
   initConnection,
   endConnection,
@@ -168,11 +167,25 @@ const WalletScreen = ({ navigation }) => {
   const handleDeposit = async () => {
     if (processing) return;
     setProcessing(true);
+
     try {
-      // Re-ensure connection is active
+      // 1. Check Geolocation First
+      console.log('Verifying location eligibility...');
+      const geo = await verifyLocation();
+
+      if (!geo.allowed) {
+        Alert.alert(
+          'Restricted Area',
+          geo.error || 'You must be in Georgia to purchase credits.',
+          [{ text: 'OK', onPress: () => setProcessing(false) }],
+        );
+        return; // Stop the flow here
+      }
+
+      // 2. Re-ensure IAP connection is active
       await initConnection();
 
-      // FIX 4: Use destructured getProducts
+      // 3. Fetch Products
       const products = await getProducts({ skus: itemSkus });
       console.log('Available Store Products:', products);
 
@@ -185,11 +198,14 @@ const WalletScreen = ({ navigation }) => {
         return;
       }
 
-      // FIX 5: Use destructured requestPurchase
+      // 4. Request Purchase
       await requestPurchase({
         sku: itemSkus[0],
         andFlush: Platform.OS === 'ios',
       });
+
+      // Note: setProcessing(false) usually happens in the purchaseUpdatedListener
+      // or purchaseErrorListener once the native popup closes.
     } catch (err) {
       console.error('Detailed Purchase Error:', err);
       Alert.alert('Payment Error', err.message);
