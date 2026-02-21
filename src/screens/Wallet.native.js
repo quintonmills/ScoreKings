@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // FIX 1: Use named exports for v12+
 import {
@@ -108,11 +109,20 @@ const WalletScreen = ({ navigation }) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch(`${API_URL}/me?userId=1`);
+      // Get the actual logged-in ID from storage
+      const storedId = await AsyncStorage.getItem('userId');
+
+      // Fallback to 1 only if storage is empty, but warn yourself
+      const idToFetch = storedId || '1';
+
+      // Use the dynamic ID in the URLs
+      const response = await fetch(`${API_URL}/me?userId=${idToFetch}`);
       const userData = await response.json();
       setUser(userData);
 
-      const transRes = await fetch(`${API_URL}/users/1/transactions`);
+      const transRes = await fetch(
+        `${API_URL}/users/${idToFetch}/transactions`,
+      );
       const transData = await transRes.json();
       setTransactions(Array.isArray(transData) ? transData : []);
     } catch (error) {
