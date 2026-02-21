@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config/api';
 
 const COLORS = {
   primary: '#1e3f6d',
@@ -54,10 +56,49 @@ export const SettingsScreen = ({ navigation }) => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            // Logic for backend deletion would go here
-            console.log('Account Deletion Requested');
-            Alert.alert('Success', 'Account deletion request submitted.');
+          onPress: async () => {
+            try {
+              const userId = await AsyncStorage.getItem('userId');
+
+              const response = await fetch(
+                `${API_URL}/auth/delete-account?userId=${userId}`,
+                {
+                  method: 'DELETE',
+                },
+              );
+
+              if (response.ok) {
+                // 1. Wipe local storage
+                await AsyncStorage.clear();
+
+                // 2. Alert the user
+                Alert.alert(
+                  'Deleted',
+                  'Your account has been permanently removed.',
+                  [
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        // 3. Kick them back to Login/Auth flow
+                        navigation.reset({
+                          index: 0,
+                          routes: [{ name: 'Login' }],
+                        });
+                      },
+                    },
+                  ],
+                );
+              } else {
+                const data = await response.json();
+                Alert.alert('Error', data.error || 'Could not delete account.');
+              }
+            } catch (error) {
+              console.error('Delete Error:', error);
+              Alert.alert(
+                'Network Error',
+                'Check your connection and try again.',
+              );
+            }
           },
         },
       ],
