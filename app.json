@@ -34,13 +34,19 @@
     },
     "plugins": [
       "expo-secure-store",
-      ["react-native-iap", { "configureStoreKit2": true }],
+      [
+        "react-native-iap",
+        {
+          "configureStoreKit2": true
+        }
+      ],
       [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow ScoreKings to use your location to verify state eligibility."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "eas": {

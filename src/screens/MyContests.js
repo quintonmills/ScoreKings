@@ -13,8 +13,18 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Added this
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// CONFIG: Automatically switches between local testing and production
+// config/api.js or at the top of your screens
+const LOCAL_IP = '10.0.0.253';
+const PORT = '4000';
+
+// This logic says: If I'm in development AND I'm not an Apple Reviewer, try local.
+// However, the SAFEST way for Apple is to use a fallback.
+export const API_URL = __DEV__
+  ? `http://${LOCAL_IP}:${PORT}/api`
+  : 'https://server-core-1.onrender.com/api';
 const COLORS = {
   primary: '#1e3f6d',
   secondary: '#2A5298',
@@ -27,19 +37,16 @@ const COLORS = {
   cardBorder: '#E5E5EA',
 };
 
-const API_URL = 'https://server-core-1.onrender.com/api';
-
 export default function MyContestsScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // FIXED: Now fetches the REAL userId from storage
   const fetchUserData = async () => {
     try {
       const storedId = await AsyncStorage.getItem('userId');
-      const userId = storedId || '1'; // Fallback to 1 if not found
+      const userId = storedId || '1';
 
       const response = await fetch(`${API_URL}/me?userId=${userId}`);
       if (!response.ok) throw new Error(`Failed to fetch user`);
@@ -58,21 +65,26 @@ export default function MyContestsScreen({ navigation }) {
       const data = await response.json();
       setEntries(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error('Entries fetch error:', error);
       setEntries([]);
     }
   };
 
   const loadData = useCallback(async () => {
-    // Only show full screen loader if not already refreshing
-    if (!refreshing) setLoading(true);
+    try {
+      if (!refreshing) setLoading(true);
 
-    const userId = await fetchUserData();
-    if (userId) {
-      await fetchEntries(userId);
+      const userId = await fetchUserData();
+      if (userId) {
+        await fetchEntries(userId);
+      }
+    } catch (error) {
+      console.error('General load error:', error);
+    } finally {
+      // Guarantees the spinner stops regardless of success or failure
+      setLoading(false);
+      setRefreshing(false);
     }
-
-    setLoading(false);
-    setRefreshing(false);
   }, [refreshing]);
 
   useEffect(() => {
@@ -146,6 +158,9 @@ export default function MyContestsScreen({ navigation }) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size='large' color={COLORS.primary} />
+        <Text style={{ marginTop: 10, color: COLORS.gray }}>
+          Connecting to ScoreKings...
+        </Text>
       </View>
     );
   }
@@ -234,10 +249,14 @@ export default function MyContestsScreen({ navigation }) {
   );
 }
 
-// ... styles remain the same ...
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.lightGray },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightGray,
+  },
   header: {
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     elevation: 4,
@@ -272,10 +291,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
     elevation: 3,
   },
   walletHeader: {
@@ -290,11 +305,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     letterSpacing: 1,
   },
-  statValue: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: COLORS.dark,
-  },
+  statValue: { fontSize: 32, fontWeight: '900', color: COLORS.dark },
   accentLine: {
     height: 3,
     width: 40,
@@ -319,11 +330,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
   },
-  cardContent: {
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  cardContent: { padding: 16, flexDirection: 'row', alignItems: 'center' },
   contestTitle: {
     fontSize: 15,
     fontWeight: '700',

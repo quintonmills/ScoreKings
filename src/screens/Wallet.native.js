@@ -27,7 +27,12 @@ import {
   finishTransaction,
 } from 'react-native-iap';
 
-const API_URL = 'https://server-core-1.onrender.com/api';
+// FLEXIBLE API CONFIG
+const LOCAL_IP = '10.0.0.253';
+const PORT = '4000';
+const API_URL = __DEV__
+  ? `http://${LOCAL_IP}:${PORT}/api`
+  : 'https://server-core-1.onrender.com/api';
 
 const itemSkus = Platform.select({
   ios: ['com.scorekings.credits.500'],
@@ -59,6 +64,12 @@ const WalletScreen = ({ navigation }) => {
     let purchaseErrorSubscription;
 
     const initIAP = async () => {
+      // SKIP IAP on local network/simulators to prevent E_IAP_NOT_AVAILABLE
+      if (API_URL.includes(LOCAL_IP)) {
+        console.log('Local Dev: Skipping IAP Initialization');
+        return;
+      }
+
       try {
         await initConnection();
         if (Platform.OS === 'ios') {
@@ -70,13 +81,11 @@ const WalletScreen = ({ navigation }) => {
             const receipt = purchase.transactionReceipt;
             if (receipt) {
               try {
-                // The alert and state update now happen inside validateWithBackend
                 await validateWithBackend(receipt, purchase);
                 await finishTransaction({ purchase, isConsumable: true });
               } catch (err) {
                 console.error('Transaction Finish Error:', err);
               } finally {
-                // Ensure processing stops only after backend validation attempt
                 setProcessing(false);
               }
             }
@@ -85,7 +94,6 @@ const WalletScreen = ({ navigation }) => {
 
         purchaseErrorSubscription = purchaseErrorListener((error) => {
           setProcessing(false);
-          // Only show error if the user didn't manually cancel the Apple popup
           if (error.code !== 'E_USER_CANCELLED' && error.code !== 'unknown') {
             Alert.alert(
               'Payment Error',
@@ -101,9 +109,18 @@ const WalletScreen = ({ navigation }) => {
     initIAP();
 
     return () => {
-      if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
-      if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
-      endConnection();
+      // SAFE CLEANUP: The fix for the logout crash
+      try {
+        if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
+        if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
+
+        // Wrap endConnection in a try/catch for environments where it was never started
+        endConnection().catch((err) =>
+          console.log('IAP EndConnection ignored'),
+        );
+      } catch (e) {
+        console.log('Cleanup skipped: IAP not active.');
+      }
     };
   }, []);
 
@@ -152,14 +169,10 @@ const WalletScreen = ({ navigation }) => {
       const result = await response.json();
 
       if (response.ok) {
-        // ONE SINGLE SUCCESS ALERT
         Alert.alert('Success', 'Deposit confirmed! Your credits are ready.');
-
-        // Update local user balance immediately if returned by server
         if (result.balance !== undefined) {
           setUser((prev) => ({ ...prev, balance: result.balance }));
         }
-        // Refresh transaction list in the background
         fetchUserData();
       } else {
         throw new Error(result.error || 'Validation failed');
@@ -168,7 +181,7 @@ const WalletScreen = ({ navigation }) => {
       console.error('Backend Validation Error:', err);
       Alert.alert(
         'Sync Error',
-        "Payment was successful, but your wallet hasn't updated yet. Please pull to refresh in a moment.",
+        'Payment processed, but wallet update failed. Please pull to refresh.',
       );
       throw err;
     }
@@ -178,22 +191,31 @@ const WalletScreen = ({ navigation }) => {
     if (processing) return;
     setProcessing(true);
 
+    // MOCK DEPOSIT FOR LOCAL TESTING
+    if (API_URL.includes(LOCAL_IP)) {
+      Alert.alert(
+        'Local Test',
+        "Simulating success since IAP isn't available locally.",
+      );
+      // You could add a fetch call here to your local /payments/mock-deposit route
+      setProcessing(false);
+      return;
+    }
+
     try {
-      // 1. Geolocation Check
       const geo = await verifyLocation(user?.email);
       if (!geo.allowed) {
         Alert.alert(
           'Restricted Area',
-          geo.error || 'You must be in an eligible area to purchase credits.',
+          geo.error || 'You must be in an eligible area.',
           [{ text: 'OK', onPress: () => setProcessing(false) }],
         );
         return;
       }
 
-      // 2. Fetch Products and Purchase
       const products = await getProducts({ skus: itemSkus });
       if (!products || products.length === 0) {
-        Alert.alert('Store Error', 'Product not found in App Store Connect.');
+        Alert.alert('Store Error', 'Product not found.');
         setProcessing(false);
         return;
       }
@@ -222,7 +244,6 @@ const WalletScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle='light-content' />
-
       <LinearGradient
         colors={[COLORS.primary, COLORS.secondary]}
         style={styles.header}
@@ -339,6 +360,7 @@ const WalletScreen = ({ navigation }) => {
   );
 };
 
+// ... Styles remain identical to your original code
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.lightGray },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
