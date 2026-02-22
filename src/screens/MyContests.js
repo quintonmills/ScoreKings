@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Added this
 
 const COLORS = {
   primary: '#1e3f6d',
@@ -34,16 +35,20 @@ export default function MyContestsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchUserData = async (userId = 1) => {
+  // FIXED: Now fetches the REAL userId from storage
+  const fetchUserData = async () => {
     try {
+      const storedId = await AsyncStorage.getItem('userId');
+      const userId = storedId || '1'; // Fallback to 1 if not found
+
       const response = await fetch(`${API_URL}/me?userId=${userId}`);
       if (!response.ok) throw new Error(`Failed to fetch user`);
       const userData = await response.json();
       setUser(userData);
       return userData.id;
     } catch (error) {
-      setUser({ id: 1, name: 'Admin User', balance: 0 });
-      return 1;
+      console.error('User fetch error:', error);
+      return null;
     }
   };
 
@@ -58,12 +63,17 @@ export default function MyContestsScreen({ navigation }) {
   };
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    // Only show full screen loader if not already refreshing
+    if (!refreshing) setLoading(true);
+
     const userId = await fetchUserData();
-    if (userId) await fetchEntries(userId);
+    if (userId) {
+      await fetchEntries(userId);
+    }
+
     setLoading(false);
     setRefreshing(false);
-  }, []);
+  }, [refreshing]);
 
   useEffect(() => {
     loadData();
@@ -144,7 +154,6 @@ export default function MyContestsScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle='light-content' />
 
-      {/* --- PREMIUM SQUARE GRADIENT HEADER --- */}
       <LinearGradient
         colors={[COLORS.primary, COLORS.secondary]}
         style={styles.header}
@@ -158,7 +167,7 @@ export default function MyContestsScreen({ navigation }) {
             </View>
             <TouchableOpacity
               style={styles.headerSideItem}
-              onPress={() => navigation.navigate('Settings')}
+              onPress={() => navigation.navigate('Profile')}
             >
               <Ionicons
                 name='person-circle-outline'
@@ -181,7 +190,6 @@ export default function MyContestsScreen({ navigation }) {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* --- PREMIUM WALLET CARD --- */}
         <View style={styles.statsContainer}>
           <LinearGradient
             colors={['#ffffff', '#fcfcfc']}
@@ -226,18 +234,13 @@ export default function MyContestsScreen({ navigation }) {
   );
 }
 
+// ... styles remain the same ...
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.lightGray },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-
-  // --- Header Styling ---
   header: {
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3.84,
   },
   headerContent: {
     height: 64,
@@ -246,7 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 15,
   },
-  headerSideItem: { width: 40, alignItems: 'flex-end' },
+  headerSideItem: { width: 40, alignItems: 'center' },
   headerCenterItem: { flex: 1, alignItems: 'center' },
   headerTitle: {
     color: COLORS.light,
@@ -262,8 +265,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
     letterSpacing: 0.5,
   },
-
-  // --- Wallet Card ---
   statsContainer: { padding: 16 },
   statBox: {
     backgroundColor: COLORS.light,
@@ -301,8 +302,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     borderRadius: 2,
   },
-
-  // --- Entry Cards ---
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
   sectionTitle: {
@@ -319,11 +318,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 5,
-    elevation: 1,
   },
   cardContent: {
     padding: 16,
@@ -344,7 +338,6 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   payoutValue: { fontSize: 13, color: COLORS.primary, fontWeight: '800' },
-
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -353,8 +346,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-
-  // --- Empty State ---
   emptyState: { alignItems: 'center', marginTop: 60 },
   emptyIconCircle: {
     width: 80,
@@ -378,11 +369,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   browseButtonText: {
     color: COLORS.light,
