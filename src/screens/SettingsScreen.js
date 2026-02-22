@@ -37,20 +37,30 @@ export const SettingsScreen = ({ navigation }) => {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert(
-          'Error',
-          'Unable to open this link. Please check your internet connection.',
-        );
+        Alert.alert('Error', 'Unable to open this link.');
       }
     } catch (error) {
       console.error('Linking Error:', error);
     }
   };
 
+  const handleLogout = async () => {
+    Alert.alert('Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        onPress: async () => {
+          await AsyncStorage.clear();
+          navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+        },
+      },
+    ]);
+  };
+
   const handleDeleteAccount = () => {
     Alert.alert(
       'Delete Account',
-      'Are you sure you want to delete your account? This action is permanent. All remaining credits and data will be permanently removed.',
+      'This action is permanent. All remaining credits and data will be permanently removed.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -59,7 +69,6 @@ export const SettingsScreen = ({ navigation }) => {
           onPress: async () => {
             try {
               const userId = await AsyncStorage.getItem('userId');
-
               const response = await fetch(
                 `${API_URL}/auth/delete-account?userId=${userId}`,
                 {
@@ -68,36 +77,13 @@ export const SettingsScreen = ({ navigation }) => {
               );
 
               if (response.ok) {
-                // 1. Wipe local storage
                 await AsyncStorage.clear();
-
-                // 2. Alert the user
-                Alert.alert(
-                  'Deleted',
-                  'Your account has been permanently removed.',
-                  [
-                    {
-                      text: 'OK',
-                      onPress: () => {
-                        // 3. Kick them back to Login/Auth flow
-                        navigation.reset({
-                          index: 0,
-                          routes: [{ name: 'Login' }],
-                        });
-                      },
-                    },
-                  ],
-                );
+                navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
               } else {
-                const data = await response.json();
-                Alert.alert('Error', data.error || 'Could not delete account.');
+                Alert.alert('Error', 'Could not delete account.');
               }
             } catch (error) {
-              console.error('Delete Error:', error);
-              Alert.alert(
-                'Network Error',
-                'Check your connection and try again.',
-              );
+              Alert.alert('Network Error', 'Check your connection.');
             }
           },
         },
@@ -108,6 +94,7 @@ export const SettingsScreen = ({ navigation }) => {
   const SettingItem = ({
     icon,
     title,
+    subtitle,
     onPress,
     color = COLORS.dark,
     showArrow = true,
@@ -115,33 +102,59 @@ export const SettingsScreen = ({ navigation }) => {
     <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.itemLeft}>
         <Ionicons name={icon} size={22} color={color} />
-        <Text style={[styles.itemText, { color }]}>{title}</Text>
+        <View style={styles.textContainer}>
+          <Text style={[styles.itemText, { color }]}>{title}</Text>
+          {subtitle && <Text style={styles.itemSubtitle}>{subtitle}</Text>}
+        </View>
       </View>
       {showArrow && (
-        <Ionicons name='chevron-forward' size={20} color={COLORS.gray} />
+        <Ionicons name='chevron-forward' size={18} color={COLORS.gray} />
       )}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle='light-content' />
 
+      {/* --- SQUARE HEADER (MATCHES CONTEST SELECTION) --- */}
       <LinearGradient
         colors={[COLORS.primary, COLORS.secondary]}
         style={styles.header}
       >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name='arrow-back' size={24} color={COLORS.light} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>SETTINGS</Text>
-        <View style={{ width: 40 }} />
+        <SafeAreaView>
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name='arrow-back' size={24} color={COLORS.light} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>SETTINGS</Text>
+            <View style={{ width: 40 }} />
+          </View>
+        </SafeAreaView>
       </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionLabel}>REWARDS HUB</Text>
+        <View style={styles.card}>
+          <SettingItem
+            icon='gift-outline'
+            title='Rewards Store'
+            subtitle='Redeem credits for prizes'
+            color={COLORS.primary}
+            onPress={() => navigation.navigate('RedemptionScreen')}
+          />
+          <View style={styles.divider} />
+          <SettingItem
+            icon='stats-chart-outline'
+            title='Analysis History'
+            subtitle='Review your past strategy entries'
+            onPress={() => navigation.navigate('MyEntries')}
+          />
+        </View>
+
         <Text style={styles.sectionLabel}>LEGAL & COMPLIANCE</Text>
         <View style={styles.card}>
           <SettingItem
@@ -155,10 +168,23 @@ export const SettingsScreen = ({ navigation }) => {
             title='Privacy Policy'
             onPress={() => handleOpenLink(PRIVACY_URL)}
           />
+          <View style={styles.divider} />
+          <SettingItem
+            icon='information-circle-outline'
+            title='Skill-Based Rules'
+            onPress={() => handleOpenLink(TERMS_URL)}
+          />
         </View>
 
         <Text style={styles.sectionLabel}>ACCOUNT MANAGEMENT</Text>
         <View style={styles.card}>
+          <SettingItem
+            icon='log-out-outline'
+            title='Logout'
+            showArrow={false}
+            onPress={handleLogout}
+          />
+          <View style={styles.divider} />
           <SettingItem
             icon='trash-outline'
             title='Delete Account'
@@ -170,69 +196,69 @@ export const SettingsScreen = ({ navigation }) => {
 
         <View style={styles.footer}>
           <Text style={styles.versionText}>Version 1.0.0 (Build 1)</Text>
-
-          {/* CRITICAL APPLE DISCLAIMER */}
           <View style={styles.disclaimerContainer}>
             <Text style={styles.disclaimerText}>
               Apple is not a sponsor of, or responsible for, any contests or
-              sweepstakes within this app.
+              prizes within this app. Participation is based on skill and
+              analytical knowledge.
             </Text>
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.lightGray,
-  },
+  container: { flex: 1, backgroundColor: COLORS.lightGray },
+
+  // Square Header Styling
   header: {
-    height: Platform.OS === 'ios' ? 60 : 80,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3.84,
+  },
+  headerContent: {
+    height: 64,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800',
     color: COLORS.light,
-    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
+  backButton: { width: 40, alignItems: 'flex-start' },
+
+  // Content & List Styling
+  content: { flex: 1, padding: 16 },
   sectionLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.gray,
-    marginBottom: 10,
+    marginBottom: 12,
     marginLeft: 4,
     letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   card: {
     backgroundColor: COLORS.light,
-    borderRadius: 16,
-    marginBottom: 25,
+    borderRadius: 12,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     overflow: 'hidden',
-    // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    // Elevation for Android
     elevation: 2,
   },
   item: {
@@ -241,39 +267,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 18,
   },
-  itemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  itemText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 12,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.lightGray,
-    marginLeft: 50,
-  },
-  footer: {
-    marginTop: 10,
-    alignItems: 'center',
-    paddingBottom: 50,
-  },
-  versionText: {
+  itemLeft: { flexDirection: 'row', alignItems: 'center' },
+  textContainer: { marginLeft: 12 },
+  itemText: { fontSize: 16, fontWeight: '600' },
+  itemSubtitle: {
+    fontSize: 11,
     color: COLORS.gray,
-    fontSize: 12,
+    marginTop: 2,
     fontWeight: '500',
   },
-  disclaimerContainer: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-  },
+  divider: { height: 1, backgroundColor: COLORS.lightGray, marginLeft: 50 },
+
+  footer: { marginTop: 10, alignItems: 'center', paddingBottom: 50 },
+  versionText: { color: COLORS.gray, fontSize: 12, fontWeight: '500' },
+  disclaimerContainer: { marginTop: 20, paddingHorizontal: 20 },
   disclaimerText: {
     textAlign: 'center',
     color: COLORS.gray,
-    fontSize: 11,
+    fontSize: 10,
     lineHeight: 16,
     fontStyle: 'italic',
   },
 });
+
+export default SettingsScreen;
