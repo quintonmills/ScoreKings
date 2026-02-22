@@ -60,7 +60,6 @@ const WalletScreen = ({ navigation }) => {
 
     const initIAP = async () => {
       try {
-        // FIX 2: Removed "IAP." prefix
         await initConnection();
         if (Platform.OS === 'ios') {
           await clearTransactionIOS();
@@ -71,12 +70,13 @@ const WalletScreen = ({ navigation }) => {
             const receipt = purchase.transactionReceipt;
             if (receipt) {
               try {
+                // The alert and state update now happen inside validateWithBackend
                 await validateWithBackend(receipt, purchase);
-                // FIX 3: Removed "IAP." prefix
                 await finishTransaction({ purchase, isConsumable: true });
               } catch (err) {
                 console.error('Transaction Finish Error:', err);
               } finally {
+                // Ensure processing stops only after backend validation attempt
                 setProcessing(false);
               }
             }
@@ -85,10 +85,11 @@ const WalletScreen = ({ navigation }) => {
 
         purchaseErrorSubscription = purchaseErrorListener((error) => {
           setProcessing(false);
-          if (error.code !== 'E_USER_CANCELLED') {
+          // Only show error if the user didn't manually cancel the Apple popup
+          if (error.code !== 'E_USER_CANCELLED' && error.code !== 'unknown') {
             Alert.alert(
               'Payment Error',
-              error.message || 'The transaction could not be completed.',
+              'The transaction could not be completed.',
             );
           }
         });
@@ -108,13 +109,9 @@ const WalletScreen = ({ navigation }) => {
 
   const fetchUserData = async () => {
     try {
-      // Get the actual logged-in ID from storage
       const storedId = await AsyncStorage.getItem('userId');
-
-      // Fallback to 1 only if storage is empty, but warn yourself
       const idToFetch = storedId || '1';
 
-      // Use the dynamic ID in the URLs
       const response = await fetch(`${API_URL}/me?userId=${idToFetch}`);
       const userData = await response.json();
       setUser(userData);
@@ -138,15 +135,14 @@ const WalletScreen = ({ navigation }) => {
 
   const validateWithBackend = async (receipt, purchase) => {
     try {
-      // 1. Get the real User ID from storage
       const storedId = await AsyncStorage.getItem('userId');
-      const idToUse = storedId || '1'; // Fallback to '1' only if absolutely necessary
+      const idToUse = storedId || '1';
 
       const response = await fetch(`${API_URL}/payments/verify-apple`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: idToUse, // <--- Use the dynamic ID
+          userId: idToUse,
           receipt,
           productId: purchase.productId,
           transactionId: purchase.transactionId,
@@ -156,23 +152,23 @@ const WalletScreen = ({ navigation }) => {
       const result = await response.json();
 
       if (response.ok) {
+        // ONE SINGLE SUCCESS ALERT
         Alert.alert('Success', 'Deposit confirmed! Your credits are ready.');
 
-        // 2. Optimization: Update the local state immediately using the server's response
+        // Update local user balance immediately if returned by server
         if (result.balance !== undefined) {
           setUser((prev) => ({ ...prev, balance: result.balance }));
         }
-
-        // 3. Refresh everything else (transactions list)
+        // Refresh transaction list in the background
         fetchUserData();
       } else {
         throw new Error(result.error || 'Validation failed');
       }
     } catch (err) {
-      console.error('Verification Error:', err);
+      console.error('Backend Validation Error:', err);
       Alert.alert(
-        'Verification Error',
-        'Purchase was successful, but wallet sync failed. Please contact support.',
+        'Sync Error',
+        "Payment was successful, but your wallet hasn't updated yet. Please pull to refresh in a moment.",
       );
       throw err;
     }
@@ -183,45 +179,31 @@ const WalletScreen = ({ navigation }) => {
     setProcessing(true);
 
     try {
-      // 1. Check Geolocation First (Passing the user's email for the bypass)
-      console.log('Verifying location eligibility...');
-
-      // We pass user?.email here so the geo.js logic can identify the Apple Reviewer
+      // 1. Geolocation Check
       const geo = await verifyLocation(user?.email);
-
       if (!geo.allowed) {
         Alert.alert(
           'Restricted Area',
-          geo.error || 'You must be in Georgia to purchase credits.',
+          geo.error || 'You must be in an eligible area to purchase credits.',
           [{ text: 'OK', onPress: () => setProcessing(false) }],
         );
-        return; // Stop the flow here
+        return;
       }
 
-      // 2. Re-ensure IAP connection is active
-      await initConnection();
-
-      // 3. Fetch Products
+      // 2. Fetch Products and Purchase
       const products = await getProducts({ skus: itemSkus });
-      console.log('Available Store Products:', products);
-
       if (!products || products.length === 0) {
-        Alert.alert(
-          'Store Error',
-          'Product ID not found. Ensure your Sandbox user is logged in and the ID matches App Store Connect.',
-        );
+        Alert.alert('Store Error', 'Product not found in App Store Connect.');
         setProcessing(false);
         return;
       }
 
-      // 4. Request Purchase
       await requestPurchase({
         sku: itemSkus[0],
         andFlush: Platform.OS === 'ios',
       });
     } catch (err) {
-      console.error('Detailed Purchase Error:', err);
-      Alert.alert('Payment Error', err.message);
+      console.error('Deposit flow error:', err);
       setProcessing(false);
     }
   };
@@ -253,12 +235,10 @@ const WalletScreen = ({ navigation }) => {
             >
               <Ionicons name='arrow-back' size={24} color={COLORS.light} />
             </TouchableOpacity>
-
             <View style={styles.headerCenterItem}>
               <Text style={styles.headerTitle}>MY WALLET</Text>
               <Text style={styles.headerSubtitle}>FINANCIAL OVERVIEW</Text>
             </View>
-
             <TouchableOpacity
               style={styles.headerSideItem}
               onPress={() => navigation.navigate('Profile')}
@@ -276,52 +256,53 @@ const WalletScreen = ({ navigation }) => {
       <FlatList
         data={transactions}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={fetchUserData}
+            tintColor={COLORS.primary}
+          />
+        }
         ListHeaderComponent={
-          <>
-            <View style={styles.statsContainer}>
-              <View style={styles.statBox}>
-                <View style={styles.walletLabelRow}>
-                  <Text style={styles.statLabel}>AVAILABLE BALANCE</Text>
-                  <Ionicons
-                    name='shield-checkmark'
-                    size={14}
-                    color={COLORS.success}
-                  />
-                </View>
-                <Text style={styles.statValue}>
-                  {formatCurrency(user?.balance)}
-                </Text>
-
-                <View style={styles.buttonWrapper}>
-                  <TouchableOpacity
-                    style={[
-                      styles.depositButton,
-                      processing && { opacity: 0.7 },
-                    ]}
-                    onPress={handleDeposit}
-                    disabled={processing}
-                  >
-                    {processing ? (
-                      <ActivityIndicator color={COLORS.light} size='small' />
-                    ) : (
-                      <>
-                        <Ionicons
-                          name='add-circle'
-                          size={18}
-                          color={COLORS.light}
-                          style={{ marginRight: 8 }}
-                        />
-                        <Text style={styles.depositButtonText}>
-                          DEPOSIT $5.00 CREDITS
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <View style={styles.walletLabelRow}>
+                <Text style={styles.statLabel}>AVAILABLE BALANCE</Text>
+                <Ionicons
+                  name='shield-checkmark'
+                  size={14}
+                  color={COLORS.success}
+                />
+              </View>
+              <Text style={styles.statValue}>
+                {formatCurrency(user?.balance)}
+              </Text>
+              <View style={styles.buttonWrapper}>
+                <TouchableOpacity
+                  style={[styles.depositButton, processing && { opacity: 0.7 }]}
+                  onPress={handleDeposit}
+                  disabled={processing}
+                >
+                  {processing ? (
+                    <ActivityIndicator color={COLORS.light} size='small' />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name='add-circle'
+                        size={18}
+                        color={COLORS.light}
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text style={styles.depositButtonText}>
+                        DEPOSIT $5.00 CREDITS
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
             </View>
             <Text style={styles.sectionTitle}>TRANSACTION LOG</Text>
-          </>
+          </View>
         }
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
@@ -353,30 +334,15 @@ const WalletScreen = ({ navigation }) => {
         )}
         style={styles.list}
         contentContainerStyle={{ paddingBottom: 40 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={fetchUserData}
-            tintColor={COLORS.primary}
-          />
-        }
       />
     </View>
   );
 };
 
-// ... keep your existing styles ...
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.lightGray },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3.84,
-  },
+  header: { paddingBottom: 10 },
   headerContent: {
     height: 64,
     flexDirection: 'row',
@@ -391,10 +357,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 1,
-    textTransform: 'uppercase',
   },
   headerSubtitle: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255,255,255,0.6)',
     fontSize: 10,
     fontWeight: '600',
     marginTop: 2,
@@ -406,10 +371,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
     elevation: 3,
   },
   walletLabelRow: {
@@ -442,11 +403,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   depositButtonText: {
     color: COLORS.light,
@@ -455,7 +411,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   sectionTitle: {
-    paddingHorizontal: 20,
+    marginTop: 25,
     marginBottom: 12,
     fontSize: 11,
     fontWeight: '800',
@@ -480,20 +436,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.dark,
   },
-  transactionDate: {
-    fontSize: 11,
-    color: COLORS.gray,
-    marginTop: 2,
-    fontWeight: '500',
-  },
+  transactionDate: { fontSize: 11, color: COLORS.gray, marginTop: 2 },
   transactionAmount: { fontWeight: '800', fontSize: 15 },
-  emptyContainer: { alignItems: 'center', marginTop: 60 },
-  emptyText: {
-    marginTop: 12,
-    color: COLORS.gray,
-    fontSize: 13,
-    fontWeight: '600',
-  },
 });
 
 export default WalletScreen;
