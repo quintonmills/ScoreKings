@@ -30,6 +30,7 @@ const COLORS = {
 export const SettingsScreen = ({ navigation }) => {
   const TERMS_URL = 'https://quintonmills.github.io/sc-legal/terms.html';
   const PRIVACY_URL = 'https://quintonmills.github.io/sc-legal/privacy.html';
+  const RULES_URL = 'https://quintonmills.github.io/sc-legal/rules.html';
 
   const handleOpenLink = async (url) => {
     try {
@@ -147,12 +148,12 @@ export const SettingsScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('RedemptionScreen')}
           />
           <View style={styles.divider} />
-          <SettingItem
+          {/* <SettingItem
             icon='stats-chart-outline'
             title='Analysis History'
             subtitle='Review your past strategy entries'
             onPress={() => navigation.navigate('MyEntries')}
-          />
+          /> */}
         </View>
 
         <Text style={styles.sectionLabel}>LEGAL & COMPLIANCE</Text>
@@ -172,7 +173,7 @@ export const SettingsScreen = ({ navigation }) => {
           <SettingItem
             icon='information-circle-outline'
             title='Skill-Based Rules'
-            onPress={() => handleOpenLink(TERMS_URL)}
+            onPress={() => handleOpenLink(RULES_URL)}
           />
         </View>
 
