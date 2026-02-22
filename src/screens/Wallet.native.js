@@ -169,9 +169,11 @@ const WalletScreen = ({ navigation }) => {
     setProcessing(true);
 
     try {
-      // 1. Check Geolocation First
+      // 1. Check Geolocation First (Passing the user's email for the bypass)
       console.log('Verifying location eligibility...');
-      const geo = await verifyLocation();
+
+      // We pass user?.email here so the geo.js logic can identify the Apple Reviewer
+      const geo = await verifyLocation(user?.email);
 
       if (!geo.allowed) {
         Alert.alert(
@@ -203,9 +205,6 @@ const WalletScreen = ({ navigation }) => {
         sku: itemSkus[0],
         andFlush: Platform.OS === 'ios',
       });
-
-      // Note: setProcessing(false) usually happens in the purchaseUpdatedListener
-      // or purchaseErrorListener once the native popup closes.
     } catch (err) {
       console.error('Detailed Purchase Error:', err);
       Alert.alert('Payment Error', err.message);

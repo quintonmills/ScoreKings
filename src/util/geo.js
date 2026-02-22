@@ -1,30 +1,45 @@
 import * as Location from 'expo-location';
 
-export const verifyLocation = async () => {
+/**
+ * Verifies if the user is in Georgia.
+ * @param {string} userEmail - Pass the logged-in user's email to allow Apple reviewers to bypass.
+ */
+export const verifyLocation = async (userEmail) => {
   try {
-    // 1. Request Permission
+    // 1. APPLE REVIEWER BYPASS
+    // Replace 'apple-test@example.com' with your actual test account email.
+    if (userEmail && userEmail.toLowerCase() === 'apple-test@example.com') {
+      console.log('Reviewer detected: Bypassing Geo-gate.');
+      return { allowed: true, state: 'Georgia (Review Mode)' };
+    }
+
+    // 2. Request Permission
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       return {
         allowed: false,
-        error: 'Permission denied. Please enable location in settings.',
+        error:
+          'Location permission is required to verify state eligibility for deposits.',
       };
     }
 
-    // 2. Get Coordinates
-    let location = await Location.getCurrentPositionAsync({});
+    // 3. Get Coordinates
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
     const { latitude, longitude } = location.coords;
 
-    // 3. Reverse Geocode (Get State/Country)
+    // 4. Reverse Geocode (Get State/Country)
     let address = await Location.reverseGeocodeAsync({ latitude, longitude });
 
     if (address.length > 0) {
-      const userState = address[0].region; // 'Georgia' or 'GA'
+      const userState = address[0].region; // e.g., 'Georgia' or 'GA'
 
       // Check for Georgia
       if (userState === 'Georgia' || userState === 'GA') {
         return { allowed: true, state: userState };
       }
+
       return {
         allowed: false,
         state: userState,
@@ -32,9 +47,12 @@ export const verifyLocation = async () => {
       };
     }
 
-    return { allowed: false, error: 'Could not determine location.' };
+    return { allowed: false, error: 'Could not determine your current state.' };
   } catch (error) {
-    console.error(error);
-    return { allowed: false, error: 'Error verifying location.' };
+    console.error('Geo Verification Error:', error);
+    return {
+      allowed: false,
+      error: 'Error verifying location. Please try again.',
+    };
   }
 };
