@@ -138,24 +138,38 @@ const WalletScreen = ({ navigation }) => {
 
   const validateWithBackend = async (receipt, purchase) => {
     try {
+      // 1. Get the real User ID from storage
+      const storedId = await AsyncStorage.getItem('userId');
+      const idToUse = storedId || '1'; // Fallback to '1' only if absolutely necessary
+
       const response = await fetch(`${API_URL}/payments/verify-apple`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 1,
+          userId: idToUse, // <--- Use the dynamic ID
           receipt,
           productId: purchase.productId,
           transactionId: purchase.transactionId,
         }),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
         Alert.alert('Success', 'Deposit confirmed! Your credits are ready.');
+
+        // 2. Optimization: Update the local state immediately using the server's response
+        if (result.balance !== undefined) {
+          setUser((prev) => ({ ...prev, balance: result.balance }));
+        }
+
+        // 3. Refresh everything else (transactions list)
         fetchUserData();
       } else {
-        throw new Error('Validation failed');
+        throw new Error(result.error || 'Validation failed');
       }
     } catch (err) {
+      console.error('Verification Error:', err);
       Alert.alert(
         'Verification Error',
         'Purchase was successful, but wallet sync failed. Please contact support.',
