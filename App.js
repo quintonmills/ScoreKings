@@ -4,13 +4,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Screen Imports
 import LoginScreen from './src/screens/Login';
-import SignupScreen from './src/screens/SignUp'; // <--- New Import
+import SignupScreen from './src/screens/SignUp';
 import MainTabs from './src/navigation/MainTabs';
 import PlayerSelection from './src/screens/PlayerSelection';
 import ContestReviewScreen from './src/screens/ContestReview';
 import PaymentScreen from './src/screens/Payment';
 import SuccessScreen from './src/screens/SuccessScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import RedemptionScreen from './src/screens/Redemption'; // <--- NEW IMPORT
 
 const Stack = createNativeStackNavigator();
 
@@ -20,8 +21,8 @@ export default function App() {
       <Stack.Navigator
         initialRouteName='Login'
         screenOptions={{
-          headerShown: false, // Applies to all screens unless overridden
-          animation: 'slide_from_right', // Native iOS/Android feel
+          headerShown: false,
+          animation: 'slide_from_right',
         }}
       >
         {/* --- AUTH STACK --- */}
@@ -31,19 +32,30 @@ export default function App() {
         {/* --- APP CONTENT (Tabs) --- */}
         <Stack.Screen name='MainTabs' component={MainTabs} />
 
-        {/* --- GAMEPLAY & MODALS --- */}
+        {/* --- GAMEPLAY & STRATEGY --- */}
         <Stack.Screen name='PlayerSelection' component={PlayerSelection} />
         <Stack.Screen
           name='ContestReviewScreen'
           component={ContestReviewScreen}
         />
-        <Stack.Screen name='PaymentScreen' component={PaymentScreen} />
+
+        {/* --- REWARDS & SETTINGS --- */}
         <Stack.Screen name='Settings' component={SettingsScreen} />
+        <Stack.Screen
+          name='RedemptionScreen'
+          component={RedemptionScreen}
+          options={{
+            presentation: 'modal', // Makes it feel like a focused "Shop" experience
+          }}
+        />
+
+        {/* --- TRANSACTION FLOW --- */}
+        <Stack.Screen name='PaymentScreen' component={PaymentScreen} />
         <Stack.Screen
           name='SuccessScreen'
           component={SuccessScreen}
           options={{
-            animation: 'fade', // Smoother transition for the win
+            animation: 'fade',
             animationDuration: 1000,
           }}
         />
