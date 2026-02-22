@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "fantasy-sports-app-1",
+    "name": "ScoreKings",
     "slug": "fantasy-sports-app-1",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/scorekings_1024x1024.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/scorekings_1024x1024.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1e3f6d"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,38 +18,23 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "This app requires your location to verify eligibility for contests and deposits based on your current state."
-      },
-      "entitlements": {
-        "com.apple.developer.in-app-payments": []
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/scorekings_1024x1024.png",
+        "backgroundColor": "#1e3f6d"
       },
       "package": "com.fantasysportsapp1.app",
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "com.android.vending.BILLING",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "FOREGROUND_SERVICE_LOCATION"
+        "ACCESS_FINE_LOCATION"
       ]
-    },
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro",
-      "output": "single"
     },
     "plugins": [
       "expo-secure-store",
-      [
-        "react-native-iap",
-        {
-          "configureStoreKit2": true
-        }
-      ],
+      ["react-native-iap", { "configureStoreKit2": true }],
       [
         "expo-location",
         {
