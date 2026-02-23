@@ -9,35 +9,17 @@ import {
   Alert,
   RefreshControl,
   SafeAreaView,
-  Platform,
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { verifyLocation } from '../util/geo';
-import {
-  initConnection,
-  endConnection,
-  getProducts,
-  requestPurchase,
-  clearTransactionIOS,
-  purchaseUpdatedListener,
-  purchaseErrorListener,
-  finishTransaction,
-} from 'react-native-iap';
+import { useStripe } from '@stripe/stripe-react-native'; // Replacement
 
-// FLEXIBLE API CONFIG
 const LOCAL_IP = '10.0.0.253';
 const PORT = '4000';
-const API_URL = __DEV__
-  ? `http://${LOCAL_IP}:${PORT}/api`
-  : 'https://server-core-1.onrender.com/api';
-
-const itemSkus = Platform.select({
-  ios: ['com.scorekings.credits.500'],
-  android: ['com.scorekings.credits.500'],
-});
+const API_URL = 'https://server-core-1.onrender.com/api';
 
 const COLORS = {
   primary: '#1e3f6d',
@@ -46,7 +28,6 @@ const COLORS = {
   dark: '#0A1428',
   gray: '#8E8E93',
   success: '#28A745',
-  danger: '#FF3B30',
   lightGray: '#F5F5F7',
   cardBorder: '#E5E5EA',
 };
@@ -58,77 +39,12 @@ const WalletScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // ==================== IAP IMPLEMENTATION ====================
-  useEffect(() => {
-    let purchaseUpdateSubscription;
-    let purchaseErrorSubscription;
-
-    const initIAP = async () => {
-      // SKIP IAP on local network/simulators to prevent E_IAP_NOT_AVAILABLE
-      if (API_URL.includes(LOCAL_IP)) {
-        console.log('Local Dev: Skipping IAP Initialization');
-        return;
-      }
-
-      try {
-        await initConnection();
-        if (Platform.OS === 'ios') {
-          await clearTransactionIOS();
-        }
-
-        purchaseUpdateSubscription = purchaseUpdatedListener(
-          async (purchase) => {
-            const receipt = purchase.transactionReceipt;
-            if (receipt) {
-              try {
-                await validateWithBackend(receipt, purchase);
-                await finishTransaction({ purchase, isConsumable: true });
-              } catch (err) {
-                console.error('Transaction Finish Error:', err);
-              } finally {
-                setProcessing(false);
-              }
-            }
-          },
-        );
-
-        purchaseErrorSubscription = purchaseErrorListener((error) => {
-          setProcessing(false);
-          if (error.code !== 'E_USER_CANCELLED' && error.code !== 'unknown') {
-            Alert.alert(
-              'Payment Error',
-              'The transaction could not be completed.',
-            );
-          }
-        });
-      } catch (err) {
-        console.warn('IAP Connection Error:', err);
-      }
-    };
-
-    initIAP();
-
-    return () => {
-      // SAFE CLEANUP: The fix for the logout crash
-      try {
-        if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
-        if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
-
-        // Wrap endConnection in a try/catch for environments where it was never started
-        endConnection().catch((err) =>
-          console.log('IAP EndConnection ignored'),
-        );
-      } catch (e) {
-        console.log('Cleanup skipped: IAP not active.');
-      }
-    };
-  }, []);
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const fetchUserData = async () => {
     try {
       const storedId = await AsyncStorage.getItem('userId');
       const idToFetch = storedId || '1';
-
       const response = await fetch(`${API_URL}/me?userId=${idToFetch}`);
       const userData = await response.json();
       setUser(userData);
@@ -138,8 +54,8 @@ const WalletScreen = ({ navigation }) => {
       );
       const transData = await transRes.json();
       setTransactions(Array.isArray(transData) ? transData : []);
-    } catch (error) {
-      console.error('Data Fetch Error:', error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -150,82 +66,59 @@ const WalletScreen = ({ navigation }) => {
     fetchUserData();
   }, []);
 
-  const validateWithBackend = async (receipt, purchase) => {
-    try {
-      const storedId = await AsyncStorage.getItem('userId');
-      const idToUse = storedId || '1';
-
-      const response = await fetch(`${API_URL}/payments/verify-apple`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: idToUse,
-          receipt,
-          productId: purchase.productId,
-          transactionId: purchase.transactionId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        Alert.alert('Success', 'Deposit confirmed! Your credits are ready.');
-        if (result.balance !== undefined) {
-          setUser((prev) => ({ ...prev, balance: result.balance }));
-        }
-        fetchUserData();
-      } else {
-        throw new Error(result.error || 'Validation failed');
-      }
-    } catch (err) {
-      console.error('Backend Validation Error:', err);
-      Alert.alert(
-        'Sync Error',
-        'Payment processed, but wallet update failed. Please pull to refresh.',
-      );
-      throw err;
-    }
-  };
-
   const handleDeposit = async () => {
     if (processing) return;
     setProcessing(true);
 
-    // MOCK DEPOSIT FOR LOCAL TESTING
-    if (API_URL.includes(LOCAL_IP)) {
-      Alert.alert(
-        'Local Test',
-        "Simulating success since IAP isn't available locally.",
-      );
-      // You could add a fetch call here to your local /payments/mock-deposit route
-      setProcessing(false);
-      return;
-    }
-
     try {
+      // 1. Geolocation Check
       const geo = await verifyLocation(user?.email);
       if (!geo.allowed) {
-        Alert.alert(
-          'Restricted Area',
-          geo.error || 'You must be in an eligible area.',
-          [{ text: 'OK', onPress: () => setProcessing(false) }],
-        );
+        Alert.alert('Restricted Area', geo.error || 'You must be in Georgia.');
         return;
       }
 
-      const products = await getProducts({ skus: itemSkus });
-      if (!products || products.length === 0) {
-        Alert.alert('Store Error', 'Product not found.');
-        setProcessing(false);
-        return;
-      }
+      // 2. Fetch Stripe Config from Server
+      const response = await fetch(
+        `${API_URL}/payments/create-payment-intent`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, amount: 500 }), // $5.00
+        },
+      );
+      const { paymentIntent, ephemeralKey, customer } = await response.json();
 
-      await requestPurchase({
-        sku: itemSkus[0],
-        andFlush: Platform.OS === 'ios',
+      // 3. Init Stripe Sheet
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'ScoreKings',
+        customerId: customer,
+        customerEphemeralKeySecret: ephemeralKey,
+        paymentIntentClientSecret: paymentIntent,
+        defaultBillingDetails: { email: user.email },
       });
+
+      if (initError) throw new Error(initError.message);
+
+      // 4. Open Payment UI
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        if (presentError.code !== 'Canceled')
+          Alert.alert('Error', presentError.message);
+      } else {
+        // 5. Tell server to update Prisma balance
+        await fetch(`${API_URL}/payments/confirm-deposit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, amount: 500 }),
+        });
+        Alert.alert('Success', 'Deposit confirmed!');
+        fetchUserData();
+      }
     } catch (err) {
-      console.error('Deposit flow error:', err);
+      Alert.alert('Payment Error', err.message);
+    } finally {
       setProcessing(false);
     }
   };
@@ -233,13 +126,12 @@ const WalletScreen = ({ navigation }) => {
   const formatCurrency = (val) =>
     `$${Math.abs(parseFloat(val || 0)).toFixed(2)}`;
 
-  if (loading) {
+  if (loading)
     return (
       <View style={styles.center}>
         <ActivityIndicator size='large' color={COLORS.primary} />
       </View>
     );
-  }
 
   return (
     <View style={styles.container}>
@@ -251,18 +143,15 @@ const WalletScreen = ({ navigation }) => {
         <SafeAreaView>
           <View style={styles.headerContent}>
             <TouchableOpacity
-              style={styles.headerSideItem}
               onPress={() => navigation.goBack()}
+              style={styles.headerSideItem}
             >
               <Ionicons name='arrow-back' size={24} color={COLORS.light} />
             </TouchableOpacity>
-            <View style={styles.headerCenterItem}>
-              <Text style={styles.headerTitle}>MY WALLET</Text>
-              <Text style={styles.headerSubtitle}>FINANCIAL OVERVIEW</Text>
-            </View>
+            <Text style={styles.headerTitle}>SECURE WALLET</Text>
             <TouchableOpacity
-              style={styles.headerSideItem}
               onPress={() => navigation.navigate('Profile')}
+              style={styles.headerSideItem}
             >
               <Ionicons
                 name='person-circle-outline'
@@ -278,88 +167,45 @@ const WalletScreen = ({ navigation }) => {
         data={transactions}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={fetchUserData}
-            tintColor={COLORS.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={fetchUserData} />
         }
         ListHeaderComponent={
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-              <View style={styles.walletLabelRow}>
-                <Text style={styles.statLabel}>AVAILABLE BALANCE</Text>
-                <Ionicons
-                  name='shield-checkmark'
-                  size={14}
-                  color={COLORS.success}
-                />
-              </View>
+              <Text style={styles.statLabel}>AVAILABLE CREDITS</Text>
               <Text style={styles.statValue}>
                 {formatCurrency(user?.balance)}
               </Text>
-              <View style={styles.buttonWrapper}>
-                <TouchableOpacity
-                  style={[styles.depositButton, processing && { opacity: 0.7 }]}
-                  onPress={handleDeposit}
-                  disabled={processing}
-                >
-                  {processing ? (
-                    <ActivityIndicator color={COLORS.light} size='small' />
-                  ) : (
-                    <>
-                      <Ionicons
-                        name='add-circle'
-                        size={18}
-                        color={COLORS.light}
-                        style={{ marginRight: 8 }}
-                      />
-                      <Text style={styles.depositButtonText}>
-                        DEPOSIT $5.00 CREDITS
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={styles.depositButton}
+                onPress={handleDeposit}
+                disabled={processing}
+              >
+                {processing ? (
+                  <ActivityIndicator color='#fff' />
+                ) : (
+                  <Text style={styles.depositButtonText}>
+                    DEPOSIT $5.00 (STRIPE)
+                  </Text>
+                )}
+              </TouchableOpacity>
             </View>
-            <Text style={styles.sectionTitle}>TRANSACTION LOG</Text>
           </View>
         }
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
-            <View style={styles.iconContainer}>
-              <Ionicons
-                name={item.amount > 0 ? 'arrow-down-circle' : 'arrow-up-circle'}
-                size={24}
-                color={item.amount > 0 ? COLORS.success : COLORS.gray}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.transactionDescription}>
-                {item.description?.toUpperCase()}
-              </Text>
-              <Text style={styles.transactionDate}>
-                {new Date(item.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
-            <Text
-              style={[
-                styles.transactionAmount,
-                { color: item.amount > 0 ? COLORS.success : COLORS.dark },
-              ]}
-            >
-              {item.amount > 0 ? '+' : '-'}
+            <Text style={styles.transactionDescription}>
+              {item.description}
+            </Text>
+            <Text style={styles.transactionAmount}>
               {formatCurrency(item.amount)}
             </Text>
           </View>
         )}
-        style={styles.list}
-        contentContainerStyle={{ paddingBottom: 40 }}
       />
     </View>
   );
 };
-
 // ... Styles remain identical to your original code
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.lightGray },

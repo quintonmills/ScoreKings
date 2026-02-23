@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ScoreKings",
-    "slug": "fantasy-sports-app-1",
+    "slug": "scorekings",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/scorekings_1024x1024.png",
@@ -17,7 +17,8 @@
       "bundleIdentifier": "com.fantasysportsapp1.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "This app requires your location to verify eligibility for contests and deposits based on your current state."
+        "NSLocationWhenInUseUsageDescription": "This app requires your location to verify eligibility for contests and deposits based on your current state.",
+        "NSCameraUsageDescription": "ScoreKings uses the camera to allow you to securely scan your payment card for faster deposits."
       }
     },
     "android": {
@@ -27,31 +28,34 @@
       },
       "package": "com.fantasysportsapp1.app",
       "permissions": [
-        "com.android.vending.BILLING",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
       "expo-secure-store",
-      [
-        "react-native-iap",
-        {
-          "configureStoreKit2": true
-        }
-      ],
       [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow ScoreKings to use your location to verify state eligibility."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.fantasysportsapp1",
+          "enableGooglePay": true
+        }
+      ]
     ],
     "extra": {
       "eas": {
-        "projectId": "98d3c197-aa85-4764-a9a9-588c2a70eed8"
+        "projectId": "fde4e477-2598-4b10-af95-5b011f84603c"
       }
-    }
+    },
+    "owner": "quintonmills98s-organization"
   }
 }
