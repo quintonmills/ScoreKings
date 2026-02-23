@@ -6,6 +6,17 @@ OTE Pick'em is a fantasy sports application where users can enter daily contests
 
 🔗 [View Live Application](https://fantasy-sports-app-1.vercel.app/)
 
+
+### 🚀 Demo Instructions
+
+ **Note:** The backend is hosted on a free Render instance. Please allow ~50 seconds for the initial cold start.
+
+ Test Account: ```apple-test@example.com```
+
+ Password: ```AppleTest123!```
+
+ Testing Stripe: Use the Stripe test card ```4242 4242 4242 4242``` for deposits.
+
 📸 Screenshots
 User Experience
 
