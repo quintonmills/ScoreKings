@@ -22,9 +22,7 @@ const PORT = '4000';
 
 // This logic says: If I'm in development AND I'm not an Apple Reviewer, try local.
 // However, the SAFEST way for Apple is to use a fallback.
-export const API_URL = __DEV__
-  ? `http://${LOCAL_IP}:${PORT}/api`
-  : 'https://server-core-1.onrender.com/api';
+export const API_URL = 'https://server-core-1.onrender.com/api';
 const COLORS = {
   primary: '#1e3f6d',
   secondary: '#2A5298',
