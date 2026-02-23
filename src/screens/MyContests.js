@@ -180,7 +180,7 @@ export default function MyContestsScreen({ navigation }) {
             </View>
             <TouchableOpacity
               style={styles.headerSideItem}
-              onPress={() => navigation.navigate('Profile')}
+              onPress={() => navigation.navigate('Settings')}
             >
               <Ionicons
                 name='person-circle-outline'

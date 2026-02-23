@@ -31,6 +31,8 @@ export const SettingsScreen = ({ navigation }) => {
   const TERMS_URL = 'https://quintonmills.github.io/sc-legal/terms.html';
   const PRIVACY_URL = 'https://quintonmills.github.io/sc-legal/privacy.html';
   const RULES_URL = 'https://quintonmills.github.io/sc-legal/rules.html';
+  const RESPONSIBLE_GAMING_URL =
+    'https://www.ncpgambling.org/help-treatment/national-helpline-1-800-522-4700/';
 
   const handleOpenLink = async (url) => {
     try {
@@ -174,6 +176,14 @@ export const SettingsScreen = ({ navigation }) => {
             icon='information-circle-outline'
             title='Skill-Based Rules'
             onPress={() => handleOpenLink(RULES_URL)}
+          />
+          {/* --- ADDED THIS ITEM BELOW --- */}
+          <View style={styles.divider} />
+          <SettingItem
+            icon='heart-outline'
+            title='Responsible Gaming'
+            subtitle='Resources and Support'
+            onPress={() => handleOpenLink(RESPONSIBLE_GAMING_URL)}
           />
         </View>
 

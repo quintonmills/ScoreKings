@@ -150,7 +150,7 @@ const WalletScreen = ({ navigation }) => {
             </TouchableOpacity>
             <Text style={styles.headerTitle}>SECURE WALLET</Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate('Profile')}
+              onPress={() => navigation.navigate('Settings')}
               style={styles.headerSideItem}
             >
               <Ionicons
