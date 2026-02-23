@@ -31,6 +31,10 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
@@ -56,6 +60,12 @@
         "projectId": "fde4e477-2598-4b10-af95-5b011f84603c"
       }
     },
-    "owner": "quintonmills98s-organization"
+    "owner": "quintonmills98s-organization",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fde4e477-2598-4b10-af95-5b011f84603c"
+    }
   }
 }
