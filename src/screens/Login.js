@@ -34,23 +34,23 @@ const LoginScreen = ({ navigation }) => {
   const buttonScale = new Animated.Value(1);
   const Background = require('../assets/LoginBackground.png');
 
-  // useEffect(() => {
-  //   const checkExistingSession = async () => {
-  //     const token = await AsyncStorage.getItem('userToken');
-  //     if (token) {
-  //       navigation.replace('MainTabs');
-  //     }
-  //   };
-  //   checkExistingSession();
-  // }, []);
-
   useEffect(() => {
-    const clearAuth = async () => {
-      await AsyncStorage.clear(); // This wipes EVERYTHING stored locally
-      console.log('Storage Cleared');
+    const checkExistingSession = async () => {
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
+        navigation.replace('MainTabs');
+      }
     };
-    clearAuth();
-  });
+    checkExistingSession();
+  }, []);
+
+  // useEffect(() => {
+  //   const clearAuth = async () => {
+  //     await AsyncStorage.clear(); // This wipes EVERYTHING stored locally
+  //     console.log('Storage Cleared');
+  //   };
+  //   clearAuth();
+  // });
 
   const animateButton = () => {
     Animated.sequence([
@@ -95,10 +95,32 @@ const LoginScreen = ({ navigation }) => {
         }),
       });
 
-      const data = await response.json();
+      // 1. Read as text ONCE to prevent "Already Read" error
+      const rawText = await response.text();
 
+      // 2. Log this so you can see why the server is sending HTML (< character)
+      console.log('--- DEBUG: RAW SERVER RESPONSE ---');
+      console.log(rawText);
+      console.log('---------------------------------');
+
+      // 3. Manually parse the text into JSON
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseError) {
+        // If we are here, the server sent HTML (a crash or 404)
+        console.error('Failed to parse JSON:', parseError);
+        Alert.alert(
+          'Server Error',
+          'The server sent an invalid response. Check your terminal logs.',
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // 4. Use the parsed data
       if (response.ok) {
-        await AsyncStorage.setItem('userToken', data.token);
+        await AsyncStorage.setItem('userToken', data.token || 'dummy-token');
         await AsyncStorage.setItem('userId', data.user.id.toString());
         navigation.replace('MainTabs');
       } else {
@@ -114,7 +136,6 @@ const LoginScreen = ({ navigation }) => {
       setIsLoading(false);
     }
   };
-
   return (
     <ImageBackground source={Background} style={styles.backgroundImage}>
       <StatusBar barStyle='light-content' />
