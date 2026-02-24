@@ -4,7 +4,20 @@
 
 OTE Pick'em is a fantasy sports application where users can enter daily contests by predicting player performances. Users select 2 players and choose whether they'll score **Over** or **Under** their projected point totals. If both picks are correct, they win 3x their entry fee!
 
-📸 Screenshots
+
+### 🚀 Demo Instructions
+🔗 [View Live Application](https://fantasy-sports-app-1-1pukry5i5-quintonmills-projects.vercel.app)
+
+
+ **Note:** The backend is hosted on a free Render instance. Please allow ~50 seconds for the initial cold start.
+
+ Test Account: ```apple-test@example.com```
+
+ Password: ```AppleTest123!```
+
+ Testing Stripe: Use the Stripe test card ```4242 4242 4242 4242``` for deposits.
+ 
+## 📸 Screenshots
 User Experience
 
 <img width="1170" height="2532" alt="IMG_1480" src="https://github.com/user-attachments/assets/43d47272-58f2-4003-820f-f3e7df38a9e0" />
