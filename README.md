@@ -16,7 +16,7 @@ A tablet-friendly basketball stat logger for tracking a game from the sideline. 
 - Undo for the most recently recorded stat action.
 - Game finalization modal with the box-score JSON payload and generated flyers.
 - Team-logo and player-photo uploads for tailored flyers.
-- Simulated backend integration using `POST http://localhost:5000/api/games/finalize`.
+- Backend integration using `POST /api/games/finalize`.
 - Responsive, high-contrast layout designed for tablet and touch use.
 
 ## Tech stack
@@ -68,10 +68,10 @@ The game clock currently displays a placeholder (`10:00`); it is not a running t
 Finalizing a game sends a JSON `POST` request to:
 
 ```text
-http://localhost:5000/api/games/finalize
+/api/games/finalize
 ```
 
-The frontend displays the request status and reports failed requests. To connect a backend running on a different origin, configure it to allow cross-origin requests from the Vite development server.
+For local development, the frontend uses `http://localhost:5000` by default. Production defaults to `https://servercore-pjwe.onrender.com`; set the `VITE_API_BASE_URL` environment variable in the frontend hosting service to override it (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. The backend must allow cross-origin requests from the frontend's deployed origin.
 
 Example payload:
 

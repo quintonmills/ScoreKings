@@ -2,6 +2,10 @@ import { useMemo, useRef, useState } from 'react'
 import { createFinalizePayload, getFlyerPlayers, isFinalizePayloadWithinLimit, MAX_IMAGE_SIZE_BYTES } from './gamePayload.js'
 import './App.css'
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '')
+  || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://servercore-pjwe.onrender.com')
+const finalizeEndpoint = apiBaseUrl ? `${apiBaseUrl}/api/games/finalize` : ''
+
 const initialPlayers = [
   { id: 'p1', team: 'Team A', jersey: '3', name: 'Marcus', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
   { id: 'p2', team: 'Team A', jersey: '11', name: 'Jordan', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
@@ -411,9 +415,14 @@ function App() {
 
   const sendPayload = async (nextPayload) => {
     setRequestState('sending')
-    setRequestMessage('Posting to http://localhost:5000/api/games/finalize…')
+    if (!finalizeEndpoint) {
+      setRequestState('error')
+      setRequestMessage('Set VITE_API_BASE_URL to your deployed backend URL in Render, then redeploy the frontend.')
+      return
+    }
+    setRequestMessage(`Posting to ${finalizeEndpoint}…`)
     try {
-      const response = await fetch('http://localhost:5000/api/games/finalize', {
+      const response = await fetch(finalizeEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nextPayload),
@@ -468,7 +477,9 @@ function App() {
     setGeneratedFlyers([])
     setPayload(nextPayload)
     setRequestState('sending')
-    setRequestMessage('Posting to http://localhost:5000/api/games/finalize…')
+    setRequestMessage(finalizeEndpoint
+      ? `Posting to ${finalizeEndpoint}…`
+      : 'Connecting to the configured backend…')
     void sendPayload(nextPayload)
   }
 
