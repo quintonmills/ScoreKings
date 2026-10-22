@@ -14,7 +14,8 @@ A tablet-friendly basketball stat logger for tracking a game from the sideline. 
 - Editable rosters with jersey numbers and player names.
 - Player stat tracking for points, rebounds, assists, steals, blocks, and turnovers.
 - Undo for the most recently recorded stat action.
-- Game finalization modal with the box-score JSON payload.
+- Game finalization modal with the box-score JSON payload and generated flyers.
+- Team-logo and player-photo uploads for tailored flyers.
 - Simulated backend integration using `POST http://localhost:5000/api/games/finalize`.
 - Responsive, high-contrast layout designed for tablet and touch use.
 
@@ -57,7 +58,8 @@ npm run lint     # Run Oxlint
 2. Tap a player card to make that player active.
 3. Tap a stat button to record an action. Points update the scoreboard automatically.
 4. Use **Undo last action** to reverse the most recent stat entry.
-5. Select **Finalize game** to review the box-score payload and send it to the backend.
+5. In **Game setup**, add team logos and player photos. PNG, JPEG, and WebP images up to 5 MB are accepted.
+6. Select **Finalize game** to send the box-score payload and required flyer assets to the backend.
 
 The game clock currently displays a placeholder (`10:00`); it is not a running timer.
 
@@ -79,11 +81,13 @@ Example payload:
   "location": "Marietta Rec League",
   "teamA": {
     "name": "Red Team",
-    "score": 2
+    "score": 2,
+    "logo": "data:image/png;base64,..."
   },
   "teamB": {
     "name": "Blue Team",
-    "score": 0
+    "score": 0,
+    "logo": "data:image/png;base64,..."
   },
   "players": [
     {
@@ -96,10 +100,11 @@ Example payload:
       "ast": 0,
       "stl": 0,
       "blk": 0,
-      "to": 0
+      "to": 0,
+      "photo": "data:image/jpeg;base64,..."
     }
   ]
 }
 ```
 
-The example above shows the shape of the payload; actual player totals and team scores are generated from the game being logged.
+The example above shows the shape of the payload; actual player totals and team scores are generated from the game being logged. Photos and logos are converted to data URLs in memory and are not saved in browser storage. A flyer is generated for up to three players with at least one point, ranked by points, rebounds, then assists. Each selected player needs a photo and their team needs a logo; the frontend prevents finalization when an asset is missing or the JSON request would reach the backend's 14 MB limit. Returned `graphics[].publicUrl` values are shown as generated flyers.

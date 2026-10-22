@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import { createFinalizePayload, getFlyerPlayers, isFinalizePayloadWithinLimit, MAX_IMAGE_SIZE_BYTES } from './gamePayload.js'
 import './App.css'
 
 const initialPlayers = [
@@ -53,7 +54,86 @@ function PlayerCard({ player, active, onSelect }) {
   )
 }
 
-function RosterEditor({ team, title, players, onChange, onAdd, onRemove }) {
+function ImageUpload({ id, label, image, onImageChange, requiredMessage }) {
+  const inputRef = useRef(null)
+  const [validationMessage, setValidationMessage] = useState('')
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setValidationMessage('Choose a PNG, JPEG, or WebP image.')
+      event.target.value = ''
+      return
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setValidationMessage('Choose an image that is 5 MB or smaller.')
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        setValidationMessage('The selected image could not be read. Try another file.')
+        return
+      }
+      onImageChange(reader.result)
+      setValidationMessage('')
+    }
+    reader.onerror = () => {
+      setValidationMessage('The selected image could not be read. Try another file.')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    onImageChange(null)
+    setValidationMessage('')
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  return (
+    <div className="image-upload">
+      <label className="image-upload-label" htmlFor={id}>{label}</label>
+      <p id={`${id}-guidance`} className="image-upload-guidance">PNG, JPEG, or WebP · up to 5 MB</p>
+      {image && (
+        <div className="image-preview">
+          <img src={image} alt={`${label} preview`} />
+          <div className="image-preview-actions">
+            <button
+              type="button"
+              onClick={() => {
+                if (inputRef.current) inputRef.current.value = ''
+                inputRef.current?.click()
+              }}
+            >
+              Replace
+            </button>
+            <button type="button" onClick={removeImage}>Remove</button>
+          </div>
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        id={id}
+        className="image-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        aria-label={`${label} upload`}
+        aria-describedby={`${id}-guidance`}
+        aria-invalid={Boolean(validationMessage || requiredMessage)}
+        onChange={handleFileChange}
+      />
+      {(validationMessage || requiredMessage) && (
+        <p className="image-upload-error" role="alert">{validationMessage || requiredMessage}</p>
+      )}
+    </div>
+  )
+}
+
+function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requiredLogoMessage, playerImages, requiredPlayerMessages, onPlayerImageChange, onChange, onAdd, onRemove }) {
   const roster = players.filter((player) => player.team === team)
   return (
     <section className="roster-editor">
@@ -70,22 +150,38 @@ function RosterEditor({ team, title, players, onChange, onAdd, onRemove }) {
           placeholder="Team name"
         />
       </label>
+      <ImageUpload
+        id={`${teamKey}-logo`}
+        label={`${teamKey === 'teamA' ? 'Team A' : 'Team B'} logo`}
+        image={logo}
+        onImageChange={onLogoChange}
+        requiredMessage={requiredLogoMessage}
+      />
       <div className="roster-list">
         {roster.map((player) => (
-          <div className="roster-row" key={player.id}>
-            <input
-              aria-label={`${title} jersey number`}
-              value={player.jersey}
-              onChange={(event) => onChange(null, player.id, 'jersey', event.target.value)}
-              placeholder="#"
+          <div className="roster-player" key={player.id}>
+            <div className="roster-row">
+              <input
+                aria-label={`${title} jersey number`}
+                value={player.jersey}
+                onChange={(event) => onChange(null, player.id, 'jersey', event.target.value)}
+                placeholder="#"
+              />
+              <input
+                aria-label={`${title} player name`}
+                value={player.name}
+                onChange={(event) => onChange(null, player.id, 'name', event.target.value)}
+                placeholder="Player name"
+              />
+              <button className="remove-player" type="button" onClick={() => onRemove(player.id)} aria-label={`Remove ${player.name || 'player'}`}>×</button>
+            </div>
+            <ImageUpload
+              id={`player-${player.id}-photo`}
+              label={`${player.name || 'Unnamed player'} photo`}
+              image={playerImages[player.id]}
+              onImageChange={(image) => onPlayerImageChange(player.id, image)}
+              requiredMessage={requiredPlayerMessages[player.id]}
             />
-            <input
-              aria-label={`${title} player name`}
-              value={player.name}
-              onChange={(event) => onChange(null, player.id, 'name', event.target.value)}
-              placeholder="Player name"
-            />
-            <button className="remove-player" type="button" onClick={() => onRemove(player.id)} aria-label={`Remove ${player.name || 'player'}`}>×</button>
           </div>
         ))}
       </div>
@@ -96,7 +192,7 @@ function RosterEditor({ team, title, players, onChange, onAdd, onRemove }) {
   )
 }
 
-function SetupModal({ game, players, onGameChange, onPlayersChange, onAddPlayer, onRemovePlayer, onClose }) {
+function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGameChange, onPlayersChange, onAddPlayer, onRemovePlayer, onClose }) {
   const updateTeam = (team, value) => onGameChange({ ...game, [team === 'Team A' ? 'teamA' : 'teamB']: value })
   const updatePlayer = (teamName, playerId, key, value) => {
     if (playerId) {
@@ -132,16 +228,30 @@ function SetupModal({ game, players, onGameChange, onPlayersChange, onAddPlayer,
         <div className="roster-editors">
           <RosterEditor
             team="Team A"
+            teamKey="teamA"
             title={game.teamA}
             players={players}
+            logo={assets.teams.teamA}
+            onLogoChange={(image) => onAssetChange('teamA', image)}
+            requiredLogoMessage={requiredAssets.teams.teamA}
+            playerImages={assets.players}
+            requiredPlayerMessages={requiredAssets.players}
+            onPlayerImageChange={(playerId, image) => onAssetChange(playerId, image)}
             onChange={updatePlayer}
             onAdd={onAddPlayer}
             onRemove={onRemovePlayer}
           />
           <RosterEditor
             team="Team B"
+            teamKey="teamB"
             title={game.teamB}
             players={players}
+            logo={assets.teams.teamB}
+            onLogoChange={(image) => onAssetChange('teamB', image)}
+            requiredLogoMessage={requiredAssets.teams.teamB}
+            playerImages={assets.players}
+            requiredPlayerMessages={requiredAssets.players}
+            onPlayerImageChange={(playerId, image) => onAssetChange(playerId, image)}
             onChange={updatePlayer}
             onAdd={onAddPlayer}
             onRemove={onRemovePlayer}
@@ -156,7 +266,7 @@ function SetupModal({ game, players, onGameChange, onPlayersChange, onAddPlayer,
   )
 }
 
-function FinalizeModal({ payload, requestState, requestMessage, onRetry, onClose }) {
+function FinalizeModal({ payload, graphics, requestState, requestMessage, onRetry, onClose }) {
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal finalize-modal" role="dialog" aria-modal="true" aria-labelledby="finalize-title">
@@ -180,6 +290,19 @@ function FinalizeModal({ payload, requestState, requestMessage, onRetry, onClose
           <code>POST /api/games/finalize</code>
         </div>
         <pre className="payload-code">{JSON.stringify(payload, null, 2)}</pre>
+        {graphics.length > 0 && (
+          <section className="generated-flyers" aria-label="Generated flyers">
+            <h3>Generated flyers</h3>
+            <div className="generated-flyer-list">
+              {graphics.map((graphic, index) => (
+                <a key={`${graphic.publicUrl}-${index}`} href={graphic.publicUrl} target="_blank" rel="noreferrer">
+                  <img src={graphic.publicUrl} alt={`Generated flyer ${index + 1}`} />
+                  <span>Open flyer {index + 1}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
         <div className="modal-footer">
           <span>Ready for your ScoreKings backend.</span>
           <button type="button" className="primary-button" onClick={onClose}>Done <span>✓</span></button>
@@ -197,18 +320,29 @@ function App() {
     period: 'Q1',
   })
   const [players, setPlayers] = useState(initialPlayers)
+  const [assets, setAssets] = useState({ teams: { teamA: null, teamB: null }, players: {} })
   const [activePlayerId, setActivePlayerId] = useState(null)
   const [history, setHistory] = useState([])
   const [showSetup, setShowSetup] = useState(false)
   const [payload, setPayload] = useState(null)
   const [requestState, setRequestState] = useState('idle')
   const [requestMessage, setRequestMessage] = useState('')
+  const [generatedFlyers, setGeneratedFlyers] = useState([])
+  const [showAssetValidation, setShowAssetValidation] = useState(false)
 
   const teamAPlayers = useMemo(() => players.filter((player) => player.team === 'Team A'), [players])
   const teamBPlayers = useMemo(() => players.filter((player) => player.team === 'Team B'), [players])
   const activePlayer = players.find((player) => player.id === activePlayerId)
   const teamAScore = getScore(players, 'Team A')
   const teamBScore = getScore(players, 'Team B')
+  const flyerPlayers = useMemo(() => getFlyerPlayers(players), [players])
+  const requiredAssets = { teams: {}, players: {} }
+  for (const player of flyerPlayers) {
+    if (!assets.players[player.id]) requiredAssets.players[player.id] = `${player.name || 'Unnamed player'} needs a photo for their flyer.`
+    const teamKey = player.team === 'Team A' ? 'teamA' : 'teamB'
+    if (!assets.teams[teamKey]) requiredAssets.teams[teamKey] = `${player.team === 'Team A' ? game.teamA : game.teamB} needs a logo for its flyer.`
+  }
+  const missingAssetMessages = [...Object.values(requiredAssets.players), ...new Set(Object.values(requiredAssets.teams))]
 
   const recordAction = (action) => {
     if (!activePlayer) return
@@ -254,8 +388,25 @@ function App() {
 
   const removePlayer = (playerId) => {
     setPlayers((currentPlayers) => currentPlayers.filter((player) => player.id !== playerId))
+    setAssets((currentAssets) => {
+      const nextPlayerImages = { ...currentAssets.players }
+      delete nextPlayerImages[playerId]
+      return { ...currentAssets, players: nextPlayerImages }
+    })
     setHistory((currentHistory) => currentHistory.filter((action) => action.playerId !== playerId))
     if (activePlayerId === playerId) setActivePlayerId(null)
+  }
+
+  const updateAsset = (key, image) => {
+    setAssets((currentAssets) => {
+      if (key === 'teamA' || key === 'teamB') {
+        return { ...currentAssets, teams: { ...currentAssets.teams, [key]: image } }
+      }
+      const playersWithImage = { ...currentAssets.players }
+      if (image) playersWithImage[key] = image
+      else delete playersWithImage[key]
+      return { ...currentAssets, players: playersWithImage }
+    })
   }
 
   const sendPayload = async (nextPayload) => {
@@ -272,8 +423,26 @@ function App() {
         setRequestMessage(`The server responded with ${response.status} ${response.statusText || ''}.`.trim())
         return
       }
+      const responseText = await response.text()
+      let responseBody = null
+      if (responseText.trim()) {
+        try {
+          responseBody = JSON.parse(responseText)
+        } catch {
+          setGeneratedFlyers([])
+          setRequestState('success')
+          setRequestMessage('The game was accepted, but the server returned an unreadable flyer response.')
+          return
+        }
+      }
+      const graphics = Array.isArray(responseBody?.graphics)
+        ? responseBody.graphics.filter((graphic) => typeof graphic?.publicUrl === 'string' && graphic.publicUrl.length > 0)
+        : []
+      setGeneratedFlyers(graphics)
       setRequestState('success')
-      setRequestMessage('The final box score was accepted by the server.')
+      setRequestMessage(graphics.length > 0
+        ? 'The game was accepted and your flyers are ready.'
+        : 'The final box score was accepted by the server.')
     } catch (error) {
       setRequestState('error')
       setRequestMessage(error instanceof Error ? error.message : 'The request failed. Check that the backend is running.')
@@ -281,24 +450,22 @@ function App() {
   }
 
   const finalizeGame = () => {
-    const nextPayload = {
-      gameId: 'game-101',
-      location: game.location,
-      teamA: { name: game.teamA, score: teamAScore },
-      teamB: { name: game.teamB, score: teamBScore },
-      players: players.map(({ id, team, jersey, name, pts, reb, ast, stl, blk, to }) => ({
-        id,
-        team,
-        jersey,
-        name,
-        pts,
-        reb,
-        ast,
-        stl,
-        blk,
-        to,
-      })),
+    setShowAssetValidation(true)
+    if (missingAssetMessages.length > 0) return
+
+    const nextPayload = createFinalizePayload({
+      game,
+      players,
+      assets,
+      teamAScore,
+      teamBScore,
+    })
+    if (!isFinalizePayloadWithinLimit(nextPayload)) {
+      setRequestState('error')
+      setRequestMessage('The selected images make the game request too large. Remove or replace images so the JSON stays below 14 MB.')
+      return
     }
+    setGeneratedFlyers([])
     setPayload(nextPayload)
     setRequestState('sending')
     setRequestMessage('Posting to http://localhost:5000/api/games/finalize…')
@@ -414,6 +581,18 @@ function App() {
               Finalize game <span>→</span>
             </button>
           </div>
+          {showAssetValidation && missingAssetMessages.length > 0 && (
+            <div className="finalize-validation" role="alert">
+              <strong>Flyer assets are required before finalizing:</strong>
+              <ul>
+                {missingAssetMessages.map((message) => <li key={message}>{message}</li>)}
+              </ul>
+              <span>Open Game setup to add the missing images.</span>
+            </div>
+          )}
+          {requestState === 'error' && requestMessage.includes('below 14 MB') && (
+            <p className="finalize-validation" role="alert">{requestMessage}</p>
+          )}
         </section>
       </div>
 
@@ -426,6 +605,9 @@ function App() {
         <SetupModal
           game={game}
           players={players}
+          assets={assets}
+          requiredAssets={showAssetValidation ? requiredAssets : { teams: {}, players: {} }}
+          onAssetChange={updateAsset}
           onGameChange={setGame}
           onPlayersChange={setPlayers}
           onAddPlayer={addPlayer}
@@ -436,6 +618,7 @@ function App() {
       {payload && (
         <FinalizeModal
           payload={payload}
+          graphics={generatedFlyers}
           requestState={requestState}
           requestMessage={requestMessage}
           onRetry={() => void sendPayload(payload)}

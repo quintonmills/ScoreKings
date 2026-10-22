@@ -790,11 +790,16 @@ button {
 }
 
 .roster-list {
-  max-height: 180px;
+  max-height: 390px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.roster-player {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #34373b;
 }
 
 .roster-row {
@@ -807,6 +812,146 @@ button {
   height: 31px;
   padding: 0 7px;
   font-size: 10px;
+}
+
+.image-upload {
+  min-width: 0;
+  margin: 0 0 10px;
+}
+
+.image-upload-label {
+  display: block;
+  color: #c2c5c2;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.image-upload-guidance {
+  margin: 3px 0 6px;
+  color: #85898c;
+  font-size: 8px;
+}
+
+.image-file-input {
+  display: block;
+  max-width: 100%;
+  color: #b9bcba;
+  font-size: 9px;
+}
+
+.image-file-input::file-selector-button {
+  margin-right: 7px;
+  padding: 5px 8px;
+  border: 1px solid #45494c;
+  border-radius: 4px;
+  background: #292c2f;
+  color: #e2e4df;
+  font: inherit;
+  cursor: pointer;
+}
+
+.image-file-input:focus-visible,
+.image-preview-actions button:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+.image-preview {
+  margin: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-preview img {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border: 1px solid #45494c;
+  border-radius: 5px;
+  background: #151719;
+  object-fit: cover;
+}
+
+.image-preview-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.image-preview-actions button {
+  padding: 5px 7px;
+  border: 1px solid #45494c;
+  border-radius: 4px;
+  background: #292c2f;
+  color: #d8dbd6;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.image-preview-actions button:hover {
+  border-color: var(--lime);
+}
+
+.image-upload-error,
+.finalize-validation {
+  color: #ffaaa1;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.image-upload-error {
+  margin: 5px 0 0;
+}
+
+.finalize-validation {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #67413e;
+  border-radius: 7px;
+  background: #2b2222;
+}
+
+.finalize-validation ul {
+  margin: 5px 0;
+  padding-left: 18px;
+}
+
+.finalize-validation > span {
+  color: #d4a09a;
+}
+
+.generated-flyers {
+  margin-top: 18px;
+}
+
+.generated-flyers h3 {
+  margin: 0 0 8px;
+  color: #e7e8e4;
+  font-size: 12px;
+}
+
+.generated-flyer-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.generated-flyer-list a {
+  width: 120px;
+  display: grid;
+  gap: 5px;
+  color: #d7ff43;
+  font-size: 9px;
+  text-decoration: none;
+}
+
+.generated-flyer-list img {
+  width: 120px;
+  height: 150px;
+  border: 1px solid #414449;
+  border-radius: 5px;
+  background: #141618;
+  object-fit: cover;
 }
 
 .remove-player {
@@ -1191,7 +1336,7 @@ button {
   }
 
   .roster-list {
-    max-height: 130px;
+    max-height: 350px;
   }
 
   .modal-footer > span {
