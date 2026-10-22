@@ -4,10 +4,8 @@ A tablet-friendly basketball stat logger for tracking a game from the sideline. 
 
 ## Dashboard
 
-<!--
-Replace the line below with your screenshot after uploading it to GitHub:
-![ScoreKings courtside dashboard](path-or-image-url)
--->
+<img width="1041" height="717" alt="image" src="https://github.com/user-attachments/assets/7862561c-fcdf-4a94-8e19-8bba7f0d865a" />
+
 
 ## Features
 
