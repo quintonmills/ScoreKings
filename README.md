@@ -1,45 +1,107 @@
-# ScoreKings 🏀
+# ScoreKings Courtside Logger
 
-> Real-time courtside stat engine & automated social graphic generator for youth, amateur, and regional basketball leagues.
+A tablet-friendly basketball stat logger for tracking a game from the sideline. ScoreKings lets you manage team rosters, record player stats with touch-friendly controls, and export a final box score as JSON.
 
-ScoreKings is a B2B2C sports tech platform designed to capture live game data courtside and instantaneously render high-impact, shareable stat graphics for athletes. The platform turns raw box scores into viral marketing for players and structured, verified analytics for leagues and scouts.
+## Dashboard
 
----
+<!--
+Replace the line below with your screenshot after uploading it to GitHub:
+![ScoreKings courtside dashboard](path-or-image-url)
+-->
 
-## 🎯 Core Features
+## Features
 
-- **Courtside Stat Logger:** Ultra-responsive touch UI optimized for iPad/mobile stat entry (Points, Rebounds, Assists, Steals, Blocks, Turnovers).
-- **Automated Graphic Engine:** Instant server-side canvas rendering that maps live box score JSON into high-resolution 4:5 Instagram/TikTok stat cards.
-- **Export & Delivery Pipeline:** Automated JPEG output ready for direct messaging, SMS, or social media distribution post-buzzer.
-- **League Data Ingestion:** Structured data storage for game box scores, leaderboards, and player analytics.
+- Live scoreboard with automatically calculated team totals.
+- Game setup for team names, location, and quarter or overtime period.
+- Editable rosters with jersey numbers and player names.
+- Player stat tracking for points, rebounds, assists, steals, blocks, and turnovers.
+- Undo for the most recently recorded stat action.
+- Game finalization modal with the box-score JSON payload.
+- Simulated backend integration using `POST http://localhost:5000/api/games/finalize`.
+- Responsive, high-contrast layout designed for tablet and touch use.
 
----
+## Tech stack
 
-## 🛠 Tech Stack
+- React 19
+- Vite 8
+- CSS
 
-- **Frontend / Field App:** React / React Native (iPad / Tablet optimized)
-- **Backend Service:** Node.js, Express
-- **Graphic Rendering Engine:** Canvas (`@napi-rs/canvas`)
-- **Database:** MongoDB
-- **Styling & Assets:** Custom Figma graphic templates
+## Getting started
 
----
+### Requirements
 
-## 🚀 Quick Start (Local Development)
+- Node.js 20.19+ or 22.12+
+- npm
 
-### Prerequisites
-
-- Node.js (v18+)
-- npm or yarn
-
-### 1. Installation
+### Run locally
 
 ```bash
-# Clone the repository
-git clone [https://github.com/YOUR_USERNAME/ScoreKings.git](https://github.com/YOUR_USERNAME/ScoreKings.git)
-
-# Navigate to project directory
+git clone https://github.com/YOUR_USERNAME/ScoreKings.git
 cd ScoreKings
-
-# Install dependencies
 npm install
+npm run dev
+```
+
+Open the local URL printed by Vite in your browser.
+
+## Available scripts
+
+```bash
+npm run dev      # Start the local development server
+npm run build    # Create a production build in dist/
+npm run preview  # Preview the production build locally
+npm run lint     # Run Oxlint
+```
+
+## Using the logger
+
+1. Open **Game setup** to edit the team names, game location, quarter, and rosters.
+2. Tap a player card to make that player active.
+3. Tap a stat button to record an action. Points update the scoreboard automatically.
+4. Use **Undo last action** to reverse the most recent stat entry.
+5. Select **Finalize game** to review the box-score payload and send it to the backend.
+
+The game clock currently displays a placeholder (`10:00`); it is not a running timer.
+
+## Backend integration
+
+Finalizing a game sends a JSON `POST` request to:
+
+```text
+http://localhost:5000/api/games/finalize
+```
+
+The frontend displays the request status and reports failed requests. To connect a backend running on a different origin, configure it to allow cross-origin requests from the Vite development server.
+
+Example payload:
+
+```json
+{
+  "gameId": "game-101",
+  "location": "Marietta Rec League",
+  "teamA": {
+    "name": "Red Team",
+    "score": 2
+  },
+  "teamB": {
+    "name": "Blue Team",
+    "score": 0
+  },
+  "players": [
+    {
+      "id": "p1",
+      "team": "Team A",
+      "jersey": "3",
+      "name": "Marcus",
+      "pts": 2,
+      "reb": 0,
+      "ast": 0,
+      "stl": 0,
+      "blk": 0,
+      "to": 0
+    }
+  ]
+}
+```
+
+The example above shows the shape of the payload; actual player totals and team scores are generated from the game being logged.
