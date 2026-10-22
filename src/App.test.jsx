@@ -16,7 +16,12 @@ beforeEach(() => {
     ok: true,
     status: 200,
     statusText: 'OK',
-    text: async () => JSON.stringify({ graphics: [{ publicUrl: '/flyer.png' }] }),
+    text: async () => JSON.stringify({
+      graphics: [{
+        publicUrl: 'https://cdn.scorekings.example/flyer.png',
+        downloadUrl: 'https://api.scorekings.example/games/game-101/flyer/download',
+      }],
+    }),
   })))
 })
 
@@ -120,5 +125,8 @@ describe('flyer image uploads', () => {
       players: expectedPlayers,
     })
     expect(await screen.findByAltText('Generated flyer 1')).toBeTruthy()
+    expect(screen.getAllByRole('img', { name: 'QR code to download the flyer' })).toHaveLength(1)
+    expect(screen.getByRole('link', { name: 'Or open the download link' }).getAttribute('href'))
+      .toBe('https://api.scorekings.example/games/game-101/flyer/download')
   })
 })

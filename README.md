@@ -14,7 +14,7 @@ A tablet-friendly basketball stat logger for tracking a game from the sideline. 
 - Editable rosters with jersey numbers and player names.
 - Player stat tracking for points, rebounds, assists, steals, blocks, and turnovers.
 - Undo for the most recently recorded stat action.
-- Game finalization modal with the box-score JSON payload and generated flyers.
+- Game finalization modal with the box-score JSON payload, generated flyer, and QR-code download link.
 - Team-logo and player-photo uploads for tailored flyers.
 - Backend integration using `POST /api/games/finalize`.
 - Responsive, high-contrast layout designed for tablet and touch use.
@@ -107,4 +107,4 @@ Example payload:
 }
 ```
 
-The example above shows the shape of the payload; actual player totals and team scores are generated from the game being logged. Photos and logos are converted to data URLs in memory and are not saved in browser storage. A flyer is generated for up to three players with at least one point, ranked by points, rebounds, then assists. Each selected player needs a photo and their team needs a logo; the frontend prevents finalization when an asset is missing or the JSON request would reach the backend's 14 MB limit. Returned `graphics[].publicUrl` values are shown as generated flyers.
+The example above shows the shape of the payload; actual player totals and team scores are generated from the game being logged. Photos and logos are converted to data URLs in memory and are not saved in browser storage. A flyer is generated for up to three players with at least one point, ranked by points, rebounds, then assists. Each selected player needs a photo and their team needs a logo; the frontend prevents finalization when an asset is missing or the JSON request would reach the backend's 14 MB limit. Returned `graphics[].publicUrl` values are shown as generated flyers. The final-score modal displays one QR code for the first flyer, preferring its `downloadUrl` and falling back to `publicUrl` for older backend responses.
