@@ -1,5 +1,7 @@
 # ScoreKings Courtside Logger
 
+> 📄 **Technical Architecture Brief:** [View SaaS Technical Brief & System Architecture](https://quintonmills.github.io/ScoreKings-SaaS-Brief/)
+
 A tablet-friendly basketball stat logger for tracking a game from the sideline. ScoreKings lets you manage team rosters, record player stats with touch-friendly controls, and export a final box score as JSON.
 
 ## Dashboard
