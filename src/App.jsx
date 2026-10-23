@@ -180,13 +180,17 @@ function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requi
               />
               <button className="remove-player" type="button" onClick={() => onRemove(player.id)} aria-label={`Remove ${player.name || 'player'}`}>×</button>
             </div>
-            <ImageUpload
-              id={`player-${player.id}-photo`}
-              label={`${player.name || 'Unnamed player'} photo`}
-              image={playerImages[player.id]}
-              onImageChange={(image) => onPlayerImageChange(player.id, image)}
-              requiredMessage={requiredPlayerMessages[player.id]}
-            />
+            <p className="image-upload-guidance">Add three reference photos; only the top scorer's photos are sent for flyer generation.</p>
+            {[0, 1, 2].map((index) => (
+              <ImageUpload
+                key={`${player.id}-photo-${index + 1}`}
+                id={`player-${player.id}-photo-${index + 1}`}
+                label={`${player.name || 'Unnamed player'} reference photo ${index + 1}`}
+                image={playerImages[player.id]?.[index]}
+                onImageChange={(image) => onPlayerImageChange(player.id, image, index)}
+                requiredMessage={requiredPlayerMessages[player.id]?.[index]}
+              />
+            ))}
           </div>
         ))}
       </div>
@@ -253,7 +257,7 @@ function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGa
             requiredLogoMessage={requiredAssets.teams.teamA}
             playerImages={assets.players}
             requiredPlayerMessages={requiredAssets.players}
-            onPlayerImageChange={(playerId, image) => onAssetChange(playerId, image)}
+            onPlayerImageChange={(playerId, image, index) => onAssetChange(playerId, image, index)}
             onChange={updatePlayer}
             onAdd={onAddPlayer}
             onRemove={onRemovePlayer}
@@ -268,7 +272,7 @@ function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGa
             requiredLogoMessage={requiredAssets.teams.teamB}
             playerImages={assets.players}
             requiredPlayerMessages={requiredAssets.players}
-            onPlayerImageChange={(playerId, image) => onAssetChange(playerId, image)}
+            onPlayerImageChange={(playerId, image, index) => onAssetChange(playerId, image, index)}
             onChange={updatePlayer}
             onAdd={onAddPlayer}
             onRemove={onRemovePlayer}
@@ -381,11 +385,18 @@ function App() {
   const flyerPlayers = useMemo(() => getFlyerPlayers(players), [players])
   const requiredAssets = { teams: {}, players: {} }
   for (const player of flyerPlayers) {
-    if (!assets.players[player.id]) requiredAssets.players[player.id] = `${player.name || 'Unnamed player'} needs a photo for their flyer.`
+    requiredAssets.players[player.id] = [0, 1, 2].map((photoIndex) =>
+      assets.players[player.id]?.[photoIndex]
+        ? ''
+        : `${player.name || 'Unnamed player'} needs reference photo ${photoIndex + 1} for the flyer.`,
+    )
     const teamKey = player.team === 'Team A' ? 'teamA' : 'teamB'
     if (!assets.teams[teamKey]) requiredAssets.teams[teamKey] = `${player.team === 'Team A' ? game.teamA : game.teamB} needs a logo for its flyer.`
   }
-  const missingAssetMessages = [...Object.values(requiredAssets.players), ...new Set(Object.values(requiredAssets.teams))]
+  const missingAssetMessages = [
+    ...Object.values(requiredAssets.players).flat().filter(Boolean),
+    ...new Set(Object.values(requiredAssets.teams)),
+  ]
 
   const recordAction = (action) => {
     if (!activePlayer) return
@@ -440,14 +451,15 @@ function App() {
     if (activePlayerId === playerId) setActivePlayerId(null)
   }
 
-  const updateAsset = (key, image) => {
+  const updateAsset = (key, image, photoIndex) => {
     setAssets((currentAssets) => {
       if (key === 'teamA' || key === 'teamB') {
         return { ...currentAssets, teams: { ...currentAssets.teams, [key]: image } }
       }
       const playersWithImage = { ...currentAssets.players }
-      if (image) playersWithImage[key] = image
-      else delete playersWithImage[key]
+      const playerImages = [...(playersWithImage[key] || [null, null, null])]
+      playerImages[photoIndex] = image
+      playersWithImage[key] = playerImages
       return { ...currentAssets, players: playersWithImage }
     })
   }

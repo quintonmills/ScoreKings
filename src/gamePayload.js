@@ -9,7 +9,7 @@ export function getFlyerPlayers(players) {
       || playerB.reb - playerA.reb
       || playerB.ast - playerA.ast,
     )
-    .slice(0, 3)
+    .slice(0, 1)
 }
 
 export function isFinalizePayloadWithinLimit(payload) {
@@ -17,6 +17,8 @@ export function isFinalizePayloadWithinLimit(payload) {
 }
 
 export function createFinalizePayload({ game, players, assets, teamAScore, teamBScore }) {
+  const flyerPlayerId = getFlyerPlayers(players)[0]?.id
+
   return {
     gameId: 'game-101',
     location: game.location,
@@ -41,7 +43,9 @@ export function createFinalizePayload({ game, players, assets, teamAScore, teamB
       stl,
       blk,
       to,
-      ...(assets.players[id] ? { photo: assets.players[id] } : {}),
+      ...(id === flyerPlayerId && assets.players[id]?.some(Boolean)
+        ? { photos: assets.players[id].filter(Boolean) }
+        : {}),
     })),
   }
 }

@@ -34,24 +34,24 @@ describe('flyer image uploads', () => {
   it('previews a selected image and removes it', async () => {
     await openSetup()
     const user = userEvent.setup()
-    const input = screen.getByLabelText('Marcus photo upload')
+    const input = screen.getByLabelText('Marcus reference photo 1 upload')
     await user.upload(input, uploadedImage())
 
-    const preview = await screen.findByAltText('Marcus photo preview')
+    const preview = await screen.findByAltText('Marcus reference photo 1 preview')
     expect(preview.getAttribute('src')).toMatch(/^data:image\/png;base64,/)
     expect(screen.getAllByText('PNG, JPEG, or WebP · up to 5 MB').length).toBeGreaterThan(0)
 
     await user.click(screen.getByRole('button', { name: 'Replace' }))
     await user.upload(input, uploadedImage('replacement.webp', 'image/webp', 'replacement'))
-    expect((await screen.findByAltText('Marcus photo preview')).getAttribute('src')).toBe('data:image/webp;base64,cmVwbGFjZW1lbnQ=')
+    expect((await screen.findByAltText('Marcus reference photo 1 preview')).getAttribute('src')).toBe('data:image/webp;base64,cmVwbGFjZW1lbnQ=')
 
     await user.click(screen.getByRole('button', { name: 'Remove' }))
-    expect(screen.queryByAltText('Marcus photo preview')).toBeNull()
+    expect(screen.queryByAltText('Marcus reference photo 1 preview')).toBeNull()
   })
 
   it('shows inline validation for unsupported types and files over 5 MB', async () => {
     await openSetup()
-    const input = screen.getByLabelText('Marcus photo upload')
+    const input = screen.getByLabelText('Marcus reference photo 1 upload')
     fireEvent.change(input, { target: { files: [uploadedImage('portrait.gif', 'image/gif')] } })
     expect(await screen.findByText('Choose a PNG, JPEG, or WebP image.')).toBeTruthy()
 
@@ -68,7 +68,7 @@ describe('flyer image uploads', () => {
     await user.click(screen.getByRole('button', { name: /\+2/ }))
     await user.click(screen.getByRole('button', { name: /Finalize game/ }))
 
-    expect(await screen.findByText('Marcus needs a photo for their flyer.')).toBeTruthy()
+    expect(await screen.findByText('Marcus needs reference photo 1 for the flyer.')).toBeTruthy()
     expect(screen.getByText('Red Team needs a logo for its flyer.')).toBeTruthy()
     expect(fetch).not.toHaveBeenCalled()
   })
@@ -80,7 +80,12 @@ describe('flyer image uploads', () => {
 
     await user.upload(screen.getByLabelText('Team A logo upload'), uploadedImage('home.png', 'image/png', 'home'))
     await user.upload(screen.getByLabelText('Team B logo upload'), uploadedImage('away.webp', 'image/webp', 'away'))
-    await user.upload(screen.getByLabelText('Marcus photo upload'), uploadedImage('marcus.jpg', 'image/jpeg', 'marcus'))
+    for (let index = 1; index <= 3; index += 1) {
+      await user.upload(
+        screen.getByLabelText(`Marcus reference photo ${index} upload`),
+        uploadedImage(`marcus-${index}.jpg`, 'image/jpeg', `marcus-${index}`),
+      )
+    }
     await user.click(screen.getByRole('button', { name: /Back to game/ }))
     await user.click(screen.getByRole('button', { name: /Marcus/ }))
     await user.click(screen.getByRole('button', { name: /\+2/ }))
@@ -114,7 +119,15 @@ describe('flyer image uploads', () => {
       stl: 0,
       blk: 0,
       to: 0,
-      ...(id === 'p1' ? { photo: 'data:image/jpeg;base64,bWFyY3Vz' } : {}),
+      ...(id === 'p1'
+        ? {
+            photos: [
+              'data:image/jpeg;base64,bWFyY3VzLTE=',
+              'data:image/jpeg;base64,bWFyY3VzLTI=',
+              'data:image/jpeg;base64,bWFyY3VzLTM=',
+            ],
+          }
+        : {}),
     }))
 
     expect(JSON.parse(options.body)).toEqual({
