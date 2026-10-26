@@ -594,7 +594,17 @@ function App() {
           <span className="score-number">{teamAScore}</span>
         </div>
         <div className="score-center">
-          <span className="period-pill">{game.period}</span>
+          <label className="period-selector-label">
+            <span className="visually-hidden">Current game period</span>
+            <select
+              className="period-selector"
+              value={game.period}
+              onChange={(event) => setGame((currentGame) => ({ ...currentGame, period: event.target.value }))}
+              aria-label="Current game period"
+            >
+              {['Q1', 'Q2', 'Q3', 'Q4', 'OT1', 'OT2'].map((period) => <option key={period}>{period}</option>)}
+            </select>
+          </label>
           <span className="score-separator">:</span>
           <div className="game-clock">
             <span className={`clock-dot ${isClockRunning ? 'is-running' : ''}`} />

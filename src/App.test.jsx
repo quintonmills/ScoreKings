@@ -107,6 +107,20 @@ describe('flyer image uploads', () => {
     expect(screen.getByRole('button', { name: 'Start game clock' }).textContent).toBe('Resume')
   })
 
+  it('lets the user change periods and records the selected period on events', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Current game period' }), 'Q3')
+    await user.click(screen.getByRole('button', { name: /Marcus/ }))
+    await user.click(screen.getByRole('button', { name: /REBREBOUND/ }))
+    await user.click(screen.getByRole('button', { name: /Finalize game/ }))
+    await screen.findByRole('dialog', { name: 'Final box score' })
+
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)
+    expect(payload.events[0].period).toBe('Q3')
+  })
+
   it('sends the exact JSON payload with selected images and displays returned flyers', async () => {
     const user = userEvent.setup()
     render(<App />)
