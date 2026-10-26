@@ -217,6 +217,12 @@ button {
 .clock-dot {
   width: 5px;
   height: 5px;
+  border-radius: 50%;
+  background: #777b7d;
+}
+
+.clock-dot.is-running {
+  background: var(--lime);
 }
 
 .clock-caption {
@@ -225,6 +231,23 @@ button {
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 1.2px;
+}
+
+.clock-control {
+  margin-top: 7px;
+  padding: 3px 10px;
+  border: 1px solid #494c4d;
+  border-radius: 5px;
+  color: #d8dad5;
+  background: #25282a;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clock-control:hover {
+  border-color: var(--lime);
+  color: var(--lime);
 }
 
 .scoreboard-location {

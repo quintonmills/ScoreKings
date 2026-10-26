@@ -16,12 +16,16 @@ export function isFinalizePayloadWithinLimit(payload) {
   return new TextEncoder().encode(JSON.stringify(payload)).byteLength < MAX_GAME_PAYLOAD_BYTES
 }
 
-export function createFinalizePayload({ game, players, assets, teamAScore, teamBScore }) {
+export function createFinalizePayload({ game, players, assets, teamAScore, teamBScore, events, startedAt, completedAt }) {
   const flyerPlayerId = getFlyerPlayers(players)[0]?.id
 
   return {
     gameId: 'game-101',
+    status: 'COMPLETED',
+    startedAt,
+    completedAt,
     location: game.location,
+    events,
     teamA: {
       name: game.teamA,
       score: teamAScore,

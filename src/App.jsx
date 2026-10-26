@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { createFinalizePayload, getFlyerPlayers, isFinalizePayloadWithinLimit, MAX_IMAGE_SIZE_BYTES } from './gamePayload.js'
 import './App.css'
@@ -35,6 +35,12 @@ function getScore(players, team) {
   return players
     .filter((player) => player.team === team)
     .reduce((total, player) => total + player.pts, 0)
+}
+
+function formatGameClock(seconds) {
+  const minutes = Math.floor(seconds / 60).toString().padStart(2, '0')
+  const remainingSeconds = (seconds % 60).toString().padStart(2, '0')
+  return `${minutes}:${remainingSeconds}`
 }
 
 function PlayerCard({ player, active, onSelect }) {
@@ -369,6 +375,10 @@ function App() {
   const [players, setPlayers] = useState(initialPlayers)
   const [assets, setAssets] = useState({ teams: { teamA: null, teamB: null }, players: {} })
   const [activePlayerId, setActivePlayerId] = useState(null)
+  const [events, setEvents] = useState([])
+  const [startedAt] = useState(() => new Date().toISOString())
+  const [clockSeconds, setClockSeconds] = useState(0)
+  const [isClockRunning, setIsClockRunning] = useState(false)
   const [history, setHistory] = useState([])
   const [showSetup, setShowSetup] = useState(false)
   const [payload, setPayload] = useState(null)
@@ -376,6 +386,14 @@ function App() {
   const [requestMessage, setRequestMessage] = useState('')
   const [generatedFlyers, setGeneratedFlyers] = useState([])
   const [showAssetValidation, setShowAssetValidation] = useState(false)
+
+  useEffect(() => {
+    if (!isClockRunning) return undefined
+    const intervalId = window.setInterval(() => {
+      setClockSeconds((seconds) => seconds + 1)
+    }, 1000)
+    return () => window.clearInterval(intervalId)
+  }, [isClockRunning])
 
   const teamAPlayers = useMemo(() => players.filter((player) => player.team === 'Team A'), [players])
   const teamBPlayers = useMemo(() => players.filter((player) => player.team === 'Team B'), [players])
@@ -400,11 +418,25 @@ function App() {
 
   const recordAction = (action) => {
     if (!activePlayer) return
+    const timestamp = new Date().toISOString()
+    const points = action.stat === 'pts' ? action.amount : 0
+    const resultingScore = {
+      teamA: teamAScore + (activePlayer.team === 'Team A' ? points : 0),
+      teamB: teamBScore + (activePlayer.team === 'Team B' ? points : 0),
+    }
     setPlayers((currentPlayers) => currentPlayers.map((player) =>
       player.id === activePlayerId
         ? { ...player, [action.stat]: player[action.stat] + action.amount }
         : player,
     ))
+    setEvents((currentEvents) => [...currentEvents, {
+      period: game.period,
+      playerId: activePlayer.id,
+      action: action.stat === 'pts' ? `PTS_${action.amount}` : action.stat.toUpperCase(),
+      timestamp,
+      gameClockSeconds: clockSeconds,
+      resultingScore,
+    }])
     setHistory((currentHistory) => [...currentHistory, {
       playerId: activePlayerId,
       stat: action.stat,
@@ -421,6 +453,7 @@ function App() {
         : player,
     ))
     setHistory((currentHistory) => currentHistory.slice(0, -1))
+    setEvents((currentEvents) => currentEvents.slice(0, -1))
   }
 
   const addPlayer = (team) => {
@@ -519,6 +552,9 @@ function App() {
       assets,
       teamAScore,
       teamBScore,
+      events,
+      startedAt,
+      completedAt: new Date().toISOString(),
     })
     if (!isFinalizePayloadWithinLimit(nextPayload)) {
       setRequestState('error')
@@ -560,8 +596,19 @@ function App() {
         <div className="score-center">
           <span className="period-pill">{game.period}</span>
           <span className="score-separator">:</span>
-          <div className="game-clock"><span className="clock-dot" /> 10:00</div>
+          <div className="game-clock">
+            <span className={`clock-dot ${isClockRunning ? 'is-running' : ''}`} />
+            {formatGameClock(clockSeconds)}
+          </div>
           <span className="clock-caption">GAME CLOCK</span>
+          <button
+            className="clock-control"
+            type="button"
+            onClick={() => setIsClockRunning((running) => !running)}
+            aria-label={isClockRunning ? 'Pause game clock' : 'Start game clock'}
+          >
+            {isClockRunning ? 'Pause' : clockSeconds > 0 ? 'Resume' : 'Start'}
+          </button>
         </div>
         <div className="score-team score-team-b">
           <span className="team-label">AWAY</span>

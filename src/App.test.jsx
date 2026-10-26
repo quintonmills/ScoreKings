@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App.jsx'
 
@@ -28,6 +28,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 describe('flyer image uploads', () => {
@@ -71,6 +72,39 @@ describe('flyer image uploads', () => {
     expect(await screen.findByText('Marcus needs reference photo 1 for the flyer.')).toBeTruthy()
     expect(screen.getByText('Red Team needs a logo for its flyer.')).toBeTruthy()
     expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('removes the last play-by-play event when undoing a stat action', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Marcus/ }))
+    await user.click(screen.getByRole('button', { name: /REBREBOUND/ }))
+    await user.click(screen.getByRole('button', { name: /Undo last action/ }))
+    await user.click(screen.getByRole('button', { name: /Finalize game/ }))
+    await screen.findByRole('dialog', { name: 'Final box score' })
+
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)
+    expect(payload.events).toEqual([])
+    expect(payload.players[0].reb).toBe(0)
+  })
+
+  it('starts and pauses the count-up game clock', async () => {
+    vi.useFakeTimers()
+    render(<App />)
+
+    expect(screen.getByText('00:00')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Start game clock' }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+    expect(screen.getByText('00:03')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause game clock' }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+    expect(screen.getByText('00:03')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Start game clock' }).textContent).toBe('Resume')
   })
 
   it('sends the exact JSON payload with selected images and displays returned flyers', async () => {
@@ -132,7 +166,18 @@ describe('flyer image uploads', () => {
 
     expect(JSON.parse(options.body)).toEqual({
       gameId: 'game-101',
+      status: 'COMPLETED',
+      startedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
+      completedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
       location: 'Marietta Rec League',
+      events: [{
+        period: 'Q1',
+        playerId: 'p1',
+        action: 'PTS_2',
+        timestamp: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
+        gameClockSeconds: 0,
+        resultingScore: { teamA: 2, teamB: 0 },
+      }],
       teamA: { name: 'Red Team', score: 2, logo: 'data:image/png;base64,aG9tZQ==' },
       teamB: { name: 'Blue Team', score: 0, logo: 'data:image/webp;base64,YXdheQ==' },
       players: expectedPlayers,

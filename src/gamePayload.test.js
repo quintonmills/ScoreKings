@@ -37,11 +37,30 @@ describe('createFinalizePayload', () => {
       },
       teamAScore: 2,
       teamBScore: 0,
+      events: [{
+        period: 'Q1',
+        playerId: 'p1',
+        action: 'PTS_2',
+        timestamp: '2026-01-02T03:04:05.000Z',
+        resultingScore: { teamA: 2, teamB: 0 },
+      }],
+      startedAt: '2026-01-02T03:00:00.000Z',
+      completedAt: '2026-01-02T04:00:00.000Z',
     })
 
     expect(payload).toEqual({
       gameId: 'game-101',
+      status: 'COMPLETED',
+      startedAt: '2026-01-02T03:00:00.000Z',
+      completedAt: '2026-01-02T04:00:00.000Z',
       location: 'Gym',
+      events: [{
+        period: 'Q1',
+        playerId: 'p1',
+        action: 'PTS_2',
+        timestamp: '2026-01-02T03:04:05.000Z',
+        resultingScore: { teamA: 2, teamB: 0 },
+      }],
       teamA: { name: 'Home', score: 2, logo: 'data:image/png;base64,logo-a' },
       teamB: { name: 'Away', score: 0, logo: 'data:image/webp;base64,logo-b' },
       players: [{
@@ -78,6 +97,9 @@ describe('createFinalizePayload', () => {
       },
       teamAScore: 10,
       teamBScore: 8,
+      events: [],
+      startedAt: '2026-01-02T03:00:00.000Z',
+      completedAt: '2026-01-02T04:00:00.000Z',
     })
 
     expect(payload.players[0].photos).toEqual(photoSet)
