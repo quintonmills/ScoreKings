@@ -744,30 +744,6 @@ function App() {
       </section>
 
       <div className="main-content">
-        <section className="roster-section" aria-label="Single athlete stats">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">LIVE ATHLETE BOX SCORE</span>
-              <h1>{activePlayer.name || 'Unnamed athlete'}</h1>
-            </div>
-          </div>
-          <div className="athlete-stat-grid" aria-label={`${activePlayer.name || 'Athlete'} stats`}>
-            {[
-              ['PTS', activePlayer.pts],
-              ['REB', activePlayer.reb],
-              ['AST', activePlayer.ast],
-              ['STL', activePlayer.stl],
-              ['BLK', activePlayer.blk],
-              ['TO', activePlayer.to],
-            ].map(([label, value]) => (
-              <div className="athlete-stat" key={label}>
-                <strong>{value}</strong>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section className="action-dock" aria-label="Stat actions">
           <div className="active-player-panel">
             <span className="active-avatar">{activePlayer ? `#${activePlayer.jersey || '—'}` : '—'}</span>
@@ -775,7 +751,21 @@ function App() {
               <strong>{activePlayer.name || 'Unnamed athlete'}</strong>
               <span>{activePlayer.team === 'Team A' ? game.teamA : game.teamB}</span>
             </div>
-            {activePlayer && <div className="active-points"><strong>{activePlayer.pts}</strong><span>PTS</span></div>}
+            <div className="active-stats" aria-label={`${activePlayer.name || 'Athlete'} stats`}>
+              {[
+                ['PTS', activePlayer.pts],
+                ['REB', activePlayer.reb],
+                ['AST', activePlayer.ast],
+                ['STL', activePlayer.stl],
+                ['BLK', activePlayer.blk],
+                ['TO', activePlayer.to],
+              ].map(([label, value]) => (
+                <span className="active-stat" key={label}>
+                  <strong>{value}</strong>
+                  <span>{label}</span>
+                </span>
+              ))}
+            </div>
           </div>
           <div className="action-buttons">
             {actions.map((action) => (

@@ -291,10 +291,17 @@ describe('game state', () => {
   })
 
   it('keeps the live board focused on one athlete and exposes no roster switching', async () => {
-    render(<App />)
-    expect(screen.getByRole('heading', { name: 'Marcus' })).toBeTruthy()
+    const { container } = render(<App />)
+    expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
+    expect(container.querySelector('.roster-section')).toBeNull()
+    expect(container.querySelectorAll('.active-stat')).toHaveLength(6)
     expect(screen.queryByRole('button', { name: /Jordan|DeAndre|Darius/ })).toBeNull()
     expect(screen.getByRole('button', { name: /\+2/ }).hasAttribute('disabled')).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: /\+2/ }))
+    fireEvent.click(screen.getByRole('button', { name: /REBREBOUND/ }))
+    expect([...container.querySelectorAll('.active-stat strong')].map((stat) => stat.textContent))
+      .toEqual(['2', '1', '0', '0', '0', '0'])
   })
 
   it('restores game details, active player, stats, and events after remount', async () => {
@@ -313,8 +320,8 @@ describe('game state', () => {
     const { container } = render(<App />)
     expect(container.querySelector('.active-player-copy > span:last-child').textContent).toBe('Falcons')
     expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
-    expect(screen.getByRole('heading', { name: 'Marcus' })).toBeTruthy()
-    expect(container.querySelector('.athlete-stat-grid').textContent).toContain('2')
+    expect(container.querySelector('.active-stats').textContent).toContain('2PTS')
+    expect(container.querySelector('.roster-section')).toBeNull()
   })
 
   it('clears saved data and resets the board only when Reset Board is clicked', async () => {
@@ -327,6 +334,6 @@ describe('game state', () => {
 
     expect(window.localStorage.getItem('scorekings-game-state-v1')).toBeNull()
     expect(container.querySelector('.active-player-copy > span:last-child').textContent).toBe('Red Team')
-    expect(screen.getByRole('heading', { name: 'Marcus' })).toBeTruthy()
+    expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
   })
 })
