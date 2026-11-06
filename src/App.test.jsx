@@ -133,7 +133,6 @@ describe('flyer image uploads', () => {
     await user.click(screen.getByRole('button', { name: /Game setup/ }))
 
     await user.upload(screen.getByLabelText('Red Team logo upload'), uploadedImage('home.png', 'image/png', 'home'))
-    await user.upload(screen.getByLabelText('Blue Team logo upload'), uploadedImage('away.webp', 'image/webp', 'away'))
     for (let index = 1; index <= 3; index += 1) {
       await user.upload(
         screen.getByLabelText(`Marcus reference photo ${index} upload`),
@@ -183,7 +182,7 @@ describe('flyer image uploads', () => {
         resultingScore: { teamA: 2, teamB: 0 },
       }],
       teamA: { name: 'Red Team', score: 2, logo: 'data:image/png;base64,aG9tZQ==' },
-      teamB: { name: 'Blue Team', score: 0, logo: 'data:image/webp;base64,YXdheQ==' },
+      teamB: { name: 'Blue Team', score: 0 },
       players: expectedPlayers,
     })
     expect(await screen.findByAltText('Generated flyer 1')).toBeTruthy()
@@ -199,17 +198,24 @@ describe('game state', () => {
     render(<App />)
     await user.click(screen.getByRole('button', { name: /Game setup/ }))
 
-    const teamNameInputs = screen.getAllByRole('textbox', { name: 'Team name' })
-    await user.clear(teamNameInputs[0])
-    await user.type(teamNameInputs[0], 'Falcons')
-    await user.clear(teamNameInputs[1])
-    await user.type(teamNameInputs[1], 'Wolves')
+    const teamNameInput = screen.getByRole('textbox', { name: 'Team name' })
+    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
+    await user.clear(teamNameInput)
+    await user.type(teamNameInput, 'Falcons')
 
     expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
-    expect(screen.getByText('Wolves')).toBeTruthy()
     expect(screen.getByText(/#3 · Falcons/)).toBeTruthy()
     expect(screen.getByLabelText('Falcons logo upload')).toBeTruthy()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Team' }), 'Team B')
+    const teamBNameInput = screen.getByRole('textbox', { name: 'Team name' })
+    expect(teamBNameInput.value).toBe('Blue Team')
+    await user.clear(teamBNameInput)
+    await user.type(teamBNameInput, 'Wolves')
+
+    expect(screen.getByText(/#3 · Wolves/)).toBeTruthy()
     expect(screen.getByLabelText('Wolves logo upload')).toBeTruthy()
+    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
   })
 
   it('keeps the live board focused on one athlete and exposes no roster switching', async () => {
@@ -224,7 +230,7 @@ describe('game state', () => {
     const firstRender = render(<App />)
     await user.click(screen.getByRole('button', { name: /\+2/ }))
     await user.click(screen.getByRole('button', { name: /Game setup/ }))
-    const teamAName = screen.getAllByRole('textbox', { name: 'Team name' })[0]
+    const teamAName = screen.getByRole('textbox', { name: 'Team name' })
     await user.clear(teamAName)
     await user.type(teamAName, 'Falcons')
     await user.click(screen.getByRole('button', { name: /Back to game/ }))

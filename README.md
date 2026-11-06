@@ -59,7 +59,7 @@ npm run lint     # Run Oxlint
 1. Open **Game setup** to edit the athlete details, team names, game location, and quarter.
 2. Tap a stat button to record an action for the athlete shown on the board. The board and submission track one athlete only.
 3. Use **Undo last action** to reverse the most recent stat entry.
-4. In **Game setup**, add team logos and three reference photos for the target athlete. PNG, JPEG, and WebP images up to 5 MB each are accepted.
+4. In **Game setup**, add the athlete's team logo and three reference photos for the target athlete. PNG, JPEG, and WebP images up to 5 MB each are accepted.
 6. Select **Finalize game** to send the box-score payload and required flyer assets to the backend.
 
 The game clock currently displays a placeholder (`10:00`); it is not a running timer.

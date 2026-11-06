@@ -252,6 +252,8 @@ function getFlyerDownloadUrl(graphic) {
 }
 
 function SetupModal({ game, player, assets, requiredAssets, onAssetChange, onGameChange, onPlayerChange, onClose }) {
+  const teamKey = player.team === 'Team A' ? 'teamA' : 'teamB'
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal setup-modal" role="dialog" aria-modal="true" aria-labelledby="setup-title">
@@ -283,22 +285,14 @@ function SetupModal({ game, player, assets, requiredAssets, onAssetChange, onGam
         />
         <div className="team-editors">
           <TeamEditor
-            team="Team A"
-            teamKey="teamA"
-            title={game.teamA}
-            logo={assets.teams.teamA}
-            onLogoChange={(image) => onAssetChange('teamA', image)}
-            requiredLogoMessage={requiredAssets.teams.teamA}
-            onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, teamA: value }))}
-          />
-          <TeamEditor
-            team="Team B"
-            teamKey="teamB"
-            title={game.teamB}
-            logo={assets.teams.teamB}
-            onLogoChange={(image) => onAssetChange('teamB', image)}
-            requiredLogoMessage={requiredAssets.teams.teamB}
-            onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, teamB: value }))}
+            key={teamKey}
+            team={player.team}
+            teamKey={teamKey}
+            title={game[teamKey]}
+            logo={assets.teams[teamKey]}
+            onLogoChange={(image) => onAssetChange(teamKey, image)}
+            requiredLogoMessage={requiredAssets.teams[teamKey]}
+            onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, [teamKey]: value }))}
           />
         </div>
         <div className="modal-footer">
