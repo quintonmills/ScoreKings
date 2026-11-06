@@ -1415,9 +1415,22 @@ button {
   }
 
   .scoreboard {
-    min-height: 170px;
-    padding: 18px 7% 30px;
-    grid-template-columns: 1fr 90px 1fr;
+    min-height: 0;
+    padding: 18px 20px;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 12px;
+  }
+
+  .score-center {
+    min-height: 0;
+  }
+
+  .scoreboard-location {
+    position: static;
+    transform: none;
+    text-align: center;
+    font-size: 12px;
   }
 
   .score-team-name {
@@ -1477,8 +1490,8 @@ button {
   }
 
   .setup-button {
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
     justify-content: center;
     padding: 0;
     overflow: hidden;
@@ -1490,9 +1503,7 @@ button {
   }
 
   .scoreboard {
-    min-height: 156px;
-    padding: 14px 16px 28px;
-    grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr);
+    padding: 16px 14px;
   }
 
   .score-team-name {
@@ -1505,12 +1516,29 @@ button {
   }
 
   .score-center {
-    min-height: 90px;
+    min-height: 0;
   }
 
   .period-selector {
-    padding: 3px 18px 3px 7px;
+    min-height: 40px;
+    padding: 6px 24px 6px 10px;
+    font-size: 11px;
+  }
+
+  .game-clock {
+    margin-top: 9px;
+    font-size: 20px;
+  }
+
+  .clock-caption {
     font-size: 9px;
+  }
+
+  .clock-control {
+    min-height: 40px;
+    margin-top: 9px;
+    padding: 7px 17px;
+    font-size: 12px;
   }
 
   .main-content {
@@ -1531,6 +1559,11 @@ button {
 
   .athlete-stat-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .athlete-stat {
+    min-height: 76px;
   }
 
   .roster-columns {
@@ -1568,12 +1601,17 @@ button {
   }
 
   .action-dock {
-    padding: 11px;
-    margin-top: 20px;
+    padding: 14px;
+    margin-top: 18px;
+  }
+
+  .action-buttons {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .action-button {
-    min-height: 54px;
+    min-height: 64px;
   }
 
   .action-button strong {
@@ -1581,19 +1619,35 @@ button {
   }
 
   .action-button span {
-    font-size: 6px;
+    font-size: 8px;
   }
 
   .dock-footer {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 15px;
+  }
+
+  .undo-button {
+    min-height: 44px;
+    justify-content: flex-start;
+    font-size: 11px;
+  }
+
+  .reset-button {
+    min-height: 44px;
+    height: auto;
+  }
+
+  .finalize-button {
+    min-height: 46px;
+    grid-column: 1 / -1;
+    margin-left: 0;
   }
 
   .dock-hint {
     display: none;
-  }
-
-  .finalize-button {
-    margin-left: auto;
   }
 
   .app-footer {
@@ -1636,6 +1690,13 @@ button {
   .modal-footer > span {
     max-width: 55%;
     line-height: 1.4;
+  }
+}
+
+@media (max-width: 360px) {
+  .action-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 }
 
