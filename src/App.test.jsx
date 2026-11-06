@@ -15,7 +15,7 @@ const localStorageMock = {
 
 function openSetup() {
   render(<App />)
-  return userEvent.setup().click(screen.getByRole('button', { name: /Game setup/ }))
+  return userEvent.setup().click(screen.getByRole('button', { name: 'Game settings' }))
 }
 
 beforeEach(() => {
@@ -121,7 +121,7 @@ describe('flyer image uploads', () => {
   it('applies an optional countdown and can return to count-up mode', async () => {
     vi.useFakeTimers()
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Game settings' }))
 
     fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }), {
@@ -143,7 +143,7 @@ describe('flyer image uploads', () => {
     expect(screen.getByText('00:00')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Start game clock' }).textContent).toBe('Start')
 
-    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Game settings' }))
     fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
     fireEvent.click(screen.getByRole('button', { name: 'Apply clock settings' }))
     fireEvent.click(screen.getByRole('button', { name: /Back to game/ }))
@@ -156,7 +156,7 @@ describe('flyer image uploads', () => {
 
   it('rejects invalid custom countdown durations without changing the clock', () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Game settings' }))
     fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }), {
       target: { value: '00:00' },
@@ -170,7 +170,7 @@ describe('flyer image uploads', () => {
 
   it('persists custom countdown settings across a page reload', () => {
     const firstRender = render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Game settings' }))
     fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }), {
       target: { value: '01:15' },
@@ -186,7 +186,7 @@ describe('flyer image uploads', () => {
     firstRender.unmount()
     render(<App />)
     expect(screen.getByText('01:15')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Game settings' }))
     expect(screen.getByRole('switch', { name: 'Enable custom countdown' }).checked).toBe(true)
     expect(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }).value).toBe('01:15')
   })
@@ -196,7 +196,7 @@ describe('flyer image uploads', () => {
     render(<App />)
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Current game period' }), 'Q3')
-    await user.click(screen.getByRole('button', { name: /Game setup/ }))
+    await user.click(screen.getByRole('button', { name: 'Game settings' }))
     expect(screen.queryByLabelText('Quarter / period')).toBeNull()
     await user.click(screen.getByRole('button', { name: /Back to game/ }))
     await user.click(screen.getByRole('button', { name: /REBREBOUND/ }))
@@ -210,7 +210,7 @@ describe('flyer image uploads', () => {
   it('sends the exact JSON payload with selected images and displays returned flyers', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /Game setup/ }))
+    await user.click(screen.getByRole('button', { name: 'Game settings' }))
 
     await user.upload(screen.getByLabelText('Red Team logo upload'), uploadedImage('home.png', 'image/png', 'home'))
     for (let index = 1; index <= 3; index += 1) {
@@ -273,10 +273,21 @@ describe('flyer image uploads', () => {
 })
 
 describe('game state', () => {
+  it('uses the top clock strip without branding header or footer banners', () => {
+    const { container } = render(<App />)
+    const scoreboard = container.querySelector('.scoreboard')
+    const mainContent = container.querySelector('.main-content')
+
+    expect(container.querySelector('header')).toBeNull()
+    expect(container.querySelector('footer')).toBeNull()
+    expect(scoreboard.compareDocumentPosition(mainContent) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Game settings' })).toBeTruthy()
+  })
+
   it('updates team titles and logo labels as team names are typed', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /Game setup/ }))
+    await user.click(screen.getByRole('button', { name: 'Game settings' }))
 
     const teamNameInput = screen.getByRole('textbox', { name: 'Team name' })
     expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
@@ -308,7 +319,7 @@ describe('game state', () => {
     const user = userEvent.setup()
     const firstRender = render(<App />)
     await user.click(screen.getByRole('button', { name: /\+2/ }))
-    await user.click(screen.getByRole('button', { name: /Game setup/ }))
+    await user.click(screen.getByRole('button', { name: 'Game settings' }))
     const teamAName = screen.getByRole('textbox', { name: 'Team name' })
     await user.clear(teamAName)
     await user.type(teamAName, 'Falcons')

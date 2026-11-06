@@ -691,20 +691,6 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="#game" aria-label="ScoreKings home">
-          <span className="brand-mark">SK</span>
-          <span>SCORE<span className="brand-light">KINGS</span></span>
-          <span className="brand-divider" />
-          <span className="brand-caption">COURTSIDE</span>
-        </a>
-        <div className="topbar-right">
-          <span className="live-pill"><span /> LIVE GAME</span>
-          <button type="button" className="setup-button" onClick={() => setShowSetup(true)}>
-            <span className="setup-icon">☷</span> Game setup
-          </button>
-        </div>
-      </header>
       {storageMessage && <p className="storage-warning" role="alert">{storageMessage}</p>}
 
       <section className="scoreboard" id="game" aria-label="Live scoreboard">
@@ -720,12 +706,13 @@ function App() {
               {['Q1', 'Q2', 'Q3', 'Q4', 'OT1', 'OT2'].map((period) => <option key={period}>{period}</option>)}
             </select>
           </label>
-          <span className="score-separator">:</span>
-          <div className="game-clock">
-            <span className={`clock-dot ${isClockRunning ? 'is-running' : ''}`} />
-            {formatGameClock(clockSeconds)}
+          <div className="clock-readout">
+            <div className="game-clock" aria-live="off">
+              <span className={`clock-dot ${isClockRunning ? 'is-running' : ''}`} />
+              {formatGameClock(clockSeconds)}
+            </div>
+            <span className="clock-caption">GAME CLOCK</span>
           </div>
-          <span className="clock-caption">GAME CLOCK</span>
           <button
             className="clock-control"
             type="button"
@@ -738,6 +725,15 @@ function App() {
             aria-label={isClockRunning ? 'Pause game clock' : 'Start game clock'}
           >
             {isClockRunning ? 'Pause' : clockSeconds > 0 ? 'Resume' : 'Start'}
+          </button>
+          <button
+            type="button"
+            className="setup-button"
+            onClick={() => setShowSetup(true)}
+            aria-label="Game settings"
+            title="Game settings"
+          >
+            <span className="setup-icon" aria-hidden="true">⚙</span>
           </button>
         </div>
         <div className="scoreboard-location"><span>⌖</span> {game.location}</div>
@@ -803,11 +799,6 @@ function App() {
           )}
         </section>
       </div>
-
-      <footer className="app-footer">
-        <span>ScoreKings <span className="footer-muted">· Courtside Stat Logger</span></span>
-        <span>Changes are recorded live</span>
-      </footer>
 
       {showSetup && (
         <SetupModal
