@@ -217,13 +217,6 @@ function AthleteEditor({ player, playerImages, requiredPlayerMessages, onPlayerC
           Jersey number
           <input value={player.jersey} onChange={(event) => onPlayerChange('jersey', event.target.value)} />
         </label>
-        <label className="field-label">
-          Team
-          <select value={player.team} onChange={(event) => onPlayerChange('team', event.target.value)}>
-            <option value="Team A">Team A</option>
-            <option value="Team B">Team B</option>
-          </select>
-        </label>
       </div>
       {[0, 1, 2].map((index) => (
         <ImageUpload

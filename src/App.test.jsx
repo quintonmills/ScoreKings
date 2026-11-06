@@ -154,7 +154,7 @@ describe('flyer image uploads', () => {
 
     const expectedPlayers = [{
       id: 'p1',
-      team: 'Team A',
+      team: 'Red Team',
       jersey: '3',
       name: 'Marcus',
       pts: 2,
@@ -209,16 +209,8 @@ describe('game state', () => {
     expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
     expect(screen.getByText(/#3 · Falcons/)).toBeTruthy()
     expect(screen.getByLabelText('Falcons logo upload')).toBeTruthy()
-
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Team' }), 'Team B')
-    const teamBNameInput = screen.getByRole('textbox', { name: 'Team name' })
-    expect(teamBNameInput.value).toBe('Blue Team')
-    await user.clear(teamBNameInput)
-    await user.type(teamBNameInput, 'Wolves')
-
-    expect(screen.getByText(/#3 · Wolves/)).toBeTruthy()
-    expect(screen.getByLabelText('Wolves logo upload')).toBeTruthy()
     expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
+    expect(screen.queryByRole('combobox', { name: 'Team' })).toBeNull()
   })
 
   it('keeps the live board focused on one athlete and exposes no roster switching', async () => {

@@ -39,7 +39,7 @@ export function createFinalizePayload({ game, players, assets, teamAScore, teamB
     },
     players: players.slice(0, 1).map(({ id, team, jersey, name, pts, reb, ast, stl, blk, to }) => ({
       id,
-      team,
+      team: team === 'Team A' ? game.teamA : game.teamB,
       jersey,
       name,
       pts,

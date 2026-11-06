@@ -65,7 +65,7 @@ describe('createFinalizePayload', () => {
       teamB: { name: 'Away', score: 0, logo: 'data:image/webp;base64,logo-b' },
       players: [{
         id: 'p1',
-        team: 'Team A',
+        team: 'Home',
         jersey: '3',
         name: 'Marcus',
         pts: 2,
@@ -88,8 +88,8 @@ describe('createFinalizePayload', () => {
     const payload = createFinalizePayload({
       game: { location: 'Gym', teamA: 'Home', teamB: 'Away' },
       players: [
-        { id: 'top', team: 'Team A', jersey: '1', name: 'Top', pts: 10, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-        { id: 'next', team: 'Team B', jersey: '2', name: 'Next', pts: 8, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
+        { id: 'top', team: 'Team B', jersey: '1', name: 'Top', pts: 10, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
+        { id: 'next', team: 'Team A', jersey: '2', name: 'Next', pts: 8, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
       ],
       assets: {
         teams: { teamA: null, teamB: null },
@@ -104,6 +104,7 @@ describe('createFinalizePayload', () => {
 
     expect(payload.players).toHaveLength(1)
     expect(payload.players[0].id).toBe('top')
+    expect(payload.players[0].team).toBe('Away')
     expect(payload.players[0].photos).toEqual(photoSet)
   })
 
