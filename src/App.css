@@ -807,6 +807,10 @@ button {
   margin-bottom: 18px;
 }
 
+.setup-game-fields {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .athlete-fields {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

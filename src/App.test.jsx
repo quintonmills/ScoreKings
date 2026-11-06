@@ -119,6 +119,9 @@ describe('flyer image uploads', () => {
     render(<App />)
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Current game period' }), 'Q3')
+    await user.click(screen.getByRole('button', { name: /Game setup/ }))
+    expect(screen.queryByLabelText('Quarter / period')).toBeNull()
+    await user.click(screen.getByRole('button', { name: /Back to game/ }))
     await user.click(screen.getByRole('button', { name: /REBREBOUND/ }))
     await user.click(screen.getByRole('button', { name: /Finalize game/ }))
     await screen.findByRole('dialog', { name: 'Final box score' })

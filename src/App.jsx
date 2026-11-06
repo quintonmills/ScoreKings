@@ -264,16 +264,10 @@ function SetupModal({ game, player, assets, requiredAssets, onAssetChange, onGam
           </div>
           <button type="button" className="icon-button" onClick={onClose} aria-label="Close setup">×</button>
         </div>
-        <div className="game-fields">
+        <div className="game-fields setup-game-fields">
           <label className="field-label">
             Location
             <input value={game.location} onChange={(event) => onGameChange({ ...game, location: event.target.value })} />
-          </label>
-          <label className="field-label">
-            Quarter / period
-            <select value={game.period} onChange={(event) => onGameChange({ ...game, period: event.target.value })}>
-              {['Q1', 'Q2', 'Q3', 'Q4', 'OT1', 'OT2'].map((period) => <option key={period}>{period}</option>)}
-            </select>
           </label>
         </div>
         <AthleteEditor
