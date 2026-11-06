@@ -6,7 +6,8 @@
 A tablet-friendly basketball stat logger for tracking one athlete per submission. ScoreKings lets you configure the athlete and teams, record individual stats with touch-friendly controls, and export a single-athlete box score as JSON.
 ## Dashboard
 
-<img width="1041" height="717" alt="image" src="https://github.com/user-attachments/assets/7862561c-fcdf-4a94-8e19-8bba7f0d865a" />
+<img width="284" height="512" alt="image" src="https://github.com/user-attachments/assets/2ffb5397-a007-44ac-b579-5a09cb50880b" />
+
 
 
 ## Features
