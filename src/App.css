@@ -6,6 +6,7 @@
   --panel-raised: #24272a;
   --lime: #d7ff43;
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--ink);
   background: #151618;
   display: flex;
@@ -1386,6 +1387,7 @@ button {
   .main-content {
     width: calc(100% - 28px);
     padding: 9px 0 12px;
+    flex: 1;
   }
 
   .roster-columns {
@@ -1424,6 +1426,9 @@ button {
 
   .action-dock {
     order: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     padding: 9px;
     margin-top: 8px;
   }
@@ -1466,20 +1471,22 @@ button {
   }
 
   .active-stat strong {
-    font-size: 13px;
+    font-size: 17px;
   }
 
   .active-stat span {
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .action-buttons {
+    flex: 1;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(72px, 1fr));
     gap: 9px;
   }
 
   .action-button {
-    min-height: 72px;
+    min-height: 0;
     gap: 4px;
     border-radius: 10px;
   }
