@@ -215,7 +215,6 @@ describe('game state', () => {
   it('keeps the live board focused on one athlete and exposes no roster switching', async () => {
     render(<App />)
     expect(screen.getByRole('heading', { name: 'Marcus' })).toBeTruthy()
-    expect(screen.getByText('ONE ATHLETE PER SUBMISSION')).toBeTruthy()
     expect(screen.queryByRole('button', { name: /Jordan|DeAndre|Darius/ })).toBeNull()
     expect(screen.getByRole('button', { name: /\+2/ }).hasAttribute('disabled')).toBe(false)
   })

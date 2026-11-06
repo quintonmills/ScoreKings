@@ -206,7 +206,6 @@ function AthleteEditor({ player, playerImages, requiredPlayerMessages, onPlayerC
   return (
     <section className="athlete-editor" aria-labelledby="athlete-details-title">
       <div className="editor-heading">
-        <span className="eyebrow">ONE ATHLETE PER SUBMISSION</span>
         <h3 id="athlete-details-title">Athlete details</h3>
       </div>
       <div className="game-fields athlete-fields">
@@ -226,7 +225,6 @@ function AthleteEditor({ player, playerImages, requiredPlayerMessages, onPlayerC
           </select>
         </label>
       </div>
-      <p className="image-upload-guidance">All logged stats and the submission below belong to this athlete only.</p>
       {[0, 1, 2].map((index) => (
         <ImageUpload
           key={`${player.id}-photo-${index + 1}`}
@@ -666,7 +664,6 @@ function App() {
         <div className="score-team score-team-b athlete-score-total">
           <span className="team-label">ATHLETE POINTS</span>
           <span className="score-number">{activePlayer.pts}</span>
-          <span className="athlete-team-name">Single-player submission</span>
         </div>
         <div className="scoreboard-location"><span>⌖</span> {game.location}</div>
       </section>
@@ -678,7 +675,6 @@ function App() {
               <span className="eyebrow">LIVE ATHLETE BOX SCORE</span>
               <h1>{activePlayer.name || 'Unnamed athlete'}</h1>
             </div>
-            <span className="player-count">ONE ATHLETE PER SUBMISSION</span>
           </div>
           <div className="athlete-stat-grid" aria-label={`${activePlayer.name || 'Athlete'} stats`}>
             {[
@@ -701,7 +697,6 @@ function App() {
           <div className="active-player-panel">
             <span className="active-avatar">{activePlayer ? `#${activePlayer.jersey || '—'}` : '—'}</span>
             <div className="active-player-copy">
-              <span className="eyebrow">TRACKING ATHLETE</span>
               <strong>{activePlayer.name || 'Unnamed athlete'}</strong>
               <span>{activePlayer.team === 'Team A' ? game.teamA : game.teamB}</span>
             </div>
@@ -725,7 +720,6 @@ function App() {
               <span>↶</span> Undo last action
             </button>
             <button type="button" className="reset-button" onClick={resetBoard}>Reset Board</button>
-            <div className="dock-hint">Every action is recorded for this athlete only.</div>
             <button className="finalize-button" type="button" onClick={finalizeGame}>
               Finalize game <span>→</span>
             </button>
