@@ -6,6 +6,14 @@ import './App.css'
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '')
   || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://servercore-pjwe.onrender.com')
 const finalizeEndpoint = apiBaseUrl ? `${apiBaseUrl}/api/games/finalize` : ''
+const GAME_STORAGE_KEY = 'scorekings-game-state-v1'
+
+const initialGame = {
+  teamA: 'Red Team',
+  teamB: 'Blue Team',
+  location: 'Marietta Rec League',
+  period: 'Q1',
+}
 
 const initialPlayers = [
   { id: 'p1', team: 'Team A', jersey: '3', name: 'Marcus', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
@@ -19,6 +27,33 @@ const initialPlayers = [
   { id: 'p9', team: 'Team B', jersey: '21', name: 'Andre', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
   { id: 'p10', team: 'Team B', jersey: '5', name: 'Noah', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
 ]
+
+function loadGameState() {
+  try {
+    const savedState = window.localStorage.getItem(GAME_STORAGE_KEY)
+    if (!savedState) return { storageError: '' }
+
+    const parsedState = JSON.parse(savedState)
+    if (
+      parsedState.version !== 1
+      || !parsedState.game
+      || !Array.isArray(parsedState.players)
+      || !parsedState.assets?.teams
+      || !Array.isArray(parsedState.events)
+      || !Array.isArray(parsedState.history)
+      || typeof parsedState.startedAt !== 'string'
+      || !Number.isFinite(parsedState.clockSeconds)
+    ) {
+      throw new Error('Saved game state has an unsupported format.')
+    }
+
+    return { ...parsedState, storageError: '' }
+  } catch {
+    return {
+      storageError: 'Saved game data could not be loaded. Reset the board to start a new game.',
+    }
+  }
+}
 
 const actions = [
   { label: '+2', detail: '2 POINTS', stat: 'pts', amount: 2, style: 'score-action' },
@@ -144,7 +179,7 @@ function ImageUpload({ id, label, image, onImageChange, requiredMessage }) {
   )
 }
 
-function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requiredLogoMessage, playerImages, requiredPlayerMessages, onPlayerImageChange, onChange, onAdd, onRemove }) {
+function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requiredLogoMessage, playerImages, requiredPlayerMessages, onPlayerImageChange, onTeamNameChange, onPlayerChange, onAdd, onRemove }) {
   const roster = players.filter((player) => player.team === team)
   return (
     <section className="roster-editor">
@@ -157,13 +192,13 @@ function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requi
         Team name
         <input
           value={title}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => onTeamNameChange(event.target.value)}
           placeholder="Team name"
         />
       </label>
       <ImageUpload
         id={`${teamKey}-logo`}
-        label={`${teamKey === 'teamA' ? 'Team A' : 'Team B'} logo`}
+        label={`${title} logo`}
         image={logo}
         onImageChange={onLogoChange}
         requiredMessage={requiredLogoMessage}
@@ -175,13 +210,13 @@ function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requi
               <input
                 aria-label={`${title} jersey number`}
                 value={player.jersey}
-                onChange={(event) => onChange(null, player.id, 'jersey', event.target.value)}
+                onChange={(event) => onPlayerChange(player.id, 'jersey', event.target.value)}
                 placeholder="#"
               />
               <input
                 aria-label={`${title} player name`}
                 value={player.name}
-                onChange={(event) => onChange(null, player.id, 'name', event.target.value)}
+                onChange={(event) => onPlayerChange(player.id, 'name', event.target.value)}
                 placeholder="Player name"
               />
               <button className="remove-player" type="button" onClick={() => onRemove(player.id)} aria-label={`Remove ${player.name || 'player'}`}>×</button>
@@ -220,16 +255,6 @@ function getFlyerDownloadUrl(graphic) {
 }
 
 function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGameChange, onPlayersChange, onAddPlayer, onRemovePlayer, onClose }) {
-  const updateTeam = (team, value) => onGameChange({ ...game, [team === 'Team A' ? 'teamA' : 'teamB']: value })
-  const updatePlayer = (teamName, playerId, key, value) => {
-    if (playerId) {
-      onPlayersChange(players.map((player) => player.id === playerId ? { ...player, [key]: value } : player))
-      return
-    }
-    const team = teamName === game.teamA ? 'Team A' : 'Team B'
-    updateTeam(team, teamName)
-  }
-
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal setup-modal" role="dialog" aria-modal="true" aria-labelledby="setup-title">
@@ -264,7 +289,8 @@ function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGa
             playerImages={assets.players}
             requiredPlayerMessages={requiredAssets.players}
             onPlayerImageChange={(playerId, image, index) => onAssetChange(playerId, image, index)}
-            onChange={updatePlayer}
+            onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, teamA: value }))}
+            onPlayerChange={(playerId, key, value) => onPlayersChange((currentPlayers) => currentPlayers.map((player) => player.id === playerId ? { ...player, [key]: value } : player))}
             onAdd={onAddPlayer}
             onRemove={onRemovePlayer}
           />
@@ -279,7 +305,8 @@ function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGa
             playerImages={assets.players}
             requiredPlayerMessages={requiredAssets.players}
             onPlayerImageChange={(playerId, image, index) => onAssetChange(playerId, image, index)}
-            onChange={updatePlayer}
+            onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, teamB: value }))}
+            onPlayerChange={(playerId, key, value) => onPlayersChange((currentPlayers) => currentPlayers.map((player) => player.id === playerId ? { ...player, [key]: value } : player))}
             onAdd={onAddPlayer}
             onRemove={onRemovePlayer}
           />
@@ -366,26 +393,25 @@ function FinalizeModal({ payload, graphics, requestState, requestMessage, onRetr
 }
 
 function App() {
-  const [game, setGame] = useState({
-    teamA: 'Red Team',
-    teamB: 'Blue Team',
-    location: 'Marietta Rec League',
-    period: 'Q1',
-  })
-  const [players, setPlayers] = useState(initialPlayers)
-  const [assets, setAssets] = useState({ teams: { teamA: null, teamB: null }, players: {} })
-  const [activePlayerId, setActivePlayerId] = useState(null)
-  const [events, setEvents] = useState([])
-  const [startedAt] = useState(() => new Date().toISOString())
-  const [clockSeconds, setClockSeconds] = useState(0)
+  const [loadedState] = useState(loadGameState)
+  const [game, setGame] = useState(() => loadedState.game || initialGame)
+  const [players, setPlayers] = useState(() => loadedState.players || initialPlayers)
+  const [assets, setAssets] = useState(() => loadedState.assets || { teams: { teamA: null, teamB: null }, players: {} })
+  const [activePlayerId, setActivePlayerId] = useState(() => loadedState.activePlayerId || null)
+  const [events, setEvents] = useState(() => loadedState.events || [])
+  const [startedAt, setStartedAt] = useState(() => loadedState.startedAt || new Date().toISOString())
+  const [clockSeconds, setClockSeconds] = useState(() => loadedState.clockSeconds || 0)
   const [isClockRunning, setIsClockRunning] = useState(false)
-  const [history, setHistory] = useState([])
+  const [history, setHistory] = useState(() => loadedState.history || [])
   const [showSetup, setShowSetup] = useState(false)
   const [payload, setPayload] = useState(null)
   const [requestState, setRequestState] = useState('idle')
   const [requestMessage, setRequestMessage] = useState('')
   const [generatedFlyers, setGeneratedFlyers] = useState([])
   const [showAssetValidation, setShowAssetValidation] = useState(false)
+  const [storageMessage, setStorageMessage] = useState(loadedState.storageError)
+  const [saveRevision, setSaveRevision] = useState(0)
+  const skipNextSave = useRef(Boolean(loadedState.storageError))
 
   useEffect(() => {
     if (!isClockRunning) return undefined
@@ -394,6 +420,30 @@ function App() {
     }, 1000)
     return () => window.clearInterval(intervalId)
   }, [isClockRunning])
+
+  useEffect(() => {
+    if (skipNextSave.current) {
+      skipNextSave.current = false
+      return
+    }
+
+    try {
+      window.localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify({
+        version: 1,
+        game,
+        players,
+        assets,
+        activePlayerId,
+        events,
+        startedAt,
+        clockSeconds,
+        history,
+      }))
+      setStorageMessage('')
+    } catch {
+      setStorageMessage('Game data could not be saved in this browser. Check available storage or remove large images.')
+    }
+  }, [game, players, assets, activePlayerId, events, startedAt, clockSeconds, history, saveRevision])
 
   const teamAPlayers = useMemo(() => players.filter((player) => player.team === 'Team A'), [players])
   const teamBPlayers = useMemo(() => players.filter((player) => player.team === 'Team B'), [players])
@@ -497,6 +547,32 @@ function App() {
     })
   }
 
+  const resetBoard = () => {
+    try {
+      window.localStorage.removeItem(GAME_STORAGE_KEY)
+      skipNextSave.current = true
+      setStorageMessage('')
+    } catch {
+      setStorageMessage('Saved game data could not be cleared. The board will still reset, but saved data may return after refresh.')
+    }
+    setGame(initialGame)
+    setPlayers(initialPlayers.map((player) => ({ ...player })))
+    setAssets({ teams: { teamA: null, teamB: null }, players: {} })
+    setActivePlayerId(null)
+    setEvents([])
+    setStartedAt(new Date().toISOString())
+    setClockSeconds(0)
+    setIsClockRunning(false)
+    setHistory([])
+    setSaveRevision((revision) => revision + 1)
+    setShowSetup(false)
+    setPayload(null)
+    setRequestState('idle')
+    setRequestMessage('')
+    setGeneratedFlyers([])
+    setShowAssetValidation(false)
+  }
+
   const sendPayload = async (nextPayload) => {
     setRequestState('sending')
     if (!finalizeEndpoint) {
@@ -586,6 +662,7 @@ function App() {
           </button>
         </div>
       </header>
+      {storageMessage && <p className="storage-warning" role="alert">{storageMessage}</p>}
 
       <section className="scoreboard" id="game" aria-label="Live scoreboard">
         <div className="score-team score-team-a">
@@ -695,6 +772,7 @@ function App() {
             <button className="undo-button" type="button" onClick={undoAction} disabled={history.length === 0}>
               <span>↶</span> Undo last action
             </button>
+            <button type="button" className="reset-button" onClick={resetBoard}>Reset Board</button>
             <div className="dock-hint">Select a player, then tap a stat to record it.</div>
             <button className="finalize-button" type="button" onClick={finalizeGame}>
               Finalize game <span>→</span>

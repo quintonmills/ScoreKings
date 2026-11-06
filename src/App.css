@@ -99,11 +99,22 @@ button {
 }
 
 .setup-button,
+.reset-button,
 .icon-button {
   border: 1px solid #3a3d41;
   border-radius: 8px;
   background: #1b1d20;
   cursor: pointer;
+}
+
+.reset-button {
+  height: 38px;
+  padding: 0 12px;
+  flex: 0 0 auto;
+  color: #ffaaa1;
+  border-color: #67413e;
+  font-size: 11px;
+  font-weight: 650;
 }
 
 .setup-button {
@@ -117,6 +128,7 @@ button {
 }
 
 .setup-button:hover,
+.reset-button:hover,
 .icon-button:hover {
   border-color: #696d71;
   background: #25272a;
@@ -936,10 +948,18 @@ button {
 }
 
 .image-upload-error,
-.finalize-validation {
+.finalize-validation,
+.storage-warning {
   color: #ffaaa1;
   font-size: 9px;
   line-height: 1.5;
+}
+
+.storage-warning {
+  margin: 0;
+  padding: 9px 5.2%;
+  border-bottom: 1px solid #67413e;
+  background: #2b2222;
 }
 
 .image-upload-error {

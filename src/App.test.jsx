@@ -5,6 +5,13 @@ import App from './App.jsx'
 
 const uploadedImage = (name = 'photo.png', type = 'image/png', contents = 'image-bytes') =>
   new File([contents], name, { type })
+const storedValues = new Map()
+const localStorageMock = {
+  getItem: (key) => storedValues.get(key) ?? null,
+  setItem: (key, value) => storedValues.set(key, String(value)),
+  removeItem: (key) => storedValues.delete(key),
+  clear: () => storedValues.clear(),
+}
 
 function openSetup() {
   render(<App />)
@@ -12,6 +19,8 @@ function openSetup() {
 }
 
 beforeEach(() => {
+  storedValues.clear()
+  Object.defineProperty(window, 'localStorage', { configurable: true, value: localStorageMock })
   vi.stubGlobal('fetch', vi.fn(async () => ({
     ok: true,
     status: 200,
@@ -126,8 +135,8 @@ describe('flyer image uploads', () => {
     render(<App />)
     await user.click(screen.getByRole('button', { name: /Game setup/ }))
 
-    await user.upload(screen.getByLabelText('Team A logo upload'), uploadedImage('home.png', 'image/png', 'home'))
-    await user.upload(screen.getByLabelText('Team B logo upload'), uploadedImage('away.webp', 'image/webp', 'away'))
+    await user.upload(screen.getByLabelText('Red Team logo upload'), uploadedImage('home.png', 'image/png', 'home'))
+    await user.upload(screen.getByLabelText('Blue Team logo upload'), uploadedImage('away.webp', 'image/webp', 'away'))
     for (let index = 1; index <= 3; index += 1) {
       await user.upload(
         screen.getByLabelText(`Marcus reference photo ${index} upload`),
@@ -200,5 +209,60 @@ describe('flyer image uploads', () => {
     expect(screen.getAllByRole('img', { name: 'QR code to download the flyer' })).toHaveLength(1)
     expect(screen.getByRole('link', { name: 'Or open the download link' }).getAttribute('href'))
       .toBe('https://api.scorekings.example/games/game-101/flyer/download')
+  })
+})
+
+describe('game state', () => {
+  it('updates team titles and logo labels as team names are typed', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /Game setup/ }))
+
+    const teamNameInputs = screen.getAllByRole('textbox', { name: 'Team name' })
+    await user.clear(teamNameInputs[0])
+    await user.type(teamNameInputs[0], 'Falcons')
+    await user.clear(teamNameInputs[1])
+    await user.type(teamNameInputs[1], 'Wolves')
+
+    expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
+    expect(screen.getAllByText('Wolves').length).toBeGreaterThan(1)
+    expect(screen.getByLabelText('Falcons logo upload')).toBeTruthy()
+    expect(screen.getByLabelText('Wolves logo upload')).toBeTruthy()
+  })
+
+  it('restores game details, active player, stats, and events after remount', async () => {
+    const user = userEvent.setup()
+    const firstRender = render(<App />)
+    await user.click(screen.getByRole('button', { name: /Marcus/ }))
+    await user.click(screen.getByRole('button', { name: /\+2/ }))
+    await user.click(screen.getByRole('button', { name: /Game setup/ }))
+    const teamAName = screen.getAllByRole('textbox', { name: 'Team name' })[0]
+    await user.clear(teamAName)
+    await user.type(teamAName, 'Falcons')
+    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+
+    expect(window.localStorage.getItem('scorekings-game-state-v1')).toBeTruthy()
+    firstRender.unmount()
+
+    const { container } = render(<App />)
+    expect(container.querySelector('.score-team-a .score-team-name').textContent).toBe('Falcons')
+    expect(container.querySelector('.score-team-a .score-number').textContent).toBe('2')
+    expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
+    expect(screen.getByRole('button', { name: /Marcus/ }).textContent).toContain('2')
+  })
+
+  it('clears saved data and resets the board only when Reset Board is clicked', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<App />)
+    await user.click(screen.getByRole('button', { name: /Marcus/ }))
+    await user.click(screen.getByRole('button', { name: /\+2/ }))
+    expect(window.localStorage.getItem('scorekings-game-state-v1')).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: 'Reset Board' }))
+
+    expect(window.localStorage.getItem('scorekings-game-state-v1')).toBeNull()
+    expect(container.querySelector('.score-team-a .score-team-name').textContent).toBe('Red Team')
+    expect(container.querySelector('.score-team-a .score-number').textContent).toBe('0')
+    expect(screen.getByText('Select a player')).toBeTruthy()
   })
 })
