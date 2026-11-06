@@ -608,13 +608,6 @@ function App() {
       {storageMessage && <p className="storage-warning" role="alert">{storageMessage}</p>}
 
       <section className="scoreboard" id="game" aria-label="Live scoreboard">
-        <div className="score-team score-team-a">
-          <span className="team-label">TRACKING ONE ATHLETE</span>
-          <span className="score-team-name">{activePlayer.name || 'Unnamed athlete'}</span>
-          <span className="athlete-team-name">
-            #{activePlayer.jersey || '—'} · {activePlayer.team === 'Team A' ? game.teamA : game.teamB}
-          </span>
-        </div>
         <div className="score-center">
           <label className="period-selector-label">
             <span className="visually-hidden">Current game period</span>
@@ -641,10 +634,6 @@ function App() {
           >
             {isClockRunning ? 'Pause' : clockSeconds > 0 ? 'Resume' : 'Start'}
           </button>
-        </div>
-        <div className="score-team score-team-b athlete-score-total">
-          <span className="team-label">ATHLETE POINTS</span>
-          <span className="score-number">{activePlayer.pts}</span>
         </div>
         <div className="scoreboard-location"><span>⌖</span> {game.location}</div>
       </section>

@@ -97,8 +97,12 @@ describe('flyer image uploads', () => {
 
   it('starts and pauses the count-up game clock', async () => {
     vi.useFakeTimers()
-    render(<App />)
+    const { container } = render(<App />)
 
+    const scoreboard = container.querySelector('.scoreboard')
+    expect(scoreboard.textContent).not.toContain('TRACKING ONE ATHLETE')
+    expect(scoreboard.textContent).not.toContain('ATHLETE POINTS')
+    expect(scoreboard.textContent).not.toContain('Marcus')
     expect(screen.getByText('00:00')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Start game clock' }))
     await act(async () => {
@@ -207,7 +211,7 @@ describe('game state', () => {
     await user.type(teamNameInput, 'Falcons')
 
     expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
-    expect(screen.getByText(/#3 · Falcons/)).toBeTruthy()
+    expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
     expect(screen.getByLabelText('Falcons logo upload')).toBeTruthy()
     expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
     expect(screen.queryByRole('combobox', { name: 'Team' })).toBeNull()
@@ -234,8 +238,7 @@ describe('game state', () => {
     firstRender.unmount()
 
     const { container } = render(<App />)
-    expect(container.querySelector('.score-team-a .athlete-team-name').textContent).toContain('Falcons')
-    expect(container.querySelector('.athlete-score-total .score-number').textContent).toBe('2')
+    expect(container.querySelector('.active-player-copy > span:last-child').textContent).toBe('Falcons')
     expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
     expect(screen.getByRole('heading', { name: 'Marcus' })).toBeTruthy()
     expect(container.querySelector('.athlete-stat-grid').textContent).toContain('2')
@@ -250,8 +253,7 @@ describe('game state', () => {
     await user.click(screen.getByRole('button', { name: 'Reset Board' }))
 
     expect(window.localStorage.getItem('scorekings-game-state-v1')).toBeNull()
-    expect(container.querySelector('.score-team-a .athlete-team-name').textContent).toContain('Red Team')
-    expect(container.querySelector('.athlete-score-total .score-number').textContent).toBe('0')
+    expect(container.querySelector('.active-player-copy > span:last-child').textContent).toBe('Red Team')
     expect(screen.getByRole('heading', { name: 'Marcus' })).toBeTruthy()
   })
 })

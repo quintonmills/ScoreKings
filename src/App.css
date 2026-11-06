@@ -144,7 +144,7 @@ button {
   position: relative;
   padding: 23px 10% 32px;
   display: grid;
-  grid-template-columns: 1fr 150px 1fr;
+  grid-template-columns: 1fr;
   align-items: center;
   background:
     radial-gradient(ellipse at 50% 115%, #292d28 0, transparent 48%),
