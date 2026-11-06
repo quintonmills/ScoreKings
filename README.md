@@ -62,7 +62,7 @@ npm run lint     # Run Oxlint
 4. In **Game setup**, add the athlete's team logo and three reference photos for the target athlete. PNG, JPEG, and WebP images up to 5 MB each are accepted.
 6. Select **Finalize game** to send the box-score payload and required flyer assets to the backend.
 
-The game clock currently displays a placeholder (`10:00`); it is not a running timer.
+The game clock counts up from `00:00` by default. To use a countdown, open **Game setup**, enable **Custom countdown**, enter a duration in `MM:SS`, and select **Apply clock settings**. The countdown stops at zero; applying the setting again after it expires restarts it from the configured duration.
 
 ## Backend integration
 

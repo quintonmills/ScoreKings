@@ -811,6 +811,106 @@ button {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.custom-clock-settings {
+  margin-bottom: 18px;
+  padding: 13px;
+  border: 1px solid #373a3e;
+  border-radius: 9px;
+  background: #202225;
+}
+
+.custom-clock-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.custom-clock-heading h3 {
+  margin: 0;
+  color: #ededeb;
+  font-size: 12px;
+}
+
+.custom-clock-heading p {
+  margin: 5px 0 0;
+  color: #92969b;
+  font-size: 10px;
+}
+
+.custom-clock-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #c3c6c4;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.custom-clock-toggle input {
+  width: 35px;
+  height: 19px;
+  margin: 0;
+  appearance: none;
+  border: 1px solid #55595e;
+  border-radius: 12px;
+  background: #141618;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.custom-clock-toggle input::before {
+  display: block;
+  width: 13px;
+  height: 13px;
+  margin: 2px;
+  border-radius: 50%;
+  background: #92969b;
+  content: '';
+  transition: transform 140ms ease, background-color 140ms ease;
+}
+
+.custom-clock-toggle input:checked {
+  border-color: var(--lime);
+  background: #d7ff4330;
+}
+
+.custom-clock-toggle input:checked::before {
+  transform: translateX(16px);
+  background: var(--lime);
+}
+
+.custom-clock-toggle input:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+.custom-clock-duration {
+  margin-top: 13px;
+}
+
+.custom-clock-error {
+  color: #ff8a7e;
+  font-size: 10px;
+}
+
+.clock-settings-button {
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 1px solid #4b5053;
+  border-radius: 5px;
+  background: #292c2f;
+  color: #ededeb;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.clock-settings-button:hover {
+  border-color: var(--lime);
+}
+
 .athlete-fields {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

@@ -118,6 +118,79 @@ describe('flyer image uploads', () => {
     expect(screen.getByRole('button', { name: 'Start game clock' }).textContent).toBe('Resume')
   })
 
+  it('applies an optional countdown and can return to count-up mode', async () => {
+    vi.useFakeTimers()
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }), {
+      target: { value: '00:02' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply clock settings' }))
+    expect(screen.getByText('00:02')).toBeTruthy()
+    expect(screen.getByRole('switch', { name: 'Enable custom countdown' }).checked).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: /Back to game/ }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start game clock' }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000)
+    })
+    expect(screen.getByText('00:01')).toBeTruthy()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000)
+    })
+    expect(screen.getByText('00:00')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Start game clock' }).textContent).toBe('Start')
+
+    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Apply clock settings' }))
+    fireEvent.click(screen.getByRole('button', { name: /Back to game/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Start game clock' }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000)
+    })
+    expect(screen.getByText('00:01')).toBeTruthy()
+  })
+
+  it('rejects invalid custom countdown durations without changing the clock', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }), {
+      target: { value: '00:00' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply clock settings' }))
+
+    expect(screen.getByRole('alert').textContent).toContain('Enter a duration')
+    expect(screen.getByText('00:00')).toBeTruthy()
+    expect(JSON.parse(window.localStorage.getItem('scorekings-game-state-v1')).customClockEnabled).toBe(false)
+  })
+
+  it('persists custom countdown settings across a page reload', () => {
+    const firstRender = render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }), {
+      target: { value: '01:15' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply clock settings' }))
+    expect(JSON.parse(window.localStorage.getItem('scorekings-game-state-v1'))).toMatchObject({
+      version: 2,
+      customClockEnabled: true,
+      customClockDurationSeconds: 75,
+      clockSeconds: 75,
+    })
+
+    firstRender.unmount()
+    render(<App />)
+    expect(screen.getByText('01:15')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /Game setup/ }))
+    expect(screen.getByRole('switch', { name: 'Enable custom countdown' }).checked).toBe(true)
+    expect(screen.getByRole('textbox', { name: 'Custom countdown duration (MM:SS)' }).value).toBe('01:15')
+  })
+
   it('lets the user change periods and records the selected period on events', async () => {
     const user = userEvent.setup()
     render(<App />)

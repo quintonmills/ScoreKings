@@ -35,7 +35,7 @@ function loadGameState() {
 
     const parsedState = JSON.parse(savedState)
     if (
-      parsedState.version !== 1
+      ![1, 2].includes(parsedState.version)
       || !parsedState.game
       || !Array.isArray(parsedState.players)
       || !parsedState.assets?.teams
@@ -43,6 +43,14 @@ function loadGameState() {
       || !Array.isArray(parsedState.history)
       || typeof parsedState.startedAt !== 'string'
       || !Number.isFinite(parsedState.clockSeconds)
+      || (parsedState.version === 2 && (
+        typeof parsedState.customClockEnabled !== 'boolean'
+        || !Number.isInteger(parsedState.customClockDurationSeconds)
+        || parsedState.customClockDurationSeconds < 1
+        || parsedState.customClockDurationSeconds > 5999
+        || parsedState.clockSeconds < 0
+        || (parsedState.customClockEnabled && parsedState.clockSeconds > parsedState.customClockDurationSeconds)
+      ))
     ) {
       throw new Error('Saved game state has an unsupported format.')
     }
@@ -65,6 +73,10 @@ function loadGameState() {
           ? { [playerId]: parsedState.assets.players[playerId] }
           : {},
       },
+      customClockEnabled: parsedState.version === 2 ? parsedState.customClockEnabled : false,
+      customClockDurationSeconds: parsedState.version === 2
+        ? parsedState.customClockDurationSeconds
+        : 10 * 60,
       storageError: '',
     }
   } catch {
@@ -95,6 +107,14 @@ function formatGameClock(seconds) {
   const minutes = Math.floor(seconds / 60).toString().padStart(2, '0')
   const remainingSeconds = (seconds % 60).toString().padStart(2, '0')
   return `${minutes}:${remainingSeconds}`
+}
+
+function parseGameClock(value) {
+  const match = /^(\d{1,2}):([0-5]\d)$/.exec(value.trim())
+  if (!match) return null
+
+  const seconds = Number(match[1]) * 60 + Number(match[2])
+  return seconds > 0 ? seconds : null
 }
 
 function ImageUpload({ id, label, image, onImageChange, requiredMessage }) {
@@ -244,8 +264,30 @@ function getFlyerDownloadUrl(graphic) {
   }
 }
 
-function SetupModal({ game, player, assets, requiredAssets, onAssetChange, onGameChange, onPlayerChange, onClose }) {
+function SetupModal({ game, player, assets, requiredAssets, customClockEnabled, customClockDurationSeconds, onClockSettingsChange, onAssetChange, onGameChange, onPlayerChange, onClose }) {
   const teamKey = player.team === 'Team A' ? 'teamA' : 'teamB'
+  const [enableCustomClock, setEnableCustomClock] = useState(customClockEnabled)
+  const [clockDurationInput, setClockDurationInput] = useState(formatGameClock(customClockDurationSeconds))
+  const [clockDurationError, setClockDurationError] = useState('')
+
+  const applyClockSettings = (event) => {
+    event.preventDefault()
+    if (!enableCustomClock) {
+      onClockSettingsChange({ enabled: false, durationSeconds: customClockDurationSeconds })
+      setClockDurationError('')
+      return
+    }
+
+    const durationSeconds = parseGameClock(clockDurationInput)
+    if (durationSeconds === null) {
+      setClockDurationError('Enter a duration from 00:01 to 99:59 in MM:SS format.')
+      return
+    }
+
+    onClockSettingsChange({ enabled: true, durationSeconds })
+    setClockDurationInput(formatGameClock(durationSeconds))
+    setClockDurationError('')
+  }
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -263,6 +305,41 @@ function SetupModal({ game, player, assets, requiredAssets, onAssetChange, onGam
             <input value={game.location} onChange={(event) => onGameChange({ ...game, location: event.target.value })} />
           </label>
         </div>
+        <form className="custom-clock-settings" onSubmit={applyClockSettings}>
+          <div className="custom-clock-heading">
+            <div>
+              <h3>Game clock</h3>
+              <p>Off counts up from 00:00.</p>
+            </div>
+            <label className="custom-clock-toggle">
+              <span>Custom countdown</span>
+              <input
+                type="checkbox"
+                role="switch"
+                aria-label="Enable custom countdown"
+                checked={enableCustomClock}
+                onChange={(event) => setEnableCustomClock(event.target.checked)}
+              />
+            </label>
+          </div>
+          {enableCustomClock && (
+            <label className="field-label custom-clock-duration">
+              Countdown duration (MM:SS)
+              <input
+                aria-label="Custom countdown duration (MM:SS)"
+                inputMode="numeric"
+                pattern="[0-9]{1,2}:[0-5][0-9]"
+                placeholder="10:00"
+                value={clockDurationInput}
+                onChange={(event) => setClockDurationInput(event.target.value)}
+                aria-invalid={Boolean(clockDurationError)}
+                aria-describedby={clockDurationError ? 'custom-clock-error' : undefined}
+              />
+              {clockDurationError && <span id="custom-clock-error" className="custom-clock-error" role="alert">{clockDurationError}</span>}
+            </label>
+          )}
+          <button type="submit" className="clock-settings-button">Apply clock settings</button>
+        </form>
         <AthleteEditor
           player={player}
           playerImages={assets.players}
@@ -371,6 +448,10 @@ function App() {
   const [events, setEvents] = useState(() => loadedState.events || [])
   const [startedAt, setStartedAt] = useState(() => loadedState.startedAt || new Date().toISOString())
   const [clockSeconds, setClockSeconds] = useState(() => loadedState.clockSeconds || 0)
+  const [customClockEnabled, setCustomClockEnabled] = useState(() => loadedState.customClockEnabled || false)
+  const [customClockDurationSeconds, setCustomClockDurationSeconds] = useState(() =>
+    loadedState.customClockDurationSeconds || 10 * 60,
+  )
   const [isClockRunning, setIsClockRunning] = useState(false)
   const [history, setHistory] = useState(() => loadedState.history || [])
   const [showSetup, setShowSetup] = useState(false)
@@ -386,10 +467,18 @@ function App() {
   useEffect(() => {
     if (!isClockRunning) return undefined
     const intervalId = window.setInterval(() => {
-      setClockSeconds((seconds) => seconds + 1)
+      if (customClockEnabled) {
+        setClockSeconds((seconds) => Math.max(0, seconds - 1))
+      } else {
+        setClockSeconds((seconds) => seconds + 1)
+      }
     }, 1000)
     return () => window.clearInterval(intervalId)
-  }, [isClockRunning])
+  }, [isClockRunning, customClockEnabled])
+
+  useEffect(() => {
+    if (customClockEnabled && clockSeconds === 0) setIsClockRunning(false)
+  }, [customClockEnabled, clockSeconds])
 
   useEffect(() => {
     if (skipNextSave.current) {
@@ -399,7 +488,7 @@ function App() {
 
     try {
       window.localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify({
-        version: 1,
+        version: 2,
         game,
         players,
         assets,
@@ -407,13 +496,15 @@ function App() {
         events,
         startedAt,
         clockSeconds,
+        customClockEnabled,
+        customClockDurationSeconds,
         history,
       }))
       setStorageMessage('')
     } catch {
       setStorageMessage('Game data could not be saved in this browser. Check available storage or remove large images.')
     }
-  }, [game, players, assets, events, startedAt, clockSeconds, history, saveRevision])
+  }, [game, players, assets, events, startedAt, clockSeconds, customClockEnabled, customClockDurationSeconds, history, saveRevision])
 
   const activePlayer = players[0]
   const teamAScore = getScore(players, 'Team A')
@@ -452,7 +543,7 @@ function App() {
       playerId: activePlayer.id,
       action: action.stat === 'pts' ? `PTS_${action.amount}` : action.stat.toUpperCase(),
       timestamp,
-      gameClockSeconds: clockSeconds,
+      gameClockSeconds: customClockEnabled ? customClockDurationSeconds - clockSeconds : clockSeconds,
       resultingScore,
     }])
     setHistory((currentHistory) => [...currentHistory, {
@@ -491,6 +582,13 @@ function App() {
     })
   }
 
+  const updateClockSettings = ({ enabled, durationSeconds }) => {
+    setIsClockRunning(false)
+    setCustomClockEnabled(enabled)
+    setCustomClockDurationSeconds(durationSeconds)
+    setClockSeconds(enabled ? durationSeconds : 0)
+  }
+
   const resetBoard = () => {
     try {
       window.localStorage.removeItem(GAME_STORAGE_KEY)
@@ -505,6 +603,8 @@ function App() {
     setEvents([])
     setStartedAt(new Date().toISOString())
     setClockSeconds(0)
+    setCustomClockEnabled(false)
+    setCustomClockDurationSeconds(10 * 60)
     setIsClockRunning(false)
     setHistory([])
     setSaveRevision((revision) => revision + 1)
@@ -629,7 +729,12 @@ function App() {
           <button
             className="clock-control"
             type="button"
-            onClick={() => setIsClockRunning((running) => !running)}
+            onClick={() => {
+              if (!isClockRunning && customClockEnabled && clockSeconds === 0) {
+                setClockSeconds(customClockDurationSeconds)
+              }
+              setIsClockRunning((running) => !running)
+            }}
             aria-label={isClockRunning ? 'Pause game clock' : 'Start game clock'}
           >
             {isClockRunning ? 'Pause' : clockSeconds > 0 ? 'Resume' : 'Start'}
@@ -720,6 +825,9 @@ function App() {
           player={activePlayer}
           assets={assets}
           requiredAssets={showAssetValidation ? requiredAssets : { teams: {}, players: {} }}
+          customClockEnabled={customClockEnabled}
+          customClockDurationSeconds={customClockDurationSeconds}
+          onClockSettingsChange={updateClockSettings}
           onAssetChange={updateAsset}
           onGameChange={setGame}
           onPlayerChange={updatePlayer}
