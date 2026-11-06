@@ -15,18 +15,18 @@ const initialGame = {
   period: 'Q1',
 }
 
-const initialPlayers = [
-  { id: 'p1', team: 'Team A', jersey: '3', name: 'Marcus', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p2', team: 'Team A', jersey: '11', name: 'Jordan', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p3', team: 'Team A', jersey: '24', name: 'DeAndre', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p4', team: 'Team A', jersey: '8', name: 'Chris', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p5', team: 'Team A', jersey: '15', name: 'Eli', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p6', team: 'Team B', jersey: '2', name: 'Darius', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p7', team: 'Team B', jersey: '7', name: 'Cameron', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p8', team: 'Team B', jersey: '13', name: 'Malik', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p9', team: 'Team B', jersey: '21', name: 'Andre', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-  { id: 'p10', team: 'Team B', jersey: '5', name: 'Noah', pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, to: 0 },
-]
+const initialPlayer = {
+  id: 'p1',
+  team: 'Team A',
+  jersey: '3',
+  name: 'Marcus',
+  pts: 0,
+  reb: 0,
+  ast: 0,
+  stl: 0,
+  blk: 0,
+  to: 0,
+}
 
 function loadGameState() {
   try {
@@ -47,7 +47,26 @@ function loadGameState() {
       throw new Error('Saved game state has an unsupported format.')
     }
 
-    return { ...parsedState, storageError: '' }
+    const savedPlayer = parsedState.players.find((player) => player.id === parsedState.activePlayerId)
+      || parsedState.players.find((player) => player.pts || player.reb || player.ast || player.stl || player.blk || player.to)
+      || parsedState.players[0]
+      || initialPlayer
+    const playerId = savedPlayer.id
+
+    return {
+      ...parsedState,
+      players: [savedPlayer],
+      activePlayerId: playerId,
+      events: parsedState.events.filter((event) => event.playerId === playerId),
+      history: parsedState.history.filter((action) => action.playerId === playerId),
+      assets: {
+        ...parsedState.assets,
+        players: parsedState.assets.players?.[playerId]
+          ? { [playerId]: parsedState.assets.players[playerId] }
+          : {},
+      },
+      storageError: '',
+    }
   } catch {
     return {
       storageError: 'Saved game data could not be loaded. Reset the board to start a new game.',
@@ -76,28 +95,6 @@ function formatGameClock(seconds) {
   const minutes = Math.floor(seconds / 60).toString().padStart(2, '0')
   const remainingSeconds = (seconds % 60).toString().padStart(2, '0')
   return `${minutes}:${remainingSeconds}`
-}
-
-function PlayerCard({ player, active, onSelect }) {
-  return (
-    <button
-      className={`player-card ${active ? 'is-active' : ''}`}
-      type="button"
-      onClick={onSelect}
-      aria-pressed={active}
-    >
-      <span className="player-number">#{player.jersey || '—'}</span>
-      <span className="player-info">
-        <span className="player-name">{player.name || 'Unnamed player'}</span>
-        <span className="player-stats">
-          <span><b>{player.pts}</b> PTS</span>
-          <span><b>{player.reb}</b> REB</span>
-          <span><b>{player.ast}</b> AST</span>
-        </span>
-      </span>
-      {active && <span className="active-indicator">ACTIVE</span>}
-    </button>
-  )
 }
 
 function ImageUpload({ id, label, image, onImageChange, requiredMessage }) {
@@ -179,14 +176,12 @@ function ImageUpload({ id, label, image, onImageChange, requiredMessage }) {
   )
 }
 
-function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requiredLogoMessage, playerImages, requiredPlayerMessages, onPlayerImageChange, onTeamNameChange, onPlayerChange, onAdd, onRemove }) {
-  const roster = players.filter((player) => player.team === team)
+function TeamEditor({ team, teamKey, title, logo, onLogoChange, requiredLogoMessage, onTeamNameChange }) {
   return (
-    <section className="roster-editor">
+    <section className="team-editor">
       <div className="editor-heading">
         <span className={`team-dot ${team === 'Team A' ? 'team-a-dot' : 'team-b-dot'}`} />
         <h3>{title}</h3>
-        <span className="roster-count">{roster.length} PLAYERS</span>
       </div>
       <label className="field-label">
         Team name
@@ -203,41 +198,45 @@ function RosterEditor({ team, teamKey, title, players, logo, onLogoChange, requi
         onImageChange={onLogoChange}
         requiredMessage={requiredLogoMessage}
       />
-      <div className="roster-list">
-        {roster.map((player) => (
-          <div className="roster-player" key={player.id}>
-            <div className="roster-row">
-              <input
-                aria-label={`${title} jersey number`}
-                value={player.jersey}
-                onChange={(event) => onPlayerChange(player.id, 'jersey', event.target.value)}
-                placeholder="#"
-              />
-              <input
-                aria-label={`${title} player name`}
-                value={player.name}
-                onChange={(event) => onPlayerChange(player.id, 'name', event.target.value)}
-                placeholder="Player name"
-              />
-              <button className="remove-player" type="button" onClick={() => onRemove(player.id)} aria-label={`Remove ${player.name || 'player'}`}>×</button>
-            </div>
-            <p className="image-upload-guidance">Add three reference photos; only the top scorer's photos are sent for flyer generation.</p>
-            {[0, 1, 2].map((index) => (
-              <ImageUpload
-                key={`${player.id}-photo-${index + 1}`}
-                id={`player-${player.id}-photo-${index + 1}`}
-                label={`${player.name || 'Unnamed player'} reference photo ${index + 1}`}
-                image={playerImages[player.id]?.[index]}
-                onImageChange={(image) => onPlayerImageChange(player.id, image, index)}
-                requiredMessage={requiredPlayerMessages[player.id]?.[index]}
-              />
-            ))}
-          </div>
-        ))}
+    </section>
+  )
+}
+
+function AthleteEditor({ player, playerImages, requiredPlayerMessages, onPlayerChange, onPlayerImageChange }) {
+  return (
+    <section className="athlete-editor" aria-labelledby="athlete-details-title">
+      <div className="editor-heading">
+        <span className="eyebrow">ONE ATHLETE PER SUBMISSION</span>
+        <h3 id="athlete-details-title">Athlete details</h3>
       </div>
-      <button className="add-player-button" type="button" onClick={() => onAdd(team)}>
-        <span>＋</span> Add player
-      </button>
+      <div className="game-fields athlete-fields">
+        <label className="field-label">
+          Athlete name
+          <input value={player.name} onChange={(event) => onPlayerChange('name', event.target.value)} />
+        </label>
+        <label className="field-label">
+          Jersey number
+          <input value={player.jersey} onChange={(event) => onPlayerChange('jersey', event.target.value)} />
+        </label>
+        <label className="field-label">
+          Team
+          <select value={player.team} onChange={(event) => onPlayerChange('team', event.target.value)}>
+            <option value="Team A">Team A</option>
+            <option value="Team B">Team B</option>
+          </select>
+        </label>
+      </div>
+      <p className="image-upload-guidance">All logged stats and the submission below belong to this athlete only.</p>
+      {[0, 1, 2].map((index) => (
+        <ImageUpload
+          key={`${player.id}-photo-${index + 1}`}
+          id={`player-${player.id}-photo-${index + 1}`}
+          label={`${player.name || 'Unnamed athlete'} reference photo ${index + 1}`}
+          image={playerImages[player.id]?.[index]}
+          onImageChange={(image) => onPlayerImageChange(image, index)}
+          requiredMessage={requiredPlayerMessages[index]}
+        />
+      ))}
     </section>
   )
 }
@@ -254,7 +253,7 @@ function getFlyerDownloadUrl(graphic) {
   }
 }
 
-function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGameChange, onPlayersChange, onAddPlayer, onRemovePlayer, onClose }) {
+function SetupModal({ game, player, assets, requiredAssets, onAssetChange, onGameChange, onPlayerChange, onClose }) {
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal setup-modal" role="dialog" aria-modal="true" aria-labelledby="setup-title">
@@ -277,38 +276,31 @@ function SetupModal({ game, players, assets, requiredAssets, onAssetChange, onGa
             </select>
           </label>
         </div>
-        <div className="roster-editors">
-          <RosterEditor
+        <AthleteEditor
+          player={player}
+          playerImages={assets.players}
+          requiredPlayerMessages={requiredAssets.players[player.id] || []}
+          onPlayerChange={onPlayerChange}
+          onPlayerImageChange={(image, index) => onAssetChange(player.id, image, index)}
+        />
+        <div className="team-editors">
+          <TeamEditor
             team="Team A"
             teamKey="teamA"
             title={game.teamA}
-            players={players}
             logo={assets.teams.teamA}
             onLogoChange={(image) => onAssetChange('teamA', image)}
             requiredLogoMessage={requiredAssets.teams.teamA}
-            playerImages={assets.players}
-            requiredPlayerMessages={requiredAssets.players}
-            onPlayerImageChange={(playerId, image, index) => onAssetChange(playerId, image, index)}
             onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, teamA: value }))}
-            onPlayerChange={(playerId, key, value) => onPlayersChange((currentPlayers) => currentPlayers.map((player) => player.id === playerId ? { ...player, [key]: value } : player))}
-            onAdd={onAddPlayer}
-            onRemove={onRemovePlayer}
           />
-          <RosterEditor
+          <TeamEditor
             team="Team B"
             teamKey="teamB"
             title={game.teamB}
-            players={players}
             logo={assets.teams.teamB}
             onLogoChange={(image) => onAssetChange('teamB', image)}
             requiredLogoMessage={requiredAssets.teams.teamB}
-            playerImages={assets.players}
-            requiredPlayerMessages={requiredAssets.players}
-            onPlayerImageChange={(playerId, image, index) => onAssetChange(playerId, image, index)}
             onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, teamB: value }))}
-            onPlayerChange={(playerId, key, value) => onPlayersChange((currentPlayers) => currentPlayers.map((player) => player.id === playerId ? { ...player, [key]: value } : player))}
-            onAdd={onAddPlayer}
-            onRemove={onRemovePlayer}
           />
         </div>
         <div className="modal-footer">
@@ -395,9 +387,8 @@ function FinalizeModal({ payload, graphics, requestState, requestMessage, onRetr
 function App() {
   const [loadedState] = useState(loadGameState)
   const [game, setGame] = useState(() => loadedState.game || initialGame)
-  const [players, setPlayers] = useState(() => loadedState.players || initialPlayers)
+  const [players, setPlayers] = useState(() => loadedState.players || [{ ...initialPlayer }])
   const [assets, setAssets] = useState(() => loadedState.assets || { teams: { teamA: null, teamB: null }, players: {} })
-  const [activePlayerId, setActivePlayerId] = useState(() => loadedState.activePlayerId || null)
   const [events, setEvents] = useState(() => loadedState.events || [])
   const [startedAt, setStartedAt] = useState(() => loadedState.startedAt || new Date().toISOString())
   const [clockSeconds, setClockSeconds] = useState(() => loadedState.clockSeconds || 0)
@@ -433,7 +424,7 @@ function App() {
         game,
         players,
         assets,
-        activePlayerId,
+        activePlayerId: players[0]?.id || null,
         events,
         startedAt,
         clockSeconds,
@@ -443,11 +434,9 @@ function App() {
     } catch {
       setStorageMessage('Game data could not be saved in this browser. Check available storage or remove large images.')
     }
-  }, [game, players, assets, activePlayerId, events, startedAt, clockSeconds, history, saveRevision])
+  }, [game, players, assets, events, startedAt, clockSeconds, history, saveRevision])
 
-  const teamAPlayers = useMemo(() => players.filter((player) => player.team === 'Team A'), [players])
-  const teamBPlayers = useMemo(() => players.filter((player) => player.team === 'Team B'), [players])
-  const activePlayer = players.find((player) => player.id === activePlayerId)
+  const activePlayer = players[0]
   const teamAScore = getScore(players, 'Team A')
   const teamBScore = getScore(players, 'Team B')
   const flyerPlayers = useMemo(() => getFlyerPlayers(players), [players])
@@ -475,7 +464,7 @@ function App() {
       teamB: teamBScore + (activePlayer.team === 'Team B' ? points : 0),
     }
     setPlayers((currentPlayers) => currentPlayers.map((player) =>
-      player.id === activePlayerId
+      player.id === activePlayer.id
         ? { ...player, [action.stat]: player[action.stat] + action.amount }
         : player,
     ))
@@ -488,7 +477,7 @@ function App() {
       resultingScore,
     }])
     setHistory((currentHistory) => [...currentHistory, {
-      playerId: activePlayerId,
+      playerId: activePlayer.id,
       stat: action.stat,
       amount: action.amount,
     }])
@@ -506,32 +495,8 @@ function App() {
     setEvents((currentEvents) => currentEvents.slice(0, -1))
   }
 
-  const addPlayer = (team) => {
-    const player = {
-      id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      team,
-      jersey: '',
-      name: '',
-      pts: 0,
-      reb: 0,
-      ast: 0,
-      stl: 0,
-      blk: 0,
-      to: 0,
-    }
-    setPlayers((currentPlayers) => [...currentPlayers, player])
-    setActivePlayerId(player.id)
-  }
-
-  const removePlayer = (playerId) => {
-    setPlayers((currentPlayers) => currentPlayers.filter((player) => player.id !== playerId))
-    setAssets((currentAssets) => {
-      const nextPlayerImages = { ...currentAssets.players }
-      delete nextPlayerImages[playerId]
-      return { ...currentAssets, players: nextPlayerImages }
-    })
-    setHistory((currentHistory) => currentHistory.filter((action) => action.playerId !== playerId))
-    if (activePlayerId === playerId) setActivePlayerId(null)
+  const updatePlayer = (key, value) => {
+    setPlayers((currentPlayers) => currentPlayers.map((player) => ({ ...player, [key]: value })))
   }
 
   const updateAsset = (key, image, photoIndex) => {
@@ -556,9 +521,8 @@ function App() {
       setStorageMessage('Saved game data could not be cleared. The board will still reset, but saved data may return after refresh.')
     }
     setGame(initialGame)
-    setPlayers(initialPlayers.map((player) => ({ ...player })))
+    setPlayers([{ ...initialPlayer }])
     setAssets({ teams: { teamA: null, teamB: null }, players: {} })
-    setActivePlayerId(null)
     setEvents([])
     setStartedAt(new Date().toISOString())
     setClockSeconds(0)
@@ -666,9 +630,11 @@ function App() {
 
       <section className="scoreboard" id="game" aria-label="Live scoreboard">
         <div className="score-team score-team-a">
-          <span className="team-label">HOME</span>
-          <span className="score-team-name">{game.teamA}</span>
-          <span className="score-number">{teamAScore}</span>
+          <span className="team-label">TRACKING ONE ATHLETE</span>
+          <span className="score-team-name">{activePlayer.name || 'Unnamed athlete'}</span>
+          <span className="athlete-team-name">
+            #{activePlayer.jersey || '—'} · {activePlayer.team === 'Team A' ? game.teamA : game.teamB}
+          </span>
         </div>
         <div className="score-center">
           <label className="period-selector-label">
@@ -697,50 +663,37 @@ function App() {
             {isClockRunning ? 'Pause' : clockSeconds > 0 ? 'Resume' : 'Start'}
           </button>
         </div>
-        <div className="score-team score-team-b">
-          <span className="team-label">AWAY</span>
-          <span className="score-team-name">{game.teamB}</span>
-          <span className="score-number">{teamBScore}</span>
+        <div className="score-team score-team-b athlete-score-total">
+          <span className="team-label">ATHLETE POINTS</span>
+          <span className="score-number">{activePlayer.pts}</span>
+          <span className="athlete-team-name">Single-player submission</span>
         </div>
         <div className="scoreboard-location"><span>⌖</span> {game.location}</div>
       </section>
 
       <div className="main-content">
-        <section className="roster-section" aria-label="Player roster">
+        <section className="roster-section" aria-label="Single athlete stats">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">LIVE BOX SCORE</span>
-              <h1>Tap a player to log stats</h1>
+              <span className="eyebrow">LIVE ATHLETE BOX SCORE</span>
+              <h1>{activePlayer.name || 'Unnamed athlete'}</h1>
             </div>
-            <span className="player-count">{players.length} PLAYERS ON ROSTER</span>
+            <span className="player-count">ONE ATHLETE PER SUBMISSION</span>
           </div>
-          <div className="roster-columns">
-            <section className="team-roster">
-              <div className="roster-title">
-                <span className="team-dot team-a-dot" />
-                <h2>{game.teamA}</h2>
-                <span>{teamAScore} PTS</span>
+          <div className="athlete-stat-grid" aria-label={`${activePlayer.name || 'Athlete'} stats`}>
+            {[
+              ['PTS', activePlayer.pts],
+              ['REB', activePlayer.reb],
+              ['AST', activePlayer.ast],
+              ['STL', activePlayer.stl],
+              ['BLK', activePlayer.blk],
+              ['TO', activePlayer.to],
+            ].map(([label, value]) => (
+              <div className="athlete-stat" key={label}>
+                <strong>{value}</strong>
+                <span>{label}</span>
               </div>
-              <div className="player-grid">
-                {teamAPlayers.map((player) => (
-                  <PlayerCard key={player.id} player={player} active={activePlayerId === player.id} onSelect={() => setActivePlayerId(player.id)} />
-                ))}
-                {teamAPlayers.length === 0 && <p className="empty-roster">Add players in Game setup to get started.</p>}
-              </div>
-            </section>
-            <section className="team-roster">
-              <div className="roster-title">
-                <span className="team-dot team-b-dot" />
-                <h2>{game.teamB}</h2>
-                <span>{teamBScore} PTS</span>
-              </div>
-              <div className="player-grid">
-                {teamBPlayers.map((player) => (
-                  <PlayerCard key={player.id} player={player} active={activePlayerId === player.id} onSelect={() => setActivePlayerId(player.id)} />
-                ))}
-                {teamBPlayers.length === 0 && <p className="empty-roster">Add players in Game setup to get started.</p>}
-              </div>
-            </section>
+            ))}
           </div>
         </section>
 
@@ -748,9 +701,9 @@ function App() {
           <div className="active-player-panel">
             <span className="active-avatar">{activePlayer ? `#${activePlayer.jersey || '—'}` : '—'}</span>
             <div className="active-player-copy">
-              <span className="eyebrow">ACTIVE PLAYER</span>
-              <strong>{activePlayer ? activePlayer.name || 'Unnamed player' : 'Select a player'}</strong>
-              <span>{activePlayer ? activePlayer.team === 'Team A' ? game.teamA : game.teamB : 'Tap a roster card above'}</span>
+              <span className="eyebrow">TRACKING ATHLETE</span>
+              <strong>{activePlayer.name || 'Unnamed athlete'}</strong>
+              <span>{activePlayer.team === 'Team A' ? game.teamA : game.teamB}</span>
             </div>
             {activePlayer && <div className="active-points"><strong>{activePlayer.pts}</strong><span>PTS</span></div>}
           </div>
@@ -760,7 +713,6 @@ function App() {
                 className={`action-button ${action.style || ''}`}
                 type="button"
                 key={`${action.stat}-${action.amount}`}
-                disabled={!activePlayer}
                 onClick={() => recordAction(action)}
               >
                 <strong>{action.label}</strong>
@@ -773,7 +725,7 @@ function App() {
               <span>↶</span> Undo last action
             </button>
             <button type="button" className="reset-button" onClick={resetBoard}>Reset Board</button>
-            <div className="dock-hint">Select a player, then tap a stat to record it.</div>
+            <div className="dock-hint">Every action is recorded for this athlete only.</div>
             <button className="finalize-button" type="button" onClick={finalizeGame}>
               Finalize game <span>→</span>
             </button>
@@ -801,14 +753,12 @@ function App() {
       {showSetup && (
         <SetupModal
           game={game}
-          players={players}
+          player={activePlayer}
           assets={assets}
           requiredAssets={showAssetValidation ? requiredAssets : { teams: {}, players: {} }}
           onAssetChange={updateAsset}
           onGameChange={setGame}
-          onPlayersChange={setPlayers}
-          onAddPlayer={addPlayer}
-          onRemovePlayer={removePlayer}
+          onPlayerChange={updatePlayer}
           onClose={() => setShowSetup(false)}
         />
       )}

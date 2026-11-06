@@ -83,7 +83,7 @@ describe('createFinalizePayload', () => {
     })
   })
 
-  it('sends reference photos only for the top-ranked flyer player', () => {
+  it('submits only the tracked athlete and includes their reference photos', () => {
     const photoSet = ['photo-1', 'photo-2', 'photo-3']
     const payload = createFinalizePayload({
       game: { location: 'Gym', teamA: 'Home', teamB: 'Away' },
@@ -102,8 +102,9 @@ describe('createFinalizePayload', () => {
       completedAt: '2026-01-02T04:00:00.000Z',
     })
 
+    expect(payload.players).toHaveLength(1)
+    expect(payload.players[0].id).toBe('top')
     expect(payload.players[0].photos).toEqual(photoSet)
-    expect(payload.players[1].photos).toBeUndefined()
   })
 
   describe('isFinalizePayloadWithinLimit', () => {
