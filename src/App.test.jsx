@@ -358,6 +358,7 @@ describe('game state', () => {
     expect(screen.getAllByRole('button', { name: /Select .* to track stats/ })).toHaveLength(5)
     expect(screen.getByRole('region', { name: 'Red Team roster' })).toBeTruthy()
     expect(screen.queryByRole('region', { name: 'Blue Team roster' })).toBeNull()
+    expect(container.querySelector('.active-indicator')).toBeNull()
     expect(container.querySelectorAll('.active-stat')).toHaveLength(6)
     expect(screen.getByRole('button', { name: /\+2/ }).hasAttribute('disabled')).toBe(false)
 

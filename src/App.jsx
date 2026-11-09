@@ -815,7 +815,6 @@ function App() {
                           <span><b>{player.reb}</b> REB</span>
                         </span>
                       </span>
-                      {isActive && <span className="active-indicator">TRACKING</span>}
                     </button>
                   )
                 })}

@@ -397,16 +397,6 @@ button {
   font-weight: 700;
 }
 
-.active-indicator {
-  position: absolute;
-  top: 5px;
-  right: 7px;
-  color: var(--lime);
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.7px;
-}
-
 .empty-roster {
   grid-column: 1 / -1;
   padding: 20px 14px;
