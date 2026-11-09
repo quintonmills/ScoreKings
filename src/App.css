@@ -1096,17 +1096,6 @@ button {
   font-size: 12px;
 }
 
-.flyer-download {
-  margin-bottom: 14px;
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border: 1px solid #414449;
-  border-radius: 8px;
-  background: #1a1c1e;
-}
-
 .flyer-qr {
   padding: 8px;
   flex: none;
@@ -1115,27 +1104,9 @@ button {
 }
 
 .flyer-qr svg {
-  width: 176px;
-  height: 176px;
+  width: 132px;
+  height: 132px;
   display: block;
-}
-
-.flyer-download-copy {
-  display: grid;
-  gap: 7px;
-  color: #c4c7c3;
-  font-size: 10px;
-  line-height: 1.5;
-}
-
-.flyer-download-copy strong {
-  color: #f0f1ed;
-  font-size: 12px;
-}
-
-.flyer-download-copy a {
-  width: fit-content;
-  color: #d7ff43;
 }
 
 .flyer-qr-unavailable {
@@ -1146,13 +1117,25 @@ button {
 }
 
 .generated-flyer-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
 }
 
-.generated-flyer-list a {
-  width: 120px;
+.generated-flyer-card {
+  min-width: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #414449;
+  border-radius: 7px;
+  background: #1a1c1e;
+}
+
+.generated-flyer-card > a:first-child {
+  width: 100%;
   display: grid;
   gap: 5px;
   color: #d7ff43;
@@ -1160,13 +1143,33 @@ button {
   text-decoration: none;
 }
 
-.generated-flyer-list img {
-  width: 120px;
+.generated-flyer-card img {
+  width: 100%;
   height: 150px;
   border: 1px solid #414449;
   border-radius: 5px;
   background: #141618;
   object-fit: cover;
+}
+
+.generated-flyer-card .flyer-qr {
+  padding: 5px;
+}
+
+.generated-flyer-card .flyer-qr svg {
+  width: 132px;
+  height: 132px;
+  display: block;
+}
+
+.generated-flyer-card .flyer-download-link {
+  width: fit-content;
+  color: #d7ff43;
+  font-size: 9px;
+}
+
+.generated-flyer-card .flyer-qr-unavailable {
+  margin: 0;
 }
 
 .remove-player {
@@ -1375,16 +1378,6 @@ button {
 }
 
 @media (max-width: 540px) {
-  .flyer-download {
-    padding: 10px;
-    gap: 12px;
-  }
-
-  .flyer-qr svg {
-    width: 132px;
-    height: 132px;
-  }
-
   .scoreboard {
     padding: 8px 10px 7px;
   }

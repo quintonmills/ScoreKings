@@ -276,11 +276,24 @@ function AthleteEditor({ player, playerNumber, playerImages, requiredPlayerMessa
 }
 
 function getFlyerDownloadUrl(graphic) {
-  const candidate = graphic.downloadUrl || graphic.publicUrl
-  if (typeof candidate !== 'string' || !candidate) return null
+  for (const candidate of [graphic?.downloadUrl, graphic?.publicUrl]) {
+    if (typeof candidate !== 'string' || !candidate) continue
+
+    try {
+      const url = new URL(candidate, apiBaseUrl)
+      if (url.protocol === 'http:' || url.protocol === 'https:') return url.href
+    } catch {
+      continue
+    }
+  }
+  return null
+}
+
+function getFlyerPublicUrl(graphic) {
+  if (typeof graphic?.publicUrl !== 'string' || !graphic.publicUrl) return null
 
   try {
-    const url = new URL(candidate, apiBaseUrl)
+    const url = new URL(graphic.publicUrl, apiBaseUrl)
     return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null
   } catch {
     return null
@@ -412,9 +425,6 @@ function SetupModal({ game, players, player, activePlayerNumber, assets, require
 }
 
 function FinalizeModal({ payload, graphics, requestState, requestMessage, onRetry, onClose }) {
-  const firstFlyer = graphics[0]
-  const downloadUrl = firstFlyer ? getFlyerDownloadUrl(firstFlyer) : null
-
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal finalize-modal" role="dialog" aria-modal="true" aria-labelledby="finalize-title">
@@ -441,36 +451,42 @@ function FinalizeModal({ payload, graphics, requestState, requestMessage, onRetr
         {graphics.length > 0 && (
           <section className="generated-flyers" aria-label="Generated flyers">
             <h3>Generated flyers</h3>
-            {downloadUrl ? (
-              <div className="flyer-download">
-                <div className="flyer-qr">
-                  <QRCodeSVG
-                    value={downloadUrl}
-                    size={176}
-                    level="M"
-                    marginSize={4}
-                    role="img"
-                    aria-label="QR code to download the flyer"
-                  />
-                </div>
-                <div className="flyer-download-copy">
-                  <strong>Scan to download the flyer</strong>
-                  <span>Open your phone’s camera and point it at the code.</span>
-                  <a href={downloadUrl} target="_blank" rel="noreferrer">Or open the download link</a>
-                </div>
-              </div>
-            ) : (
-              <p className="flyer-qr-unavailable" role="status">
-                A QR code is unavailable because the server did not return a valid flyer URL.
-              </p>
-            )}
             <div className="generated-flyer-list">
-              {graphics.map((graphic, index) => (
-                <a key={`${graphic.publicUrl}-${index}`} href={graphic.publicUrl} target="_blank" rel="noreferrer">
-                  <img src={graphic.publicUrl} alt={`Generated flyer ${index + 1}`} />
-                  <span>Open flyer {index + 1}</span>
-                </a>
-              ))}
+              {graphics.map((graphic, index) => {
+                const publicUrl = getFlyerPublicUrl(graphic)
+                const downloadUrl = getFlyerDownloadUrl(graphic)
+                const flyerName = graphic.playerName || `Flyer ${index + 1}`
+
+                return (
+                  <article className="generated-flyer-card" key={`${publicUrl}-${index}`}>
+                    <a href={publicUrl} target="_blank" rel="noreferrer">
+                      <img src={publicUrl} alt={`Generated flyer for ${flyerName}`} />
+                      <span>Open {flyerName}</span>
+                    </a>
+                    {downloadUrl ? (
+                      <>
+                        <div className="flyer-qr">
+                          <QRCodeSVG
+                            value={downloadUrl}
+                            size={132}
+                            level="M"
+                            marginSize={4}
+                            role="img"
+                            aria-label={`QR code to download flyer for ${flyerName}`}
+                          />
+                        </div>
+                        <a className="flyer-download-link" href={downloadUrl} target="_blank" rel="noreferrer">
+                          Download {flyerName}
+                        </a>
+                      </>
+                    ) : (
+                      <p className="flyer-qr-unavailable" role="status">
+                        A QR code is unavailable because the server did not return a valid flyer URL.
+                      </p>
+                    )}
+                  </article>
+                )
+              })}
             </div>
           </section>
         )}
@@ -695,7 +711,9 @@ function App() {
         }
       }
       const graphics = Array.isArray(responseBody?.graphics)
-        ? responseBody.graphics.filter((graphic) => typeof graphic?.publicUrl === 'string' && graphic.publicUrl.length > 0)
+        ? responseBody.graphics
+          .filter((graphic) => getFlyerPublicUrl(graphic))
+          .map((graphic) => ({ ...graphic, publicUrl: getFlyerPublicUrl(graphic) }))
         : []
       setGeneratedFlyers(graphics)
       setRequestState('success')

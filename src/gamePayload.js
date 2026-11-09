@@ -17,8 +17,6 @@ export function isFinalizePayloadWithinLimit(payload) {
 }
 
 export function createFinalizePayload({ game, players, assets, teamAScore, events, startedAt, completedAt }) {
-  const flyerPlayerId = getFlyerPlayers(players)[0]?.id
-
   return {
     gameId: 'game-101',
     status: 'COMPLETED',
@@ -43,7 +41,7 @@ export function createFinalizePayload({ game, players, assets, teamAScore, event
       stl,
       blk,
       to,
-      ...(id === flyerPlayerId && assets.players[id]?.some(Boolean)
+      ...(assets.players[id]?.some(Boolean)
         ? { photos: assets.players[id].filter(Boolean) }
         : {}),
     })),

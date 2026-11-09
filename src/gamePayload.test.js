@@ -83,7 +83,7 @@ describe('createFinalizePayload', () => {
     })
   })
 
-  it('submits every tracked player and attaches photos to the top scorer', () => {
+  it('submits every tracked player and includes each player\'s uploaded photos', () => {
     const photoSet = ['photo-1', 'photo-2', 'photo-3']
     const payload = createFinalizePayload({
       game: { location: 'Gym', teamA: 'Home', teamB: 'Away' },
@@ -108,7 +108,7 @@ describe('createFinalizePayload', () => {
     expect(payload.players[0].photos).toEqual(photoSet)
     expect(payload.players[1].id).toBe('next')
     expect(payload.players[1].team).toBe('Team A')
-    expect(payload.players[1]).not.toHaveProperty('photos')
+    expect(payload.players[1].photos).toEqual(photoSet)
   })
 
   describe('isFinalizePayloadWithinLimit', () => {

@@ -26,10 +26,19 @@ beforeEach(() => {
     status: 200,
     statusText: 'OK',
     text: async () => JSON.stringify({
-      graphics: [{
-        publicUrl: 'https://cdn.scorekings.example/flyer.png',
-        downloadUrl: 'https://api.scorekings.example/games/game-101/flyer/download',
-      }],
+      graphics: [
+        {
+          playerId: 'p1',
+          playerName: 'Marcus',
+          publicUrl: 'https://cdn.scorekings.example/marcus-flyer.png',
+          downloadUrl: 'https://api.scorekings.example/games/game-101/flyer/marcus/download',
+        },
+        {
+          playerId: 'p2',
+          playerName: 'Jordan',
+          publicUrl: 'https://cdn.scorekings.example/jordan-flyer.png',
+        },
+      ],
     }),
   })))
 })
@@ -284,10 +293,13 @@ describe('flyer image uploads', () => {
       teamB: { name: 'Opponent', score: 0 },
       players: expectedPlayers,
     })
-    expect(await screen.findByAltText('Generated flyer 1')).toBeTruthy()
-    expect(screen.getAllByRole('img', { name: 'QR code to download the flyer' })).toHaveLength(1)
-    expect(screen.getByRole('link', { name: 'Or open the download link' }).getAttribute('href'))
-      .toBe('https://api.scorekings.example/games/game-101/flyer/download')
+    expect(await screen.findByAltText('Generated flyer for Marcus')).toBeTruthy()
+    expect(screen.getByAltText('Generated flyer for Jordan')).toBeTruthy()
+    expect(screen.getAllByRole('img', { name: /QR code to download flyer for/ })).toHaveLength(2)
+    expect(screen.getByRole('link', { name: 'Download Marcus' }).getAttribute('href'))
+      .toBe('https://api.scorekings.example/games/game-101/flyer/marcus/download')
+    expect(screen.getByRole('link', { name: 'Download Jordan' }).getAttribute('href'))
+      .toBe('https://cdn.scorekings.example/jordan-flyer.png')
   })
 })
 
