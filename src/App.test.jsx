@@ -231,7 +231,7 @@ describe('flyer image uploads', () => {
 
     const expectedPlayers = [{
       id: 'p1',
-      team: 'Red Team',
+      team: 'Team A',
       jersey: '3',
       name: 'Marcus',
       pts: 2,

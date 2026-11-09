@@ -16,7 +16,7 @@ describe('getFlyerPlayers', () => {
 })
 
 describe('createFinalizePayload', () => {
-  it('preserves game and player fields and adds images under the backend field names', () => {
+  it('preserves backend team identifiers and adds images under the backend field names', () => {
     const payload = createFinalizePayload({
       game: { location: 'Gym', teamA: 'Home', teamB: 'Away' },
       players: [{
@@ -65,7 +65,7 @@ describe('createFinalizePayload', () => {
       teamB: { name: 'Away', score: 0, logo: 'data:image/webp;base64,logo-b' },
       players: [{
         id: 'p1',
-        team: 'Home',
+        team: 'Team A',
         jersey: '3',
         name: 'Marcus',
         pts: 2,
@@ -104,7 +104,7 @@ describe('createFinalizePayload', () => {
 
     expect(payload.players).toHaveLength(1)
     expect(payload.players[0].id).toBe('top')
-    expect(payload.players[0].team).toBe('Away')
+    expect(payload.players[0].team).toBe('Team B')
     expect(payload.players[0].photos).toEqual(photoSet)
   })
 
