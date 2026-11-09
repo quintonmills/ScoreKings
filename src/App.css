@@ -713,6 +713,61 @@ button {
   background: #202225;
 }
 
+.setup-player-picker {
+  margin-bottom: 16px;
+}
+
+.setup-player-picker h3 {
+  margin: 0 0 8px;
+  color: #b8bbba;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.setup-player-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.setup-player-choice {
+  min-width: 0;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  border: 1px solid #414449;
+  border-radius: 6px;
+  background: #141618;
+  color: #e6e7e3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.setup-player-choice.is-selected {
+  border-color: var(--lime);
+  background: #252a1d;
+}
+
+.setup-player-choice span {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 10px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setup-player-choice small {
+  overflow: hidden;
+  max-width: 100%;
+  color: #92969b;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .custom-clock-heading {
   display: flex;
   align-items: center;

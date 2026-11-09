@@ -83,7 +83,7 @@ describe('createFinalizePayload', () => {
     })
   })
 
-  it('submits only the tracked athlete and includes their reference photos', () => {
+  it('submits every tracked player and attaches photos to the top scorer', () => {
     const photoSet = ['photo-1', 'photo-2', 'photo-3']
     const payload = createFinalizePayload({
       game: { location: 'Gym', teamA: 'Home', teamB: 'Away' },
@@ -102,10 +102,12 @@ describe('createFinalizePayload', () => {
       completedAt: '2026-01-02T04:00:00.000Z',
     })
 
-    expect(payload.players).toHaveLength(1)
+    expect(payload.players).toHaveLength(2)
     expect(payload.players[0].id).toBe('top')
     expect(payload.players[0].team).toBe('Team B')
     expect(payload.players[0].photos).toEqual(photoSet)
+    expect(payload.players[1].id).toBe('next')
+    expect(payload.players[1]).not.toHaveProperty('photos')
   })
 
   describe('isFinalizePayloadWithinLimit', () => {

@@ -28,6 +28,23 @@ const initialPlayer = {
   to: 0,
 }
 
+function createInitialPlayers() {
+  return Array.from({ length: 5 }, (_, index) => index === 0
+    ? { ...initialPlayer }
+    : {
+      id: `p${index + 1}`,
+      team: 'Team A',
+      jersey: String(index + 3),
+      name: `Player ${index + 1}`,
+      pts: 0,
+      reb: 0,
+      ast: 0,
+      stl: 0,
+      blk: 0,
+      to: 0,
+    })
+}
+
 function loadGameState() {
   try {
     const savedState = window.localStorage.getItem(GAME_STORAGE_KEY)
@@ -55,23 +72,30 @@ function loadGameState() {
       throw new Error('Saved game state has an unsupported format.')
     }
 
-    const savedPlayer = parsedState.players.find((player) => player.id === parsedState.activePlayerId)
-      || parsedState.players.find((player) => player.pts || player.reb || player.ast || player.stl || player.blk || player.to)
-      || parsedState.players[0]
-      || initialPlayer
-    const playerId = savedPlayer.id
+    const players = parsedState.players.slice(0, 5)
+    const playerIds = new Set(players.map((player) => player.id))
+    for (const player of createInitialPlayers()) {
+      if (players.length === 5) break
+      if (!playerIds.has(player.id)) {
+        players.push(player)
+        playerIds.add(player.id)
+      }
+    }
+    const activePlayerId = players.some((player) => player.id === parsedState.activePlayerId)
+      ? parsedState.activePlayerId
+      : players[0]?.id || initialPlayer.id
 
     return {
       ...parsedState,
-      players: [savedPlayer],
-      activePlayerId: playerId,
-      events: parsedState.events.filter((event) => event.playerId === playerId),
-      history: parsedState.history.filter((action) => action.playerId === playerId),
+      players,
+      activePlayerId,
+      events: parsedState.events.filter((event) => playerIds.has(event.playerId)),
+      history: parsedState.history.filter((action) => playerIds.has(action.playerId)),
       assets: {
         ...parsedState.assets,
-        players: parsedState.assets.players?.[playerId]
-          ? { [playerId]: parsedState.assets.players[playerId] }
-          : {},
+        players: Object.fromEntries(
+          Object.entries(parsedState.assets.players || {}).filter(([playerId]) => playerIds.has(playerId)),
+        ),
       },
       customClockEnabled: parsedState.version === 2 ? parsedState.customClockEnabled : false,
       customClockDurationSeconds: parsedState.version === 2
@@ -222,20 +246,27 @@ function TeamEditor({ team, teamKey, title, logo, onLogoChange, requiredLogoMess
   )
 }
 
-function AthleteEditor({ player, playerImages, requiredPlayerMessages, onPlayerChange, onPlayerImageChange }) {
+function AthleteEditor({ player, playerNumber, playerImages, requiredPlayerMessages, onPlayerChange, onPlayerImageChange }) {
   return (
-    <section className="athlete-editor" aria-labelledby="athlete-details-title">
+    <section className="athlete-editor" aria-labelledby="player-details-title">
       <div className="editor-heading">
-        <h3 id="athlete-details-title">Athlete details</h3>
+        <h3 id="player-details-title">Player {playerNumber} details</h3>
       </div>
       <div className="game-fields athlete-fields">
         <label className="field-label">
-          Athlete name
+          Player name
           <input value={player.name} onChange={(event) => onPlayerChange('name', event.target.value)} />
         </label>
         <label className="field-label">
           Jersey number
           <input value={player.jersey} onChange={(event) => onPlayerChange('jersey', event.target.value)} />
+        </label>
+        <label className="field-label">
+          Team
+          <select value={player.team} onChange={(event) => onPlayerChange('team', event.target.value)}>
+            <option value="Team A">Team A</option>
+            <option value="Team B">Team B</option>
+          </select>
         </label>
       </div>
       {[0, 1, 2].map((index) => (
@@ -264,8 +295,7 @@ function getFlyerDownloadUrl(graphic) {
   }
 }
 
-function SetupModal({ game, player, assets, requiredAssets, customClockEnabled, customClockDurationSeconds, onClockSettingsChange, onAssetChange, onGameChange, onPlayerChange, onClose }) {
-  const teamKey = player.team === 'Team A' ? 'teamA' : 'teamB'
+function SetupModal({ game, players, player, activePlayerNumber, assets, requiredAssets, customClockEnabled, customClockDurationSeconds, onClockSettingsChange, onAssetChange, onGameChange, onPlayerChange, onPlayerSelect, onClose }) {
   const [enableCustomClock, setEnableCustomClock] = useState(customClockEnabled)
   const [clockDurationInput, setClockDurationInput] = useState(formatGameClock(customClockDurationSeconds))
   const [clockDurationError, setClockDurationError] = useState('')
@@ -340,24 +370,51 @@ function SetupModal({ game, player, assets, requiredAssets, customClockEnabled, 
           )}
           <button type="submit" className="clock-settings-button">Apply clock settings</button>
         </form>
+        <section className="setup-player-picker" aria-label="Choose a player to edit">
+          <h3>Players</h3>
+          <div className="setup-player-options">
+            {players.map((rosterPlayer, index) => {
+              const playerName = rosterPlayer.name || `Player ${index + 1}`
+              const isSelected = rosterPlayer.id === player.id
+              return (
+                <button
+                  type="button"
+                  className={`setup-player-choice ${isSelected ? 'is-selected' : ''}`}
+                  key={rosterPlayer.id}
+                  aria-pressed={isSelected}
+                  onClick={() => onPlayerSelect(rosterPlayer.id)}
+                >
+                  <span>#{rosterPlayer.jersey || '—'} {playerName}</span>
+                  <small>{rosterPlayer.team === 'Team A' ? game.teamA : game.teamB}</small>
+                </button>
+              )
+            })}
+          </div>
+        </section>
         <AthleteEditor
           player={player}
+          playerNumber={activePlayerNumber}
           playerImages={assets.players}
           requiredPlayerMessages={requiredAssets.players[player.id] || []}
           onPlayerChange={onPlayerChange}
           onPlayerImageChange={(image, index) => onAssetChange(player.id, image, index)}
         />
         <div className="team-editors">
-          <TeamEditor
-            key={teamKey}
-            team={player.team}
-            teamKey={teamKey}
-            title={game[teamKey]}
-            logo={assets.teams[teamKey]}
-            onLogoChange={(image) => onAssetChange(teamKey, image)}
-            requiredLogoMessage={requiredAssets.teams[teamKey]}
-            onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, [teamKey]: value }))}
-          />
+          {[
+            { team: 'Team A', teamKey: 'teamA' },
+            { team: 'Team B', teamKey: 'teamB' },
+          ].map(({ team, teamKey }) => (
+            <TeamEditor
+              key={teamKey}
+              team={team}
+              teamKey={teamKey}
+              title={game[teamKey]}
+              logo={assets.teams[teamKey]}
+              onLogoChange={(image) => onAssetChange(teamKey, image)}
+              requiredLogoMessage={requiredAssets.teams[teamKey]}
+              onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, [teamKey]: value }))}
+            />
+          ))}
         </div>
         <div className="modal-footer">
           <span>Changes are saved to this game immediately.</span>
@@ -443,7 +500,10 @@ function FinalizeModal({ payload, graphics, requestState, requestMessage, onRetr
 function App() {
   const [loadedState] = useState(loadGameState)
   const [game, setGame] = useState(() => loadedState.game || initialGame)
-  const [players, setPlayers] = useState(() => loadedState.players || [{ ...initialPlayer }])
+  const [players, setPlayers] = useState(() => loadedState.players || createInitialPlayers())
+  const [activePlayerId, setActivePlayerId] = useState(() =>
+    loadedState.activePlayerId || loadedState.players?.[0]?.id || initialPlayer.id,
+  )
   const [assets, setAssets] = useState(() => loadedState.assets || { teams: { teamA: null, teamB: null }, players: {} })
   const [events, setEvents] = useState(() => loadedState.events || [])
   const [startedAt, setStartedAt] = useState(() => loadedState.startedAt || new Date().toISOString())
@@ -492,7 +552,7 @@ function App() {
         game,
         players,
         assets,
-        activePlayerId: players[0]?.id || null,
+        activePlayerId,
         events,
         startedAt,
         clockSeconds,
@@ -504,9 +564,9 @@ function App() {
     } catch {
       setStorageMessage('Game data could not be saved in this browser. Check available storage or remove large images.')
     }
-  }, [game, players, assets, events, startedAt, clockSeconds, customClockEnabled, customClockDurationSeconds, history, saveRevision])
+  }, [game, players, activePlayerId, assets, events, startedAt, clockSeconds, customClockEnabled, customClockDurationSeconds, history, saveRevision])
 
-  const activePlayer = players[0]
+  const activePlayer = players.find((player) => player.id === activePlayerId) || players[0]
   const teamAScore = getScore(players, 'Team A')
   const teamBScore = getScore(players, 'Team B')
   const flyerPlayers = useMemo(() => getFlyerPlayers(players), [players])
@@ -566,7 +626,9 @@ function App() {
   }
 
   const updatePlayer = (key, value) => {
-    setPlayers((currentPlayers) => currentPlayers.map((player) => ({ ...player, [key]: value })))
+    setPlayers((currentPlayers) => currentPlayers.map((player) =>
+      player.id === activePlayerId ? { ...player, [key]: value } : player,
+    ))
   }
 
   const updateAsset = (key, image, photoIndex) => {
@@ -598,7 +660,8 @@ function App() {
       setStorageMessage('Saved game data could not be cleared. The board will still reset, but saved data may return after refresh.')
     }
     setGame(initialGame)
-    setPlayers([{ ...initialPlayer }])
+    setPlayers(createInitialPlayers())
+    setActivePlayerId(initialPlayer.id)
     setAssets({ teams: { teamA: null, teamB: null }, players: {} })
     setEvents([])
     setStartedAt(new Date().toISOString())
@@ -740,6 +803,57 @@ function App() {
       </section>
 
       <div className="main-content">
+        <section className="roster-section" aria-label="Player roster">
+          <div className="roster-columns">
+            {[
+              { team: 'Team A', teamKey: 'teamA', dotClass: 'team-a-dot' },
+              { team: 'Team B', teamKey: 'teamB', dotClass: 'team-b-dot' },
+            ].map(({ team, teamKey, dotClass }) => {
+              const teamPlayers = players
+                .map((player, index) => ({ ...player, rosterNumber: index + 1 }))
+                .filter((player) => player.team === team)
+
+              return (
+                <section className="team-roster" key={team} aria-label={`${game[teamKey]} roster`}>
+                  <div className="roster-title">
+                    <span className={`team-dot ${dotClass}`} />
+                    <h2>{game[teamKey]}</h2>
+                    <span>{teamPlayers.length} PLAYERS</span>
+                  </div>
+                  <div className="player-grid">
+                    {teamPlayers.map((player) => {
+                      const playerName = player.name || `Player ${player.rosterNumber}`
+                      const isActive = player.id === activePlayer.id
+                      return (
+                        <button
+                          className={`player-card ${isActive ? 'is-active' : ''}`}
+                          type="button"
+                          key={player.id}
+                          aria-label={`Select ${playerName} to track stats`}
+                          aria-pressed={isActive}
+                          onClick={() => setActivePlayerId(player.id)}
+                        >
+                          <span className="player-number">#{player.jersey || '—'}</span>
+                          <span className="player-info">
+                            <span className="player-name">{playerName}</span>
+                            <span className="player-stats">
+                              <span><b>{player.pts}</b> PTS</span>
+                              <span><b>{player.reb}</b> REB</span>
+                            </span>
+                          </span>
+                          {isActive && <span className="active-indicator">TRACKING</span>}
+                        </button>
+                      )
+                    })}
+                    {teamPlayers.length === 0 && (
+                      <p className="empty-roster">No players assigned to this team.</p>
+                    )}
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+        </section>
         <section className="action-dock" aria-label="Stat actions">
           <div className="active-player-panel">
             <span className="active-avatar">{activePlayer ? `#${activePlayer.jersey || '—'}` : '—'}</span>
@@ -803,7 +917,9 @@ function App() {
       {showSetup && (
         <SetupModal
           game={game}
+          players={players}
           player={activePlayer}
+          activePlayerNumber={players.findIndex((player) => player.id === activePlayer.id) + 1}
           assets={assets}
           requiredAssets={showAssetValidation ? requiredAssets : { teams: {}, players: {} }}
           customClockEnabled={customClockEnabled}
@@ -812,6 +928,7 @@ function App() {
           onAssetChange={updateAsset}
           onGameChange={setGame}
           onPlayerChange={updatePlayer}
+          onPlayerSelect={setActivePlayerId}
           onClose={() => setShowSetup(false)}
         />
       )}

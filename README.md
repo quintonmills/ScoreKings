@@ -3,7 +3,7 @@
 > 🚀 **Live Demo App:** [https://score-kings-ivory.vercel.app](https://score-kings-ivory.vercel.app)  
 > 📄 **Technical Architecture Brief:** [View SaaS Technical Brief & System Architecture](https://quintonmills.github.io/ScoreKings-SaaS-Brief/)
 
-A tablet-friendly basketball stat logger for tracking one athlete per submission. ScoreKings lets you configure the athlete and teams, record individual stats with touch-friendly controls, and export a single-athlete box score as JSON.
+A tablet-friendly basketball stat logger for tracking up to five athletes per game. ScoreKings lets you configure players and teams, record individual stats with touch-friendly controls, and export the complete box score as JSON.
 ## Dashboard
 
 <img width="284" height="512" alt="image" src="https://github.com/user-attachments/assets/2ffb5397-a007-44ac-b579-5a09cb50880b" />
@@ -12,9 +12,9 @@ A tablet-friendly basketball stat logger for tracking one athlete per submission
 
 ## Features
 
-- Live scoreboard focused on the selected athlete and their points total.
+- Five-player roster with selectable active player and per-player stat tracking.
 - Game setup for team names, location, and quarter or overtime period.
-- One-athlete stat tracking for points, rebounds, assists, steals, blocks, and turnovers.
+- Player stat tracking for points, rebounds, assists, steals, blocks, and turnovers.
 - Undo for the most recently recorded stat action.
 - Automatic browser-local game-state persistence and a **Reset Board** control.
 - Game finalization modal with the box-score JSON payload, generated flyer, and QR-code download link.
@@ -57,10 +57,10 @@ npm run lint     # Run Oxlint
 
 ## Using the logger
 
-1. Open **Game setup** to edit the athlete details, their team name, and game location.
-2. Tap a stat button to record an action for the athlete shown on the board. The board and submission track one athlete only.
+1. Open **Game setup** to edit player details, team names, and game location.
+2. Select a player from the roster, then tap a stat button to record an action for that player. Repeat for up to five players.
 3. Use **Undo last action** to reverse the most recent stat entry.
-4. In **Game setup**, add the athlete's team logo and three reference photos for the target athlete. PNG, JPEG, and WebP images up to 5 MB each are accepted.
+4. In **Game setup**, select a player from the roster to edit their name, jersey, and team. Add the leading scorer's team logo and three reference photos for that player. PNG, JPEG, and WebP images up to 5 MB each are accepted.
 6. Select **Finalize game** to send the box-score payload and required flyer assets to the backend.
 
 The game clock counts up from `00:00` by default. To use a countdown, open **Game setup**, enable **Custom countdown**, enter a duration in `MM:SS`, and select **Apply clock settings**. The countdown stops at zero; applying the setting again after it expires restarts it from the configured duration.
@@ -113,4 +113,4 @@ Example payload:
 }
 ```
 
-The example above shows the shape of a single-athlete payload; the frontend submits exactly one player and that athlete's stats. Game details, player details and stats, the event history, clock, and uploaded logos/photos are saved to browser `localStorage` as you work. Select **Reset Board** to clear that saved game and return to the defaults. Browser storage limits can prevent very large image collections from being saved; the logger displays a warning if persistence fails. The target athlete needs three reference photos and their team needs a logo; the frontend prevents finalization when an asset is missing or the JSON request would reach the backend's 14 MB limit. The backend uses a bundled flyer image as broad visual art direction, while the model is instructed to create an original composition. The flyer focuses on the athlete name, jersey, team, and points total. Returned `graphics[].publicUrl` values are shown as generated flyers. The final-score modal displays one QR code for the first flyer, preferring its `downloadUrl` and falling back to `publicUrl` for older backend responses.
+The example above shows one player entry; the frontend submits all five roster players and their stats. Game details, player details and stats, the active player, event history, clock, and uploaded logos/photos are saved to browser `localStorage` as you work. Select **Reset Board** to clear that saved game and return to the defaults. Browser storage limits can prevent very large image collections from being saved; the logger displays a warning if persistence fails. The leading scorer needs three reference photos and their team needs a logo; the frontend prevents finalization when an asset is missing or the JSON request would reach the backend's 14 MB limit. The backend uses a bundled flyer image as broad visual art direction, while the model is instructed to create an original composition. The flyer focuses on the athlete name, jersey, team, and points total. Returned `graphics[].publicUrl` values are shown as generated flyers. The final-score modal displays one QR code for the first flyer, preferring its `downloadUrl` and falling back to `publicUrl` for older backend responses.

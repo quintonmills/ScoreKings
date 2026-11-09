@@ -17,8 +17,7 @@ export function isFinalizePayloadWithinLimit(payload) {
 }
 
 export function createFinalizePayload({ game, players, assets, teamAScore, teamBScore, events, startedAt, completedAt }) {
-  const submittedPlayer = players[0]
-  const flyerPlayerId = submittedPlayer && getFlyerPlayers([submittedPlayer])[0]?.id
+  const flyerPlayerId = getFlyerPlayers(players)[0]?.id
 
   return {
     gameId: 'game-101',
@@ -37,7 +36,7 @@ export function createFinalizePayload({ game, players, assets, teamAScore, teamB
       score: teamBScore,
       ...(assets.teams.teamB ? { logo: assets.teams.teamB } : {}),
     },
-    players: players.slice(0, 1).map(({ id, team, jersey, name, pts, reb, ast, stl, blk, to }) => ({
+    players: players.map(({ id, team, jersey, name, pts, reb, ast, stl, blk, to }) => ({
       id,
       team,
       jersey,

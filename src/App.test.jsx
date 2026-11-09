@@ -229,23 +229,42 @@ describe('flyer image uploads', () => {
     expect(options.method).toBe('POST')
     expect(options.headers).toEqual({ 'Content-Type': 'application/json' })
 
-    const expectedPlayers = [{
-      id: 'p1',
-      team: 'Team A',
-      jersey: '3',
-      name: 'Marcus',
-      pts: 2,
-      reb: 0,
-      ast: 0,
-      stl: 0,
-      blk: 0,
-      to: 0,
-      photos: [
-        'data:image/jpeg;base64,bWFyY3VzLTE=',
-        'data:image/jpeg;base64,bWFyY3VzLTI=',
-        'data:image/jpeg;base64,bWFyY3VzLTM=',
-      ],
-    }]
+    const expectedPlayers = [
+      {
+        id: 'p1',
+        team: 'Team A',
+        jersey: '3',
+        name: 'Marcus',
+        pts: 2,
+        reb: 0,
+        ast: 0,
+        stl: 0,
+        blk: 0,
+        to: 0,
+        photos: [
+          'data:image/jpeg;base64,bWFyY3VzLTE=',
+          'data:image/jpeg;base64,bWFyY3VzLTI=',
+          'data:image/jpeg;base64,bWFyY3VzLTM=',
+        ],
+      },
+      ...[
+        ['p2', '4', 'Player 2'],
+        ['p3', '5', 'Player 3'],
+        ['p4', '6', 'Player 4'],
+        ['p5', '7', 'Player 5'],
+      ].map(([id, jersey, name]) => ({
+        id,
+        team: 'Team A',
+        jersey,
+        name,
+        pts: 0,
+        reb: 0,
+        ast: 0,
+        stl: 0,
+        blk: 0,
+        to: 0,
+      })),
+    ]
 
     expect(JSON.parse(options.body)).toEqual({
       gameId: 'game-101',
@@ -289,50 +308,92 @@ describe('game state', () => {
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Game settings' }))
 
-    const teamNameInput = screen.getByRole('textbox', { name: 'Team name' })
-    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
+    const teamNameInput = screen.getAllByRole('textbox', { name: 'Team name' })[0]
+    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(2)
     await user.clear(teamNameInput)
     await user.type(teamNameInput, 'Falcons')
 
     expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
     expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
     expect(screen.getByLabelText('Falcons logo upload')).toBeTruthy()
-    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
-    expect(screen.queryByRole('combobox', { name: 'Team' })).toBeNull()
+    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(2)
+    expect(screen.getByRole('combobox', { name: 'Team' })).toBeTruthy()
   })
 
-  it('keeps the live board focused on one athlete and exposes no roster switching', async () => {
+  it('edits each player in setup and reflects the name, jersey, and team on the dashboard', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Game settings' }))
+    await user.click(screen.getByRole('button', { name: /#4 Player 2/ }))
+
+    await user.clear(screen.getByRole('textbox', { name: 'Player name' }))
+    await user.type(screen.getByRole('textbox', { name: 'Player name' }), 'Jordan')
+    await user.clear(screen.getByRole('textbox', { name: 'Jersey number' }))
+    await user.type(screen.getByRole('textbox', { name: 'Jersey number' }), '23')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Team' }), 'Team B')
+    await user.upload(
+      screen.getByLabelText('Jordan reference photo 1 upload'),
+      uploadedImage('jordan.jpg', 'image/jpeg', 'jordan'),
+    )
+    expect(await screen.findByAltText('Jordan reference photo 1 preview')).toBeTruthy()
+
+    expect(screen.getByRole('button', { name: /#23 Jordan/ }).textContent).toContain('Blue Team')
+    expect(screen.getByRole('button', { name: /#23 Jordan/ }).getAttribute('aria-pressed')).toBe('true')
+
+    await user.click(screen.getByRole('button', { name: /#3 Marcus/ }))
+    expect(screen.getByRole('textbox', { name: 'Player name' }).value).toBe('Marcus')
+    expect(screen.getByLabelText('Marcus reference photo 1 upload')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /#23 Jordan/ }))
+    expect(screen.getByRole('textbox', { name: 'Player name' }).value).toBe('Jordan')
+    expect(screen.getByLabelText('Jordan reference photo 1 upload')).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+    expect(container.querySelector('.active-player-copy strong').textContent).toBe('Jordan')
+    expect(screen.getByRole('button', { name: /Select Jordan to track stats/ }).textContent).toContain('#23')
+  })
+
+  it('shows five players and records stats for the selected player', async () => {
     const { container } = render(<App />)
     expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
-    expect(container.querySelector('.roster-section')).toBeNull()
+    expect(screen.getAllByRole('button', { name: /Select .* to track stats/ })).toHaveLength(5)
     expect(container.querySelectorAll('.active-stat')).toHaveLength(6)
-    expect(screen.queryByRole('button', { name: /Jordan|DeAndre|Darius/ })).toBeNull()
     expect(screen.getByRole('button', { name: /\+2/ }).hasAttribute('disabled')).toBe(false)
 
+    fireEvent.click(screen.getByRole('button', { name: 'Select Player 2 to track stats' }))
     fireEvent.click(screen.getByRole('button', { name: /\+2/ }))
+    expect(container.querySelector('.active-player-copy strong').textContent).toBe('Player 2')
+    expect(container.querySelector('.active-stats').textContent).toContain('2PTS')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select Marcus to track stats' }))
     fireEvent.click(screen.getByRole('button', { name: /REBREBOUND/ }))
     expect([...container.querySelectorAll('.active-stat strong')].map((stat) => stat.textContent))
-      .toEqual(['2', '1', '0', '0', '0', '0'])
+      .toEqual(['0', '1', '0', '0', '0', '0'])
   })
 
   it('restores game details, active player, stats, and events after remount', async () => {
     const user = userEvent.setup()
     const firstRender = render(<App />)
     await user.click(screen.getByRole('button', { name: /\+2/ }))
+    await user.click(screen.getByRole('button', { name: 'Select Player 2 to track stats' }))
+    await user.click(screen.getByRole('button', { name: /\+3/ }))
     await user.click(screen.getByRole('button', { name: 'Game settings' }))
-    const teamAName = screen.getByRole('textbox', { name: 'Team name' })
+    const teamAName = screen.getAllByRole('textbox', { name: 'Team name' })[0]
     await user.clear(teamAName)
     await user.type(teamAName, 'Falcons')
     await user.click(screen.getByRole('button', { name: /Back to game/ }))
 
-    expect(window.localStorage.getItem('scorekings-game-state-v1')).toBeTruthy()
+    const savedState = JSON.parse(window.localStorage.getItem('scorekings-game-state-v1'))
+    expect(savedState.players).toHaveLength(5)
+    expect(savedState.activePlayerId).toBe('p2')
+    expect(savedState.events).toHaveLength(2)
     firstRender.unmount()
 
     const { container } = render(<App />)
     expect(container.querySelector('.active-player-copy > span:last-child').textContent).toBe('Falcons')
-    expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
-    expect(container.querySelector('.active-stats').textContent).toContain('2PTS')
-    expect(container.querySelector('.roster-section')).toBeNull()
+    expect(container.querySelector('.active-player-copy strong').textContent).toBe('Player 2')
+    expect(container.querySelector('.active-stats').textContent).toContain('3PTS')
+    expect(screen.getByRole('button', { name: 'Select Marcus to track stats' }).textContent).toContain('2')
+    expect(screen.getAllByRole('button', { name: /Select .* to track stats/ })).toHaveLength(5)
   })
 
   it('clears saved data and resets the board only when Reset Board is clicked', async () => {
