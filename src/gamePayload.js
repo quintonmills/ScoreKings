@@ -16,7 +16,7 @@ export function isFinalizePayloadWithinLimit(payload) {
   return new TextEncoder().encode(JSON.stringify(payload)).byteLength < MAX_GAME_PAYLOAD_BYTES
 }
 
-export function createFinalizePayload({ game, players, assets, teamAScore, teamBScore, events, startedAt, completedAt }) {
+export function createFinalizePayload({ game, players, assets, teamAScore, events, startedAt, completedAt }) {
   const flyerPlayerId = getFlyerPlayers(players)[0]?.id
 
   return {
@@ -31,14 +31,10 @@ export function createFinalizePayload({ game, players, assets, teamAScore, teamB
       score: teamAScore,
       ...(assets.teams.teamA ? { logo: assets.teams.teamA } : {}),
     },
-    teamB: {
-      name: game.teamB,
-      score: teamBScore,
-      ...(assets.teams.teamB ? { logo: assets.teams.teamB } : {}),
-    },
-    players: players.map(({ id, team, jersey, name, pts, reb, ast, stl, blk, to }) => ({
+    teamB: { name: 'Opponent', score: 0 },
+    players: players.map(({ id, jersey, name, pts, reb, ast, stl, blk, to }) => ({
       id,
-      team,
+      team: 'Team A',
       jersey,
       name,
       pts,

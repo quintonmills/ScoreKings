@@ -281,7 +281,7 @@ describe('flyer image uploads', () => {
         resultingScore: { teamA: 2, teamB: 0 },
       }],
       teamA: { name: 'Red Team', score: 2, logo: 'data:image/png;base64,aG9tZQ==' },
-      teamB: { name: 'Blue Team', score: 0 },
+      teamB: { name: 'Opponent', score: 0 },
       players: expectedPlayers,
     })
     expect(await screen.findByAltText('Generated flyer 1')).toBeTruthy()
@@ -303,24 +303,25 @@ describe('game state', () => {
     expect(screen.getByRole('button', { name: 'Game settings' })).toBeTruthy()
   })
 
-  it('updates team titles and logo labels as team names are typed', async () => {
+  it('updates the single team name across the roster and logo label', async () => {
     const user = userEvent.setup()
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Game settings' }))
 
     const teamNameInput = screen.getAllByRole('textbox', { name: 'Team name' })[0]
-    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(2)
+    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
     await user.clear(teamNameInput)
     await user.type(teamNameInput, 'Falcons')
 
     expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
     expect(screen.getAllByText('Falcons').length).toBeGreaterThan(1)
     expect(screen.getByLabelText('Falcons logo upload')).toBeTruthy()
-    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(2)
-    expect(screen.getByRole('combobox', { name: 'Team' })).toBeTruthy()
+    expect(screen.getAllByRole('textbox', { name: 'Team name' })).toHaveLength(1)
+    expect(screen.queryByRole('combobox', { name: 'Team' })).toBeNull()
+    expect(screen.queryByText('Blue Team')).toBeNull()
   })
 
-  it('edits each player in setup and reflects the name, jersey, and team on the dashboard', async () => {
+  it('edits player details in setup and reflects the name and jersey on the dashboard', async () => {
     const user = userEvent.setup()
     const { container } = render(<App />)
     await user.click(screen.getByRole('button', { name: 'Game settings' }))
@@ -330,14 +331,13 @@ describe('game state', () => {
     await user.type(screen.getByRole('textbox', { name: 'Player name' }), 'Jordan')
     await user.clear(screen.getByRole('textbox', { name: 'Jersey number' }))
     await user.type(screen.getByRole('textbox', { name: 'Jersey number' }), '23')
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Team' }), 'Team B')
     await user.upload(
       screen.getByLabelText('Jordan reference photo 1 upload'),
       uploadedImage('jordan.jpg', 'image/jpeg', 'jordan'),
     )
     expect(await screen.findByAltText('Jordan reference photo 1 preview')).toBeTruthy()
 
-    expect(screen.getByRole('button', { name: /#23 Jordan/ }).textContent).toContain('Blue Team')
+    expect(screen.getByRole('button', { name: /#23 Jordan/ }).textContent).toContain('Red Team')
     expect(screen.getByRole('button', { name: /#23 Jordan/ }).getAttribute('aria-pressed')).toBe('true')
 
     await user.click(screen.getByRole('button', { name: /#3 Marcus/ }))
@@ -352,10 +352,12 @@ describe('game state', () => {
     expect(screen.getByRole('button', { name: /Select Jordan to track stats/ }).textContent).toContain('#23')
   })
 
-  it('shows five players and records stats for the selected player', async () => {
+  it('shows one team with five players and records stats for the selected player', async () => {
     const { container } = render(<App />)
     expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
     expect(screen.getAllByRole('button', { name: /Select .* to track stats/ })).toHaveLength(5)
+    expect(screen.getByRole('region', { name: 'Red Team roster' })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Blue Team roster' })).toBeNull()
     expect(container.querySelectorAll('.active-stat')).toHaveLength(6)
     expect(screen.getByRole('button', { name: /\+2/ }).hasAttribute('disabled')).toBe(false)
 

@@ -62,7 +62,7 @@ describe('createFinalizePayload', () => {
         resultingScore: { teamA: 2, teamB: 0 },
       }],
       teamA: { name: 'Home', score: 2, logo: 'data:image/png;base64,logo-a' },
-      teamB: { name: 'Away', score: 0, logo: 'data:image/webp;base64,logo-b' },
+      teamB: { name: 'Opponent', score: 0 },
       players: [{
         id: 'p1',
         team: 'Team A',
@@ -104,9 +104,10 @@ describe('createFinalizePayload', () => {
 
     expect(payload.players).toHaveLength(2)
     expect(payload.players[0].id).toBe('top')
-    expect(payload.players[0].team).toBe('Team B')
+    expect(payload.players[0].team).toBe('Team A')
     expect(payload.players[0].photos).toEqual(photoSet)
     expect(payload.players[1].id).toBe('next')
+    expect(payload.players[1].team).toBe('Team A')
     expect(payload.players[1]).not.toHaveProperty('photos')
   })
 

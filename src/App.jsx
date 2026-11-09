@@ -10,7 +10,6 @@ const GAME_STORAGE_KEY = 'scorekings-game-state-v1'
 
 const initialGame = {
   teamA: 'Red Team',
-  teamB: 'Blue Team',
   location: 'Marietta Rec League',
   period: 'Q1',
 }
@@ -72,7 +71,7 @@ function loadGameState() {
       throw new Error('Saved game state has an unsupported format.')
     }
 
-    const players = parsedState.players.slice(0, 5)
+    const players = parsedState.players.slice(0, 5).map((player) => ({ ...player, team: 'Team A' }))
     const playerIds = new Set(players.map((player) => player.id))
     for (const player of createInitialPlayers()) {
       if (players.length === 5) break
@@ -261,13 +260,6 @@ function AthleteEditor({ player, playerNumber, playerImages, requiredPlayerMessa
           Jersey number
           <input value={player.jersey} onChange={(event) => onPlayerChange('jersey', event.target.value)} />
         </label>
-        <label className="field-label">
-          Team
-          <select value={player.team} onChange={(event) => onPlayerChange('team', event.target.value)}>
-            <option value="Team A">Team A</option>
-            <option value="Team B">Team B</option>
-          </select>
-        </label>
       </div>
       {[0, 1, 2].map((index) => (
         <ImageUpload
@@ -385,7 +377,7 @@ function SetupModal({ game, players, player, activePlayerNumber, assets, require
                   onClick={() => onPlayerSelect(rosterPlayer.id)}
                 >
                   <span>#{rosterPlayer.jersey || '—'} {playerName}</span>
-                  <small>{rosterPlayer.team === 'Team A' ? game.teamA : game.teamB}</small>
+                  <small>{game.teamA}</small>
                 </button>
               )
             })}
@@ -400,21 +392,15 @@ function SetupModal({ game, players, player, activePlayerNumber, assets, require
           onPlayerImageChange={(image, index) => onAssetChange(player.id, image, index)}
         />
         <div className="team-editors">
-          {[
-            { team: 'Team A', teamKey: 'teamA' },
-            { team: 'Team B', teamKey: 'teamB' },
-          ].map(({ team, teamKey }) => (
-            <TeamEditor
-              key={teamKey}
-              team={team}
-              teamKey={teamKey}
-              title={game[teamKey]}
-              logo={assets.teams[teamKey]}
-              onLogoChange={(image) => onAssetChange(teamKey, image)}
-              requiredLogoMessage={requiredAssets.teams[teamKey]}
-              onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, [teamKey]: value }))}
-            />
-          ))}
+          <TeamEditor
+            team="Team A"
+            teamKey="teamA"
+            title={game.teamA}
+            logo={assets.teams.teamA}
+            onLogoChange={(image) => onAssetChange('teamA', image)}
+            requiredLogoMessage={requiredAssets.teams.teamA}
+            onTeamNameChange={(value) => onGameChange((currentGame) => ({ ...currentGame, teamA: value }))}
+          />
         </div>
         <div className="modal-footer">
           <span>Changes are saved to this game immediately.</span>
@@ -504,7 +490,7 @@ function App() {
   const [activePlayerId, setActivePlayerId] = useState(() =>
     loadedState.activePlayerId || loadedState.players?.[0]?.id || initialPlayer.id,
   )
-  const [assets, setAssets] = useState(() => loadedState.assets || { teams: { teamA: null, teamB: null }, players: {} })
+  const [assets, setAssets] = useState(() => loadedState.assets || { teams: { teamA: null }, players: {} })
   const [events, setEvents] = useState(() => loadedState.events || [])
   const [startedAt, setStartedAt] = useState(() => loadedState.startedAt || new Date().toISOString())
   const [clockSeconds, setClockSeconds] = useState(() => loadedState.clockSeconds || 0)
@@ -568,7 +554,6 @@ function App() {
 
   const activePlayer = players.find((player) => player.id === activePlayerId) || players[0]
   const teamAScore = getScore(players, 'Team A')
-  const teamBScore = getScore(players, 'Team B')
   const flyerPlayers = useMemo(() => getFlyerPlayers(players), [players])
   const requiredAssets = { teams: {}, players: {} }
   for (const player of flyerPlayers) {
@@ -577,8 +562,7 @@ function App() {
         ? ''
         : `${player.name || 'Unnamed player'} needs reference photo ${photoIndex + 1} for the flyer.`,
     )
-    const teamKey = player.team === 'Team A' ? 'teamA' : 'teamB'
-    if (!assets.teams[teamKey]) requiredAssets.teams[teamKey] = `${player.team === 'Team A' ? game.teamA : game.teamB} needs a logo for its flyer.`
+    if (!assets.teams.teamA) requiredAssets.teams.teamA = `${game.teamA} needs a logo for its flyer.`
   }
   const missingAssetMessages = [
     ...Object.values(requiredAssets.players).flat().filter(Boolean),
@@ -590,8 +574,8 @@ function App() {
     const timestamp = new Date().toISOString()
     const points = action.stat === 'pts' ? action.amount : 0
     const resultingScore = {
-      teamA: teamAScore + (activePlayer.team === 'Team A' ? points : 0),
-      teamB: teamBScore + (activePlayer.team === 'Team B' ? points : 0),
+      teamA: teamAScore + points,
+      teamB: 0,
     }
     setPlayers((currentPlayers) => currentPlayers.map((player) =>
       player.id === activePlayer.id
@@ -633,7 +617,7 @@ function App() {
 
   const updateAsset = (key, image, photoIndex) => {
     setAssets((currentAssets) => {
-      if (key === 'teamA' || key === 'teamB') {
+      if (key === 'teamA') {
         return { ...currentAssets, teams: { ...currentAssets.teams, [key]: image } }
       }
       const playersWithImage = { ...currentAssets.players }
@@ -662,7 +646,7 @@ function App() {
     setGame(initialGame)
     setPlayers(createInitialPlayers())
     setActivePlayerId(initialPlayer.id)
-    setAssets({ teams: { teamA: null, teamB: null }, players: {} })
+    setAssets({ teams: { teamA: null }, players: {} })
     setEvents([])
     setStartedAt(new Date().toISOString())
     setClockSeconds(0)
@@ -733,7 +717,6 @@ function App() {
       players,
       assets,
       teamAScore,
-      teamBScore,
       events,
       startedAt,
       completedAt: new Date().toISOString(),
@@ -805,53 +788,39 @@ function App() {
       <div className="main-content">
         <section className="roster-section" aria-label="Player roster">
           <div className="roster-columns">
-            {[
-              { team: 'Team A', teamKey: 'teamA', dotClass: 'team-a-dot' },
-              { team: 'Team B', teamKey: 'teamB', dotClass: 'team-b-dot' },
-            ].map(({ team, teamKey, dotClass }) => {
-              const teamPlayers = players
-                .map((player, index) => ({ ...player, rosterNumber: index + 1 }))
-                .filter((player) => player.team === team)
-
-              return (
-                <section className="team-roster" key={team} aria-label={`${game[teamKey]} roster`}>
-                  <div className="roster-title">
-                    <span className={`team-dot ${dotClass}`} />
-                    <h2>{game[teamKey]}</h2>
-                    <span>{teamPlayers.length} PLAYERS</span>
-                  </div>
-                  <div className="player-grid">
-                    {teamPlayers.map((player) => {
-                      const playerName = player.name || `Player ${player.rosterNumber}`
-                      const isActive = player.id === activePlayer.id
-                      return (
-                        <button
-                          className={`player-card ${isActive ? 'is-active' : ''}`}
-                          type="button"
-                          key={player.id}
-                          aria-label={`Select ${playerName} to track stats`}
-                          aria-pressed={isActive}
-                          onClick={() => setActivePlayerId(player.id)}
-                        >
-                          <span className="player-number">#{player.jersey || '—'}</span>
-                          <span className="player-info">
-                            <span className="player-name">{playerName}</span>
-                            <span className="player-stats">
-                              <span><b>{player.pts}</b> PTS</span>
-                              <span><b>{player.reb}</b> REB</span>
-                            </span>
-                          </span>
-                          {isActive && <span className="active-indicator">TRACKING</span>}
-                        </button>
-                      )
-                    })}
-                    {teamPlayers.length === 0 && (
-                      <p className="empty-roster">No players assigned to this team.</p>
-                    )}
-                  </div>
-                </section>
-              )
-            })}
+            <section className="team-roster" aria-label={`${game.teamA} roster`}>
+              <div className="roster-title">
+                <span className="team-dot team-a-dot" />
+                <h2>{game.teamA}</h2>
+                <span>{players.length} PLAYERS</span>
+              </div>
+              <div className="player-grid">
+                {players.map((player, index) => {
+                  const playerName = player.name || `Player ${index + 1}`
+                  const isActive = player.id === activePlayer.id
+                  return (
+                    <button
+                      className={`player-card ${isActive ? 'is-active' : ''}`}
+                      type="button"
+                      key={player.id}
+                      aria-label={`Select ${playerName} to track stats`}
+                      aria-pressed={isActive}
+                      onClick={() => setActivePlayerId(player.id)}
+                    >
+                      <span className="player-number">#{player.jersey || '—'}</span>
+                      <span className="player-info">
+                        <span className="player-name">{playerName}</span>
+                        <span className="player-stats">
+                          <span><b>{player.pts}</b> PTS</span>
+                          <span><b>{player.reb}</b> REB</span>
+                        </span>
+                      </span>
+                      {isActive && <span className="active-indicator">TRACKING</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
           </div>
         </section>
         <section className="action-dock" aria-label="Stat actions">
@@ -859,7 +828,7 @@ function App() {
             <span className="active-avatar">{activePlayer ? `#${activePlayer.jersey || '—'}` : '—'}</span>
             <div className="active-player-copy">
               <strong>{activePlayer.name || 'Unnamed athlete'}</strong>
-              <span>{activePlayer.team === 'Team A' ? game.teamA : game.teamB}</span>
+              <span>{game.teamA}</span>
             </div>
             <div className="active-stats" aria-label={`${activePlayer.name || 'Athlete'} stats`}>
               {[
