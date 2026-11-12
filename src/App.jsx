@@ -54,6 +54,7 @@ function loadGameState() {
       ![1, 2].includes(parsedState.version)
       || !parsedState.game
       || !Array.isArray(parsedState.players)
+      || parsedState.players.length === 0
       || !parsedState.assets?.teams
       || !Array.isArray(parsedState.events)
       || !Array.isArray(parsedState.history)
@@ -73,16 +74,9 @@ function loadGameState() {
 
     const players = parsedState.players.slice(0, 5).map((player) => ({ ...player, team: 'Team A' }))
     const playerIds = new Set(players.map((player) => player.id))
-    for (const player of createInitialPlayers()) {
-      if (players.length === 5) break
-      if (!playerIds.has(player.id)) {
-        players.push(player)
-        playerIds.add(player.id)
-      }
-    }
     const activePlayerId = players.some((player) => player.id === parsedState.activePlayerId)
       ? parsedState.activePlayerId
-      : players[0]?.id || initialPlayer.id
+      : players[0].id
 
     return {
       ...parsedState,
@@ -300,7 +294,7 @@ function getFlyerPublicUrl(graphic) {
   }
 }
 
-function SetupModal({ game, players, player, activePlayerNumber, assets, requiredAssets, customClockEnabled, customClockDurationSeconds, onClockSettingsChange, onAssetChange, onGameChange, onPlayerChange, onPlayerSelect, onClose }) {
+function SetupModal({ game, players, player, activePlayerNumber, assets, requiredAssets, customClockEnabled, customClockDurationSeconds, onClockSettingsChange, onAssetChange, onGameChange, onPlayerChange, onPlayerSelect, onPlayerRemove, onClose }) {
   const [enableCustomClock, setEnableCustomClock] = useState(customClockEnabled)
   const [clockDurationInput, setClockDurationInput] = useState(formatGameClock(customClockDurationSeconds))
   const [clockDurationError, setClockDurationError] = useState('')
@@ -382,16 +376,27 @@ function SetupModal({ game, players, player, activePlayerNumber, assets, require
               const playerName = rosterPlayer.name || `Player ${index + 1}`
               const isSelected = rosterPlayer.id === player.id
               return (
-                <button
-                  type="button"
-                  className={`setup-player-choice ${isSelected ? 'is-selected' : ''}`}
-                  key={rosterPlayer.id}
-                  aria-pressed={isSelected}
-                  onClick={() => onPlayerSelect(rosterPlayer.id)}
-                >
-                  <span>#{rosterPlayer.jersey || '—'} {playerName}</span>
-                  <small>{game.teamA}</small>
-                </button>
+                <div className="setup-player-option" key={rosterPlayer.id}>
+                  <button
+                    type="button"
+                    className={`setup-player-choice ${isSelected ? 'is-selected' : ''}`}
+                    aria-pressed={isSelected}
+                    onClick={() => onPlayerSelect(rosterPlayer.id)}
+                  >
+                    <span>#{rosterPlayer.jersey || '—'} {playerName}</span>
+                    <small>{game.teamA}</small>
+                  </button>
+                  <button
+                    type="button"
+                    className="remove-player"
+                    aria-label={`Remove ${playerName}`}
+                    title={players.length === 1 ? 'At least one player must remain' : `Remove ${playerName}`}
+                    disabled={players.length === 1}
+                    onClick={() => onPlayerRemove(rosterPlayer.id)}
+                  >
+                    ×
+                  </button>
+                </div>
               )
             })}
           </div>
@@ -629,6 +634,21 @@ function App() {
     setPlayers((currentPlayers) => currentPlayers.map((player) =>
       player.id === activePlayerId ? { ...player, [key]: value } : player,
     ))
+  }
+
+  const removePlayer = (playerId) => {
+    if (players.length <= 1 || !players.some((player) => player.id === playerId)) return
+
+    const remainingPlayers = players.filter((player) => player.id !== playerId)
+    if (activePlayerId === playerId) setActivePlayerId(remainingPlayers[0].id)
+    setPlayers(remainingPlayers)
+    setEvents((currentEvents) => currentEvents.filter((event) => event.playerId !== playerId))
+    setHistory((currentHistory) => currentHistory.filter((action) => action.playerId !== playerId))
+    setAssets((currentAssets) => {
+      const remainingPlayerAssets = { ...currentAssets.players }
+      delete remainingPlayerAssets[playerId]
+      return { ...currentAssets, players: remainingPlayerAssets }
+    })
   }
 
   const updateAsset = (key, image, photoIndex) => {
@@ -915,6 +935,7 @@ function App() {
           onGameChange={setGame}
           onPlayerChange={updatePlayer}
           onPlayerSelect={setActivePlayerId}
+          onPlayerRemove={removePlayer}
           onClose={() => setShowSetup(false)}
         />
       )}

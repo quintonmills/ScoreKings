@@ -720,8 +720,15 @@ button {
   gap: 7px;
 }
 
+.setup-player-option {
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+}
+
 .setup-player-choice {
   min-width: 0;
+  flex: 1;
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -1184,6 +1191,11 @@ button {
 .remove-player:hover {
   background: #382726;
   color: #ff8a7e;
+}
+
+.remove-player:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .add-player-button {

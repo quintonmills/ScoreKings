@@ -364,6 +364,40 @@ describe('game state', () => {
     expect(screen.getByRole('button', { name: /Select Jordan to track stats/ }).textContent).toContain('#23')
   })
 
+  it('removes tracked players, preserves a one-player roster, and submits that player in the payload', async () => {
+    const user = userEvent.setup()
+    const firstRender = render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Select Player 2 to track stats' }))
+    await user.click(screen.getByRole('button', { name: /\+2/ }))
+    await user.click(screen.getByRole('button', { name: 'Game settings' }))
+    await user.click(screen.getByRole('button', { name: 'Remove Player 2' }))
+    await user.click(screen.getByRole('button', { name: 'Remove Player 3' }))
+    await user.click(screen.getByRole('button', { name: 'Remove Player 4' }))
+    await user.click(screen.getByRole('button', { name: 'Remove Player 5' }))
+
+    expect(screen.getByRole('button', { name: 'Remove Marcus' }).hasAttribute('disabled')).toBe(true)
+    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+
+    const savedState = JSON.parse(window.localStorage.getItem('scorekings-game-state-v1'))
+    expect(savedState.players.map((player) => player.id)).toEqual(['p1'])
+    expect(savedState.activePlayerId).toBe('p1')
+    expect(savedState.events).toEqual([])
+    expect(savedState.history).toEqual([])
+
+    firstRender.unmount()
+    render(<App />)
+    expect(screen.getAllByRole('button', { name: /Select .* to track stats/ })).toHaveLength(1)
+    await user.click(screen.getByRole('button', { name: /Finalize game/ }))
+    await screen.findByRole('dialog', { name: 'Final box score' })
+
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)
+    expect(payload.players).toHaveLength(1)
+    expect(payload.players[0].id).toBe('p1')
+    expect(payload.events).toEqual([])
+    expect(payload.teamA.score).toBe(0)
+  })
+
   it('shows one team with five players and records stats for the selected player', async () => {
     const { container } = render(<App />)
     expect(container.querySelector('.active-player-copy strong').textContent).toBe('Marcus')
