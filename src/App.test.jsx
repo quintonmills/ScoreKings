@@ -276,7 +276,7 @@ describe('flyer image uploads', () => {
     ]
 
     expect(JSON.parse(options.body)).toEqual({
-      gameId: 'game-101',
+      gameId: expect.stringMatching(/^game-\d{4}-\d\d-\d\dT/),
       status: 'COMPLETED',
       startedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
       completedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),

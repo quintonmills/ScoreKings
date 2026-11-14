@@ -83,7 +83,9 @@ Finalizing a game sends a JSON `POST` request to:
 /api/games/finalize
 ```
 
-The frontend sends requests directly to `https://servercore-pjwe.onrender.com` in both local development and production. Set `VITE_API_BASE_URL` in the frontend hosting service to override the backend origin (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. Because requests go directly from the browser to the backend, the backend must allow cross-origin requests from both your local development origin and the frontend's deployed origin.
+The frontend sends requests directly to `https://servercore-pjwe.onrender.com` in both local development and production. Set `VITE_API_BASE_URL` in the frontend hosting service to override the backend origin (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. In the Render backend's environment settings, set `CORS_ORIGIN` to the exact frontend origin(s), comma-separated and without paths or trailing slashes. For this deployment, use `https://score-kings-ivory.vercel.app,http://localhost:5173`; add any custom domain or Vercel preview origin you use. Save and redeploy the backend after changing it. The backend defaults to allowing `*` if `CORS_ORIGIN` is unset, so check that it hasn't been set to an outdated or misspelled origin.
+
+The request body follows the backend's `/api/games/finalize` contract: it includes `gameId`, status and timestamps, location, both teams, player stats and optional image data URLs, and events. Each `gameId` is derived from the match's start time and is reused for retries, so separate games do not overwrite the same database record.
 
 Example payload:
 

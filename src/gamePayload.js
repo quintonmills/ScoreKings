@@ -18,7 +18,7 @@ export function isFinalizePayloadWithinLimit(payload) {
 
 export function createFinalizePayload({ game, players, assets, teamAScore, events, startedAt, completedAt }) {
   return {
-    gameId: 'game-101',
+    gameId: `game-${startedAt}`,
     status: 'COMPLETED',
     startedAt,
     completedAt,

@@ -49,7 +49,7 @@ describe('createFinalizePayload', () => {
     })
 
     expect(payload).toEqual({
-      gameId: 'game-101',
+      gameId: 'game-2026-01-02T03:00:00.000Z',
       status: 'COMPLETED',
       startedAt: '2026-01-02T03:00:00.000Z',
       completedAt: '2026-01-02T04:00:00.000Z',

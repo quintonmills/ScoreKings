@@ -241,7 +241,9 @@ export function useGameController() {
         : 'The final box score was accepted by the server.')
     } catch (error) {
       setRequestState('error')
-      setRequestMessage(error instanceof Error ? error.message : 'The request failed. Check that the backend is running.')
+      setRequestMessage(error instanceof TypeError
+        ? `Could not reach ${new URL(finalizeEndpoint).origin}. Check that the Render service is available and its CORS_ORIGIN allows this frontend's exact origin.`
+        : error instanceof Error ? error.message : 'The request failed. Check that the backend is running.')
     }
   }
 
