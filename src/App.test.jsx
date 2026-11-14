@@ -234,7 +234,7 @@ describe('flyer image uploads', () => {
     await screen.findByRole('dialog', { name: 'Final box score' })
 
     const [url, options] = fetch.mock.calls[0]
-    expect(url).toBe('http://localhost:5000/api/games/finalize')
+    expect(url).toBe('/api/games/finalize')
     expect(options.method).toBe('POST')
     expect(options.headers).toEqual({ 'Content-Type': 'application/json' })
 

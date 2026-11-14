@@ -28,6 +28,16 @@ A tablet-friendly basketball stat logger for tracking up to five athletes on one
 - Vite 8
 - CSS
 
+## Source structure
+
+- `src/App.jsx` composes the dashboard and modal components.
+- `src/useGameController.js` coordinates game state, persistence, clock, and finalization.
+- `src/components/GameBoard.jsx` renders the live game controls and stats.
+- `src/components/GameSetupModal.jsx` contains setup, clock, and image-upload controls.
+- `src/components/FinalizeModal.jsx` displays the submitted payload and generated flyers.
+- `src/gameState.js` contains game-state defaults, persistence loading, and clock helpers.
+- `src/gameApi.js` contains backend URL configuration and flyer URL validation.
+
 ## Getting started
 
 ### Requirements
@@ -73,7 +83,7 @@ Finalizing a game sends a JSON `POST` request to:
 /api/games/finalize
 ```
 
-For local development, the frontend uses `http://localhost:5000` by default. Production defaults to `https://servercore-pjwe.onrender.com`; set the `VITE_API_BASE_URL` environment variable in the frontend hosting service to override it (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. The backend must allow cross-origin requests from the frontend's deployed origin.
+For local development, Vite proxies `/api` requests to `https://servercore-pjwe.onrender.com`, avoiding a browser cross-origin request. Production defaults to that same backend origin; set the `VITE_API_BASE_URL` environment variable in the frontend hosting service to override it (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. The backend must allow cross-origin requests from the frontend's deployed origin.
 
 Example payload:
 
