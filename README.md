@@ -83,7 +83,7 @@ Finalizing a game sends a JSON `POST` request to:
 /api/games/finalize
 ```
 
-For local development, Vite proxies `/api` requests to `https://servercore-pjwe.onrender.com`, avoiding a browser cross-origin request. Production defaults to that same backend origin; set the `VITE_API_BASE_URL` environment variable in the frontend hosting service to override it (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. The backend must allow cross-origin requests from the frontend's deployed origin.
+The frontend sends requests directly to `https://servercore-pjwe.onrender.com` in both local development and production. Set `VITE_API_BASE_URL` in the frontend hosting service to override the backend origin (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. Because requests go directly from the browser to the backend, the backend must allow cross-origin requests from both your local development origin and the frontend's deployed origin.
 
 Example payload:
 

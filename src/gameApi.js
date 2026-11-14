@@ -1,9 +1,7 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '')
   || 'https://servercore-pjwe.onrender.com'
 
-export const finalizeEndpoint = import.meta.env.DEV && !import.meta.env.VITE_API_BASE_URL
-  ? '/api/games/finalize'
-  : `${apiBaseUrl}/api/games/finalize`
+export const finalizeEndpoint = `${apiBaseUrl}/api/games/finalize`
 
 export function getFlyerDownloadUrl(graphic) {
   for (const candidate of [graphic?.downloadUrl, graphic?.publicUrl]) {
