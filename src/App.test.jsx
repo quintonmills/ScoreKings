@@ -277,6 +277,7 @@ describe('flyer image uploads', () => {
 
     expect(JSON.parse(options.body)).toEqual({
       gameId: expect.stringMatching(/^game-\d{4}-\d\d-\d\dT/),
+      idempotencyKey: expect.stringMatching(/^game-\d{4}-\d\d-\d\dT/),
       status: 'COMPLETED',
       startedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
       completedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
@@ -289,6 +290,17 @@ describe('flyer image uploads', () => {
         gameClockSeconds: 0,
         resultingScore: { teamA: 2, teamB: 0 },
       }],
+      boxScore: expectedPlayers.map((player) => ({
+        playerId: player.id,
+        name: player.name,
+        jersey: player.jersey,
+        PTS: player.pts,
+        REB: player.reb,
+        AST: player.ast,
+        STL: player.stl,
+        BLK: player.blk,
+        TOV: player.to,
+      })),
       teamA: { name: 'Red Team', score: 2, logo: 'data:image/png;base64,aG9tZQ==' },
       teamB: { name: 'Opponent', score: 0 },
       players: expectedPlayers,

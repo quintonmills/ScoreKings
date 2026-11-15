@@ -50,6 +50,7 @@ describe('createFinalizePayload', () => {
 
     expect(payload).toEqual({
       gameId: 'game-2026-01-02T03:00:00.000Z',
+      idempotencyKey: 'game-2026-01-02T03:00:00.000Z',
       status: 'COMPLETED',
       startedAt: '2026-01-02T03:00:00.000Z',
       completedAt: '2026-01-02T04:00:00.000Z',
@@ -60,6 +61,17 @@ describe('createFinalizePayload', () => {
         action: 'PTS_2',
         timestamp: '2026-01-02T03:04:05.000Z',
         resultingScore: { teamA: 2, teamB: 0 },
+      }],
+      boxScore: [{
+        playerId: 'p1',
+        name: 'Marcus',
+        jersey: '3',
+        PTS: 2,
+        REB: 1,
+        AST: 0,
+        STL: 0,
+        BLK: 0,
+        TOV: 0,
       }],
       teamA: { name: 'Home', score: 2, logo: 'data:image/png;base64,logo-a' },
       teamB: { name: 'Opponent', score: 0 },
@@ -109,6 +121,10 @@ describe('createFinalizePayload', () => {
     expect(payload.players[1].id).toBe('next')
     expect(payload.players[1].team).toBe('Team A')
     expect(payload.players[1].photos).toEqual(photoSet)
+    expect(payload.boxScore).toEqual([
+      { playerId: 'top', name: 'Top', jersey: '1', PTS: 10, REB: 0, AST: 0, STL: 0, BLK: 0, TOV: 0 },
+      { playerId: 'next', name: 'Next', jersey: '2', PTS: 8, REB: 0, AST: 0, STL: 0, BLK: 0, TOV: 0 },
+    ])
   })
 
   describe('isFinalizePayloadWithinLimit', () => {

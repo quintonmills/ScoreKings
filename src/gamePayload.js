@@ -17,13 +17,26 @@ export function isFinalizePayloadWithinLimit(payload) {
 }
 
 export function createFinalizePayload({ game, players, assets, teamAScore, events, startedAt, completedAt }) {
+  const gameId = `game-${startedAt}`
   return {
-    gameId: `game-${startedAt}`,
+    gameId,
+    idempotencyKey: gameId,
     status: 'COMPLETED',
     startedAt,
     completedAt,
     location: game.location,
     events,
+    boxScore: players.map((player) => ({
+      playerId: player.id,
+      name: player.name,
+      jersey: player.jersey,
+      PTS: player.pts,
+      REB: player.reb,
+      AST: player.ast,
+      STL: player.stl,
+      BLK: player.blk,
+      TOV: player.to,
+    })),
     teamA: {
       name: game.teamA,
       score: teamAScore,
