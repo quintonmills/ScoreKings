@@ -285,7 +285,7 @@ export default function GameSetupModal({
         </div>
         <div className="modal-footer">
           <span>Changes are saved to this game immediately.</span>
-          <button type="button" className="primary-button" onClick={onClose}>Back to game <span>→</span></button>
+          <button type="button" className="primary-button" onClick={onClose}>Save and close <span>→</span></button>
         </div>
       </section>
     </div>

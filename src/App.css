@@ -621,6 +621,10 @@ button {
   transition: background 120ms ease, transform 120ms ease;
 }
 
+.primary-button {
+  background: #d7ff43;
+}
+
 .finalize-button:hover,
 .primary-button:hover {
   background: #e4ff7c;

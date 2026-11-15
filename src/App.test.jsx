@@ -139,7 +139,7 @@ describe('flyer image uploads', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Apply clock settings' }))
     expect(screen.getByText('00:02')).toBeTruthy()
     expect(screen.getByRole('switch', { name: 'Enable custom countdown' }).checked).toBe(true)
-    fireEvent.click(screen.getByRole('button', { name: /Back to game/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Save and close/ }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Start game clock' }))
     await act(async () => {
@@ -155,7 +155,7 @@ describe('flyer image uploads', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Game settings' }))
     fireEvent.click(screen.getByRole('switch', { name: 'Enable custom countdown' }))
     fireEvent.click(screen.getByRole('button', { name: 'Apply clock settings' }))
-    fireEvent.click(screen.getByRole('button', { name: /Back to game/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Save and close/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Start game clock' }))
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1000)
@@ -207,7 +207,7 @@ describe('flyer image uploads', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: 'Current game period' }), 'Q3')
     await user.click(screen.getByRole('button', { name: 'Game settings' }))
     expect(screen.queryByLabelText('Quarter / period')).toBeNull()
-    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+    await user.click(screen.getByRole('button', { name: /Save and close/ }))
     await user.click(screen.getByRole('button', { name: /REBREBOUND/ }))
     await user.click(screen.getByRole('button', { name: /Finalize game/ }))
     await screen.findByRole('dialog', { name: 'Final box score' })
@@ -228,7 +228,7 @@ describe('flyer image uploads', () => {
         uploadedImage(`marcus-${index}.jpg`, 'image/jpeg', `marcus-${index}`),
       )
     }
-    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+    await user.click(screen.getByRole('button', { name: /Save and close/ }))
     await user.click(screen.getByRole('button', { name: /\+2/ }))
     await user.click(screen.getByRole('button', { name: /Finalize game/ }))
     await screen.findByRole('dialog', { name: 'Final box score' })
@@ -371,7 +371,7 @@ describe('game state', () => {
     expect(screen.getByRole('textbox', { name: 'Player name' }).value).toBe('Jordan')
     expect(screen.getByLabelText('Jordan reference photo 1 upload')).toBeTruthy()
 
-    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+    await user.click(screen.getByRole('button', { name: /Save and close/ }))
     expect(container.querySelector('.active-player-copy strong').textContent).toBe('Jordan')
     expect(screen.getByRole('button', { name: /Select Jordan to track stats/ }).textContent).toContain('#23')
   })
@@ -389,7 +389,7 @@ describe('game state', () => {
     await user.click(screen.getByRole('button', { name: 'Remove Player 5' }))
 
     expect(screen.getByRole('button', { name: 'Remove Marcus' }).hasAttribute('disabled')).toBe(true)
-    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+    await user.click(screen.getByRole('button', { name: /Save and close/ }))
 
     const savedState = JSON.parse(window.localStorage.getItem('scorekings-game-state-v1'))
     expect(savedState.players.map((player) => player.id)).toEqual(['p1'])
@@ -442,7 +442,7 @@ describe('game state', () => {
     const teamAName = screen.getAllByRole('textbox', { name: 'Team name' })[0]
     await user.clear(teamAName)
     await user.type(teamAName, 'Falcons')
-    await user.click(screen.getByRole('button', { name: /Back to game/ }))
+    await user.click(screen.getByRole('button', { name: /Save and close/ }))
 
     const savedState = JSON.parse(window.localStorage.getItem('scorekings-game-state-v1'))
     expect(savedState.players).toHaveLength(5)
