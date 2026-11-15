@@ -301,8 +301,8 @@ describe('flyer image uploads', () => {
         BLK: player.blk,
         TOV: player.to,
       })),
-      teamA: { name: 'Red Team', score: 2, logo: 'data:image/png;base64,aG9tZQ==' },
-      teamB: { name: 'Opponent', score: 0 },
+      teamName: 'Red Team',
+      teamLogo: 'data:image/png;base64,aG9tZQ==',
       players: expectedPlayers,
     })
     expect(await screen.findByAltText('Generated flyer for Marcus')).toBeTruthy()
@@ -407,7 +407,8 @@ describe('game state', () => {
     expect(payload.players).toHaveLength(1)
     expect(payload.players[0].id).toBe('p1')
     expect(payload.events).toEqual([])
-    expect(payload.teamA.score).toBe(0)
+    expect(payload.teamName).toBe('Red Team')
+    expect(payload).not.toHaveProperty('teamB')
   })
 
   it('shows one team with five players and records stats for the selected player', async () => {

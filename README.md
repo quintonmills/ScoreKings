@@ -85,7 +85,7 @@ Finalizing a game sends a JSON `POST` request to:
 
 The frontend sends requests directly to `https://servercore-pjwe.onrender.com` in both local development and production. Set `VITE_API_BASE_URL` in the frontend hosting service to override the backend origin (use the backend's public origin without `/api/games/finalize`), then redeploy the frontend. In the Render backend's environment settings, set `CORS_ORIGIN` to the exact frontend origin(s), comma-separated and without paths or trailing slashes. For this deployment, use `https://score-kings-ivory.vercel.app,http://localhost:5173`; add any custom domain or Vercel preview origin you use. Save and redeploy the backend after changing it. The backend defaults to allowing `*` if `CORS_ORIGIN` is unset, so check that it hasn't been set to an outdated or misspelled origin.
 
-The request body follows the backend's `/api/games/finalize` contract: it includes `gameId`, status and timestamps, location, both teams, player stats and optional image data URLs, and events. Each `gameId` is derived from the match's start time and is reused for retries, so separate games do not overwrite the same database record.
+The request body follows the backend's `/api/games/finalize` contract: it includes `gameId`, status and timestamps, location, one `teamName`, player stats and optional image data URLs, and events. Each `gameId` is derived from the match's start time and is reused for retries, so separate games do not overwrite the same database record.
 
 Example payload:
 
@@ -94,16 +94,8 @@ Example payload:
   "gameId": "game-101",
   "idempotencyKey": "game-101",
   "location": "Marietta Rec League",
-  "teamA": {
-    "name": "Red Team",
-    "score": 2,
-    "logo": "data:image/png;base64,..."
-  },
-  "teamB": {
-    "name": "Opponent",
-    "score": 0,
-    "logo": "data:image/png;base64,..."
-  },
+  "teamName": "Red Team",
+  "teamLogo": "data:image/png;base64,...",
   "players": [
     {
       "id": "p1",
@@ -139,4 +131,4 @@ Example payload:
 }
 ```
 
-The example above shows one player entry; the frontend submits all five roster players and their stats, both in `players` and in the backend's canonical `boxScore` format. The same per-game identifier is sent as `gameId` and `idempotencyKey` so retries update that game instead of creating duplicates. All players use the configured team name; the `teamB` opponent entry is sent only because the current backend requires both team objects. Game details, player details and stats, the active player, event history, clock, and uploaded logos/photos are saved to browser `localStorage` as you work. Select **Reset Board** to clear that saved game and return to the defaults. Browser storage limits can prevent very large image collections from being saved; the logger displays a warning if persistence fails. The leading scorer needs three reference photos and the configured team needs a logo; the frontend prevents finalization when an asset is missing or the JSON request would reach the backend's 14 MB limit. The backend uses a bundled flyer image as broad visual art direction, while the model is instructed to create an original composition. The flyer focuses on the athlete name, jersey, team, and points total. Uploaded reference photos are included for each player, allowing the backend to generate graphics for multiple eligible players. Every returned `graphics[]` entry is displayed with its image, a QR code for that graphic's download URL, and a direct link; if a download URL is missing or invalid, the public image URL is used instead.
+The example above shows one player entry; the frontend submits all five roster players and their stats, both in `players` and in the backend's canonical `boxScore` format. The same per-game identifier is sent as `gameId` and `idempotencyKey` so retries update that game instead of creating duplicates. All players use the configured team name, sent as `teamName`; the team logo is sent as `teamLogo`. Game details, player details and stats, the active player, event history, clock, and uploaded logos/photos are saved to browser `localStorage` as you work. Select **Reset Board** to clear that saved game and return to the defaults. Browser storage limits can prevent very large image collections from being saved; the logger displays a warning if persistence fails. The leading scorer needs three reference photos and the configured team needs a logo; the frontend prevents finalization when an asset is missing or the JSON request would reach the backend's 14 MB limit. The backend uses a bundled flyer image as broad visual art direction, while the model is instructed to create an original composition. The flyer focuses on the athlete name, jersey, team, and points total. Uploaded reference photos are included for each player, allowing the backend to generate graphics for multiple eligible players. Every returned `graphics[]` entry is displayed with its image, a QR code for that graphic's download URL, and a direct link; if a download URL is missing or invalid, the public image URL is used instead.

@@ -16,7 +16,7 @@ describe('getFlyerPlayers', () => {
 })
 
 describe('createFinalizePayload', () => {
-  it('preserves backend team identifiers and adds images under the backend field names', () => {
+  it('sends one team name and its logo under the backend field names', () => {
     const payload = createFinalizePayload({
       game: { location: 'Gym', teamA: 'Home', teamB: 'Away' },
       players: [{
@@ -35,8 +35,6 @@ describe('createFinalizePayload', () => {
         teams: { teamA: 'data:image/png;base64,logo-a', teamB: 'data:image/webp;base64,logo-b' },
         players: { p1: ['data:image/jpeg;base64,player-photo-1', 'data:image/jpeg;base64,player-photo-2', 'data:image/jpeg;base64,player-photo-3'] },
       },
-      teamAScore: 2,
-      teamBScore: 0,
       events: [{
         period: 'Q1',
         playerId: 'p1',
@@ -55,6 +53,8 @@ describe('createFinalizePayload', () => {
       startedAt: '2026-01-02T03:00:00.000Z',
       completedAt: '2026-01-02T04:00:00.000Z',
       location: 'Gym',
+      teamName: 'Home',
+      teamLogo: 'data:image/png;base64,logo-a',
       events: [{
         period: 'Q1',
         playerId: 'p1',
@@ -73,8 +73,6 @@ describe('createFinalizePayload', () => {
         BLK: 0,
         TOV: 0,
       }],
-      teamA: { name: 'Home', score: 2, logo: 'data:image/png;base64,logo-a' },
-      teamB: { name: 'Opponent', score: 0 },
       players: [{
         id: 'p1',
         team: 'Team A',
@@ -107,8 +105,6 @@ describe('createFinalizePayload', () => {
         teams: { teamA: null, teamB: null },
         players: { top: photoSet, next: photoSet },
       },
-      teamAScore: 10,
-      teamBScore: 8,
       events: [],
       startedAt: '2026-01-02T03:00:00.000Z',
       completedAt: '2026-01-02T04:00:00.000Z',
@@ -125,6 +121,10 @@ describe('createFinalizePayload', () => {
       { playerId: 'top', name: 'Top', jersey: '1', PTS: 10, REB: 0, AST: 0, STL: 0, BLK: 0, TOV: 0 },
       { playerId: 'next', name: 'Next', jersey: '2', PTS: 8, REB: 0, AST: 0, STL: 0, BLK: 0, TOV: 0 },
     ])
+    expect(payload).toMatchObject({ teamName: 'Home' })
+    expect(payload).not.toHaveProperty('teamA')
+    expect(payload).not.toHaveProperty('teamB')
+    expect(payload).not.toHaveProperty('teams')
   })
 
   describe('isFinalizePayloadWithinLimit', () => {

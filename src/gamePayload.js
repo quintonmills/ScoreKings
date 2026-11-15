@@ -16,7 +16,7 @@ export function isFinalizePayloadWithinLimit(payload) {
   return new TextEncoder().encode(JSON.stringify(payload)).byteLength < MAX_GAME_PAYLOAD_BYTES
 }
 
-export function createFinalizePayload({ game, players, assets, teamAScore, events, startedAt, completedAt }) {
+export function createFinalizePayload({ game, players, assets, events, startedAt, completedAt }) {
   const gameId = `game-${startedAt}`
   return {
     gameId,
@@ -25,6 +25,8 @@ export function createFinalizePayload({ game, players, assets, teamAScore, event
     startedAt,
     completedAt,
     location: game.location,
+    teamName: game.teamA,
+    ...(assets.teams.teamA ? { teamLogo: assets.teams.teamA } : {}),
     events,
     boxScore: players.map((player) => ({
       playerId: player.id,
@@ -37,12 +39,6 @@ export function createFinalizePayload({ game, players, assets, teamAScore, event
       BLK: player.blk,
       TOV: player.to,
     })),
-    teamA: {
-      name: game.teamA,
-      score: teamAScore,
-      ...(assets.teams.teamA ? { logo: assets.teams.teamA } : {}),
-    },
-    teamB: { name: 'Opponent', score: 0 },
     players: players.map(({ id, jersey, name, pts, reb, ast, stl, blk, to }) => ({
       id,
       team: 'Team A',
