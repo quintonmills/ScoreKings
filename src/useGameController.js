@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createFinalizePayload, getFlyerPlayers, isFinalizePayloadWithinLimit } from './gamePayload.js'
 import { finalizeEndpoint, getFlyerPublicUrl } from './gameApi.js'
-import { createInitialPlayers, GAME_STORAGE_KEY, getScore, initialGame, loadGameState } from './gameState.js'
+import {
+  createInitialPlayers,
+  GAME_CLOCK_STORAGE_KEY,
+  GAME_STORAGE_KEY,
+  getScore,
+  initialGame,
+  loadGameState,
+} from './gameState.js'
 
 export function useGameController() {
   const [loadedState] = useState(loadGameState)
@@ -29,6 +36,39 @@ export function useGameController() {
   const [storageMessage, setStorageMessage] = useState(loadedState.storageError)
   const [saveRevision, setSaveRevision] = useState(0)
   const skipNextSave = useRef(Boolean(loadedState.storageError))
+  const clockSecondsRef = useRef(clockSeconds)
+  clockSecondsRef.current = clockSeconds
+
+  const saveClockCheckpoint = (seconds, gameStartedAt) => {
+    try {
+      window.localStorage.setItem(GAME_CLOCK_STORAGE_KEY, JSON.stringify({
+        version: 1,
+        startedAt: gameStartedAt,
+        clockSeconds: seconds,
+      }))
+    } catch {
+      setStorageMessage('Game clock could not be saved in this browser. Check available storage.')
+    }
+  }
+
+  useEffect(() => {
+    if (!isClockRunning || clockSeconds % 5 === 0) {
+      saveClockCheckpoint(clockSeconds, startedAt)
+    }
+  }, [isClockRunning, clockSeconds, startedAt])
+
+  useEffect(() => {
+    const saveCurrentClock = () => saveClockCheckpoint(clockSecondsRef.current, startedAt)
+    const saveClockWhenHidden = () => {
+      if (document.visibilityState === 'hidden') saveCurrentClock()
+    }
+    window.addEventListener('pagehide', saveCurrentClock)
+    document.addEventListener('visibilitychange', saveClockWhenHidden)
+    return () => {
+      window.removeEventListener('pagehide', saveCurrentClock)
+      document.removeEventListener('visibilitychange', saveClockWhenHidden)
+    }
+  }, [startedAt])
 
   useEffect(() => {
     if (!isClockRunning) return undefined
@@ -61,7 +101,7 @@ export function useGameController() {
         activePlayerId,
         events,
         startedAt,
-        clockSeconds,
+        clockSeconds: clockSecondsRef.current,
         customClockEnabled,
         customClockDurationSeconds,
         history,
@@ -70,7 +110,7 @@ export function useGameController() {
     } catch {
       setStorageMessage('Game data could not be saved in this browser. Check available storage or remove large images.')
     }
-  }, [game, players, activePlayerId, assets, events, startedAt, clockSeconds, customClockEnabled, customClockDurationSeconds, history, saveRevision])
+  }, [game, players, activePlayerId, assets, events, startedAt, customClockEnabled, customClockDurationSeconds, history, saveRevision])
 
   const activePlayer = players.find((player) => player.id === activePlayerId) || players[0]
   const teamAScore = getScore(players, 'Team A')
@@ -173,6 +213,7 @@ export function useGameController() {
   const resetBoard = () => {
     try {
       window.localStorage.removeItem(GAME_STORAGE_KEY)
+      window.localStorage.removeItem(GAME_CLOCK_STORAGE_KEY)
       skipNextSave.current = true
       setStorageMessage('')
     } catch {

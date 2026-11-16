@@ -45,6 +45,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.useRealTimers()
 })
@@ -125,6 +126,30 @@ describe('flyer image uploads', () => {
     })
     expect(screen.getByText('00:03')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Start game clock' }).textContent).toBe('Resume')
+  })
+
+  it('checkpoints the clock without rewriting the full game state every second', async () => {
+    vi.useFakeTimers()
+    const setItem = vi.spyOn(localStorageMock, 'setItem')
+    render(<App />)
+    setItem.mockClear()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start game clock' }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000)
+    })
+
+    expect(setItem.mock.calls.filter(([key]) => key === 'scorekings-game-state-v1')).toHaveLength(0)
+    expect(JSON.parse(window.localStorage.getItem('scorekings-game-clock-v1'))).toMatchObject({
+      version: 1,
+      clockSeconds: 5,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /REBREBOUND/ }))
+    expect(JSON.parse(window.localStorage.getItem('scorekings-game-state-v1')).clockSeconds).toBe(5)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause game clock' }))
+    expect(JSON.parse(window.localStorage.getItem('scorekings-game-clock-v1')).clockSeconds).toBe(5)
   })
 
   it('applies an optional countdown and can return to count-up mode', async () => {
