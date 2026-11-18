@@ -12,15 +12,14 @@ Real-time courtside tracking engine that logs single-player, timestamped basketb
 
 ## Features
 
-- Five-player roster with selectable active player and per-player stat tracking.
-- Game setup for the team name, location, and quarter or overtime period.
-- Player stat tracking for points, rebounds, assists, steals, blocks, and turnovers.
-- Undo for the most recently recorded stat action.
+- Dedicated single-player focus with touch-friendly courtside controls for logging live possession events.
+- Game setup for target prospect details, team context, venue location, and quarter or overtime period.
+- Chronological, UTC-timestamped event capture for points, rebounds, assists, steals, blocks, and turnovers.
+- Instant undo for the most recently logged possession event.
 - Automatic browser-local game-state persistence and a **Reset Board** control.
-- Game finalization modal with the box-score JSON payload, generated flyer, and QR-code download link.
-- Team-logo and three target-athlete reference photo uploads for a tailored flyer.
-- Backend integration using `POST /api/games/finalize`.
-- Responsive, high-contrast layout designed for tablet and touch use.
+- Game finalization modal displaying the structured JSON/CSV telemetry payload and sequence summary.
+- Idempotent backend ingestion via `POST /api/games/finalize`.
+- Responsive, high-contrast interface built for mobile and tablet courtside use without external hardware.
 
 ## Tech stack
 
