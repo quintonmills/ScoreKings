@@ -21,20 +21,7 @@ const initialPlayer = {
 }
 
 export function createInitialPlayers() {
-  return Array.from({ length: 5 }, (_, index) => index === 0
-    ? { ...initialPlayer }
-    : {
-      id: `p${index + 1}`,
-      team: 'Team A',
-      jersey: String(index + 3),
-      name: `Player ${index + 1}`,
-      pts: 0,
-      reb: 0,
-      ast: 0,
-      stl: 0,
-      blk: 0,
-      to: 0,
-    })
+  return [{ ...initialPlayer }]
 }
 
 export function loadGameState() {
