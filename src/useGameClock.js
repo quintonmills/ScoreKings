@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { GAME_CLOCK_STORAGE_KEY } from './gameState.js'
 
+/**
+ * @param {{
+ *   initialClockSeconds?: number,
+ *   initialCustomClockEnabled?: boolean,
+ *   initialCustomClockDurationSeconds?: number,
+ *   startedAt: string,
+ *   onStorageError: (message: string) => void
+ * }} options
+ */
 export function useGameClock({
   initialClockSeconds,
   initialCustomClockEnabled,

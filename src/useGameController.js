@@ -10,6 +10,8 @@ import { useGameClock } from './useGameClock.js'
 import { useGamePersistence } from './useGamePersistence.js'
 import { useGameSubmission } from './useGameSubmission.js'
 
+/** @typedef {import('./gameState.js').GameActionDefinition} GameActionDefinition */
+
 export function useGameController() {
   const [loadedState] = useState(loadGameState)
   const [game, setGame] = useState(() => loadedState.game || initialGame)
@@ -75,6 +77,7 @@ export function useGameController() {
     ...new Set(Object.values(requiredAssets.teams)),
   ]
 
+  /** @param {GameActionDefinition} action */
   const recordAction = (action) => {
     if (!activePlayer) return
     const timestamp = new Date().toISOString()
@@ -115,12 +118,14 @@ export function useGameController() {
     setEvents((currentEvents) => currentEvents.slice(0, -1))
   }
 
+  /** @param {'name' | 'jersey'} key @param {string} value */
   const updatePlayer = (key, value) => {
     setPlayers((currentPlayers) => currentPlayers.map((player) =>
       player.id === activePlayerId ? { ...player, [key]: value } : player,
     ))
   }
 
+  /** @param {string} playerId */
   const removePlayer = (playerId) => {
     if (players.length <= 1 || !players.some((player) => player.id === playerId)) return
 
@@ -136,6 +141,11 @@ export function useGameController() {
     })
   }
 
+  /**
+   * @param {string} key
+   * @param {string | null} image
+   * @param {number} [photoIndex]
+   */
   const updateAsset = (key, image, photoIndex) => {
     setAssets((currentAssets) => {
       if (key === 'teamA') {

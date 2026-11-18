@@ -1,11 +1,17 @@
 import { useState } from 'react'
-import { finalizeEndpoint, getFlyerPublicUrl } from './gameApi.js'
+import { finalizeEndpoint, getFlyerPublicUrl, parseFinalizeResponse } from './gameApi.js'
+
+/** @typedef {import('./gameApi.js').FlyerGraphic} FlyerGraphic */
+/** @typedef {import('./gamePayload.js').FinalizePayload} FinalizePayload */
+/** @typedef {FlyerGraphic & { publicUrl: string }} ResolvedFlyerGraphic */
 
 export function useGameSubmission() {
   const [requestState, setRequestState] = useState('idle')
   const [requestMessage, setRequestMessage] = useState('')
+  /** @type {[ResolvedFlyerGraphic[], import('react').Dispatch<import('react').SetStateAction<ResolvedFlyerGraphic[]>>]} */
   const [generatedFlyers, setGeneratedFlyers] = useState([])
 
+  /** @param {FinalizePayload} nextPayload */
   const sendPayload = async (nextPayload) => {
     setRequestState('sending')
     if (!finalizeEndpoint) {
@@ -29,7 +35,7 @@ export function useGameSubmission() {
       let responseBody = null
       if (responseText.trim()) {
         try {
-          responseBody = JSON.parse(responseText)
+          responseBody = parseFinalizeResponse(JSON.parse(responseText))
         } catch {
           setGeneratedFlyers([])
           setRequestState('success')
@@ -37,11 +43,10 @@ export function useGameSubmission() {
           return
         }
       }
-      const graphics = Array.isArray(responseBody?.graphics)
-        ? responseBody.graphics
-          .filter((graphic) => getFlyerPublicUrl(graphic))
-          .map((graphic) => ({ ...graphic, publicUrl: getFlyerPublicUrl(graphic) }))
-        : []
+      const graphics = responseBody?.graphics?.flatMap((graphic) => {
+        const publicUrl = getFlyerPublicUrl(graphic)
+        return publicUrl ? [{ ...graphic, publicUrl }] : []
+      }) || []
       setGeneratedFlyers(graphics)
       setRequestState('success')
       setRequestMessage(graphics.length > 0

@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { GAME_CLOCK_STORAGE_KEY, GAME_STORAGE_KEY } from './gameState.js'
 
+/** @typedef {Omit<import('./gameState.js').GameState, 'version'>} PersistedGameData */
+
+/**
+ * @param {PersistedGameData} gameState
+ * @param {{ hadLoadError: boolean, setStorageMessage: (message: string) => void }} options
+ */
 export function useGamePersistence(gameState, { hadLoadError, setStorageMessage }) {
   const skipNextSave = useRef(hadLoadError)
   const {
