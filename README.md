@@ -3,7 +3,7 @@
 > 🚀 **Live Demo App:** [https://score-kings-ivory.vercel.app](https://score-kings-ivory.vercel.app)  
 > 📄 **Technical Architecture Brief:** [View SaaS Technical Brief & System Architecture](https://quintonmills.github.io/ScoreKings-SaaS-Brief/)
 
-A tablet-friendly basketball stat logger for tracking up to five athletes on one team. ScoreKings lets you configure players and the team, record individual stats with touch-friendly controls, and export the complete box score as JSON.
+Real-time courtside tracking engine that logs single-player, timestamped basketball event streams—turning live game possessions into structured JSON/CSV telemetry.
 ## Dashboard
 
 <img width="284" height="512" alt="image" src="https://github.com/user-attachments/assets/2ffb5397-a007-44ac-b579-5a09cb50880b" />
