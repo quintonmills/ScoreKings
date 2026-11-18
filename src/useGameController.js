@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createFinalizePayload, getFlyerPlayers, isFinalizePayloadWithinLimit } from './gamePayload.js'
-import { finalizeEndpoint, getFlyerPublicUrl } from './gameApi.js'
 import {
   createInitialPlayers,
-  GAME_CLOCK_STORAGE_KEY,
-  GAME_STORAGE_KEY,
   getScore,
   initialGame,
   loadGameState,
 } from './gameState.js'
+import { useGameClock } from './useGameClock.js'
+import { useGamePersistence } from './useGamePersistence.js'
+import { useGameSubmission } from './useGameSubmission.js'
 
 export function useGameController() {
   const [loadedState] = useState(loadGameState)
@@ -20,97 +20,43 @@ export function useGameController() {
   const [assets, setAssets] = useState(() => loadedState.assets || { teams: { teamA: null }, players: {} })
   const [events, setEvents] = useState(() => loadedState.events || [])
   const [startedAt, setStartedAt] = useState(() => loadedState.startedAt || new Date().toISOString())
-  const [clockSeconds, setClockSeconds] = useState(() => loadedState.clockSeconds || 0)
-  const [customClockEnabled, setCustomClockEnabled] = useState(() => loadedState.customClockEnabled || false)
-  const [customClockDurationSeconds, setCustomClockDurationSeconds] = useState(() =>
-    loadedState.customClockDurationSeconds || 10 * 60,
-  )
-  const [isClockRunning, setIsClockRunning] = useState(false)
   const [history, setHistory] = useState(() => loadedState.history || [])
   const [showSetup, setShowSetup] = useState(false)
   const [payload, setPayload] = useState(null)
-  const [requestState, setRequestState] = useState('idle')
-  const [requestMessage, setRequestMessage] = useState('')
-  const [generatedFlyers, setGeneratedFlyers] = useState([])
   const [showAssetValidation, setShowAssetValidation] = useState(false)
   const [storageMessage, setStorageMessage] = useState(loadedState.storageError)
-  const [saveRevision, setSaveRevision] = useState(0)
-  const skipNextSave = useRef(Boolean(loadedState.storageError))
-  const clockSecondsRef = useRef(clockSeconds)
-  clockSecondsRef.current = clockSeconds
-
-  const saveClockCheckpoint = (seconds, gameStartedAt) => {
-    try {
-      window.localStorage.setItem(GAME_CLOCK_STORAGE_KEY, JSON.stringify({
-        version: 1,
-        startedAt: gameStartedAt,
-        clockSeconds: seconds,
-      }))
-    } catch {
-      setStorageMessage('Game clock could not be saved in this browser. Check available storage.')
-    }
-  }
-
-  useEffect(() => {
-    if (!isClockRunning || clockSeconds % 5 === 0) {
-      saveClockCheckpoint(clockSeconds, startedAt)
-    }
-  }, [isClockRunning, clockSeconds, startedAt])
-
-  useEffect(() => {
-    const saveCurrentClock = () => saveClockCheckpoint(clockSecondsRef.current, startedAt)
-    const saveClockWhenHidden = () => {
-      if (document.visibilityState === 'hidden') saveCurrentClock()
-    }
-    window.addEventListener('pagehide', saveCurrentClock)
-    document.addEventListener('visibilitychange', saveClockWhenHidden)
-    return () => {
-      window.removeEventListener('pagehide', saveCurrentClock)
-      document.removeEventListener('visibilitychange', saveClockWhenHidden)
-    }
-  }, [startedAt])
-
-  useEffect(() => {
-    if (!isClockRunning) return undefined
-    const intervalId = window.setInterval(() => {
-      if (customClockEnabled) {
-        setClockSeconds((seconds) => Math.max(0, seconds - 1))
-      } else {
-        setClockSeconds((seconds) => seconds + 1)
-      }
-    }, 1000)
-    return () => window.clearInterval(intervalId)
-  }, [isClockRunning, customClockEnabled])
-
-  useEffect(() => {
-    if (customClockEnabled && clockSeconds === 0) setIsClockRunning(false)
-  }, [customClockEnabled, clockSeconds])
-
-  useEffect(() => {
-    if (skipNextSave.current) {
-      skipNextSave.current = false
-      return
-    }
-
-    try {
-      window.localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify({
-        version: 2,
-        game,
-        players,
-        assets,
-        activePlayerId,
-        events,
-        startedAt,
-        clockSeconds: clockSecondsRef.current,
-        customClockEnabled,
-        customClockDurationSeconds,
-        history,
-      }))
-      setStorageMessage('')
-    } catch {
-      setStorageMessage('Game data could not be saved in this browser. Check available storage or remove large images.')
-    }
-  }, [game, players, activePlayerId, assets, events, startedAt, customClockEnabled, customClockDurationSeconds, history, saveRevision])
+  const clock = useGameClock({
+    initialClockSeconds: loadedState.clockSeconds,
+    initialCustomClockEnabled: loadedState.customClockEnabled,
+    initialCustomClockDurationSeconds: loadedState.customClockDurationSeconds,
+    startedAt,
+    onStorageError: setStorageMessage,
+  })
+  const persistence = useGamePersistence({
+    game,
+    players,
+    assets,
+    activePlayerId,
+    events,
+    startedAt,
+    clockSeconds: clock.clockSeconds,
+    customClockEnabled: clock.customClockEnabled,
+    customClockDurationSeconds: clock.customClockDurationSeconds,
+    history,
+  }, {
+    hadLoadError: Boolean(loadedState.storageError),
+    setStorageMessage,
+  })
+  const submission = useGameSubmission()
+  const { clockSeconds, setClockSeconds, customClockEnabled, customClockDurationSeconds, isClockRunning, setIsClockRunning } = clock
+  const {
+    requestState,
+    requestMessage,
+    generatedFlyers,
+    setRequestState,
+    setRequestMessage,
+    setGeneratedFlyers,
+  } = submission
 
   const activePlayer = players.find((player) => player.id === activePlayerId) || players[0]
   const teamAScore = getScore(players, 'Team A')
@@ -203,89 +149,20 @@ export function useGameController() {
     })
   }
 
-  const updateClockSettings = ({ enabled, durationSeconds }) => {
-    setIsClockRunning(false)
-    setCustomClockEnabled(enabled)
-    setCustomClockDurationSeconds(durationSeconds)
-    setClockSeconds(enabled ? durationSeconds : 0)
-  }
-
   const resetBoard = () => {
-    try {
-      window.localStorage.removeItem(GAME_STORAGE_KEY)
-      window.localStorage.removeItem(GAME_CLOCK_STORAGE_KEY)
-      skipNextSave.current = true
-      setStorageMessage('')
-    } catch {
-      setStorageMessage('Saved game data could not be cleared. The board will still reset, but saved data may return after refresh.')
-    }
+    persistence.clearSavedGame()
     setGame(initialGame)
     setPlayers(createInitialPlayers())
     setActivePlayerId('p1')
     setAssets({ teams: { teamA: null }, players: {} })
     setEvents([])
     setStartedAt(new Date().toISOString())
-    setClockSeconds(0)
-    setCustomClockEnabled(false)
-    setCustomClockDurationSeconds(10 * 60)
-    setIsClockRunning(false)
+    clock.resetClock()
     setHistory([])
-    setSaveRevision((revision) => revision + 1)
     setShowSetup(false)
     setPayload(null)
-    setRequestState('idle')
-    setRequestMessage('')
-    setGeneratedFlyers([])
+    submission.resetSubmission()
     setShowAssetValidation(false)
-  }
-
-  const sendPayload = async (nextPayload) => {
-    setRequestState('sending')
-    if (!finalizeEndpoint) {
-      setRequestState('error')
-      setRequestMessage('Set VITE_API_BASE_URL to your deployed backend URL in Render, then redeploy the frontend.')
-      return
-    }
-    setRequestMessage(`Posting to ${finalizeEndpoint}…`)
-    try {
-      const response = await fetch(finalizeEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nextPayload),
-      })
-      if (!response.ok) {
-        setRequestState('error')
-        setRequestMessage(`The server responded with ${response.status} ${response.statusText || ''}.`.trim())
-        return
-      }
-      const responseText = await response.text()
-      let responseBody = null
-      if (responseText.trim()) {
-        try {
-          responseBody = JSON.parse(responseText)
-        } catch {
-          setGeneratedFlyers([])
-          setRequestState('success')
-          setRequestMessage('The game was accepted, but the server returned an unreadable flyer response.')
-          return
-        }
-      }
-      const graphics = Array.isArray(responseBody?.graphics)
-        ? responseBody.graphics
-          .filter((graphic) => getFlyerPublicUrl(graphic))
-          .map((graphic) => ({ ...graphic, publicUrl: getFlyerPublicUrl(graphic) }))
-        : []
-      setGeneratedFlyers(graphics)
-      setRequestState('success')
-      setRequestMessage(graphics.length > 0
-        ? 'The game was accepted and your flyers are ready.'
-        : 'The final box score was accepted by the server.')
-    } catch (error) {
-      setRequestState('error')
-      setRequestMessage(error instanceof TypeError
-        ? `Could not reach ${new URL(finalizeEndpoint).origin}. Check that the Render service is available and its CORS_ORIGIN allows this frontend's exact origin.`
-        : error instanceof Error ? error.message : 'The request failed. Check that the backend is running.')
-    }
   }
 
   const finalizeGame = () => {
@@ -308,11 +185,7 @@ export function useGameController() {
     }
     setGeneratedFlyers([])
     setPayload(nextPayload)
-    setRequestState('sending')
-    setRequestMessage(finalizeEndpoint
-      ? `Posting to ${finalizeEndpoint}…`
-      : 'Connecting to the configured backend…')
-    void sendPayload(nextPayload)
+    void submission.sendPayload(nextPayload)
   }
 
   return {
@@ -346,9 +219,9 @@ export function useGameController() {
     updatePlayer,
     removePlayer,
     updateAsset,
-    updateClockSettings,
+    updateClockSettings: clock.updateClockSettings,
     resetBoard,
-    sendPayload,
+    sendPayload: submission.sendPayload,
     finalizeGame,
   }
 }
